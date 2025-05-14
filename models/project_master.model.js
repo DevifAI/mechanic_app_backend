@@ -1,0 +1,66 @@
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
+  const ProjectMasterModel = sequelize.define(
+    "project_master",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4, // Generates a unique ID like MongoDB's ObjectId
+        primaryKey: true,
+      },
+      project_no: { type: DataTypes.STRING, allowNull: false },
+      customer_id: { type: DataTypes.UUID, allowNull: false },
+      order_no: { type: DataTypes.BIGINT, allowNull: false },
+      contract_tenure: { type: DataTypes.STRING, allowNull: false },
+      contract_start_date: { type: DataTypes.DATE, allowNull: false },
+      revenue_master_id: {
+        type: DataTypes.ARRAY(DataTypes.UUID),
+        allowNull: false,
+      }, // Use UUID array
+
+      // store_location_ids: { type: DataTypes.UUID }, // Use UUID
+    },
+    {
+      timestamps: true,
+      freezeTableName: true,
+    }
+  );
+
+  ProjectMasterModel.associate = (models) => {
+    // Customer association (Partner where isCustomer is true)
+    ProjectMasterModel.belongsTo(models.Partner, {
+      foreignKey: "customer_id",
+      as: "customer",
+      scope: {
+        isCustomer: true,
+      },
+    });
+    ProjectMasterModel.belongsToMany(models.Equipment, {
+      through: models.EquipmentProject, // Join table
+      foreignKey: "project_id",
+      as: "equipments", // Optional alias
+    });
+
+    // Staff relationship through ProjectStaff
+    ProjectMasterModel.belongsToMany(models.Employee, {
+      through: models.ProjectStaff,
+      foreignKey: "project_id",
+      as: "staff",
+    });
+    // New revenue association
+    ProjectMasterModel.belongsToMany(models.RevenueMaster, {
+      through: models.ProjectRevenue,
+      foreignKey: "project_id",
+      as: "revenues",
+    });
+    ProjectMasterModel.belongsToMany(models.StoreLocation, {
+      through: "ProjectStoreLocation",
+      foreignKey: "project_id",
+      otherKey: "store_location_id",
+      as: "store_locations",
+    });
+  };
+
+  return ProjectMasterModel;
+};

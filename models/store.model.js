@@ -18,8 +18,8 @@ export default (sequelize) => {
       freezeTableName: true,
     }
   );
-  StoreLocationModel.associate = (models) => {
-    StoreLocationModel.belongsToMany(models.ProjectMaster, {
+  StoreModel.associate = (models) => {
+    StoreModel.belongsToMany(models.ProjectMaster, {
       through: "ProjectStoreLocation",
       foreignKey: "store_location_id",
       otherKey: "project_id",

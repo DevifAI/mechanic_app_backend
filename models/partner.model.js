@@ -13,7 +13,7 @@ export default (sequelize) => {
       partner_address: { type: DataTypes.TEXT, allowNull: false },
       partner_gst: { type: DataTypes.STRING, allowNull: false },
       partner_geo_id: { type: DataTypes.BIGINT, allowNull: false },
-      isCustomer: { type: DataTypes.BOOLEAN },
+      isCustomer: { type: DataTypes.BOOLEAN, allowNull: false },
     },
     {
       timestamps: true,

@@ -2,7 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 
 import { connection } from "./config/postgres.js"; // Import syncModels
-import partnerRoutes from "./routes/super_admin/partner/index.js"; // Correct path for partner routes
+import partnerRoutes from "./routes/super_admin/partner/index.js";
+import job_masterRoutes from "./routes/super_admin/job_master/job_master.routes.js";
 import { syncModels } from "./models/index.js";
 
 dotenv.config();
@@ -11,7 +12,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 // Use partner routes
-app.use("/api/master/super/admin", partnerRoutes);
+app.use("/api/master/super/admin/partner", partnerRoutes);
+app.use("/api/master/super/admin/job_master", job_masterRoutes);
 
 // Initialize database connection
 connection();

@@ -1,6 +1,7 @@
-// models/ProjectMechanics.js (for site_mechanic_ids)
-export default (sequelize, DataTypes) => {
-  return sequelize.define(
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
+  const ProjectEmployees = sequelize.define(
     "ProjectEmployees",
     {
       id: {
@@ -10,16 +11,13 @@ export default (sequelize, DataTypes) => {
       },
       project_id: {
         type: DataTypes.UUID,
+        allowNull: false,
         references: { model: "project_master", key: "id" },
       },
       employee_id: {
         type: DataTypes.UUID,
+        allowNull: false,
         references: { model: "employee", key: "id" },
-      },
-      role_id: {
-        // Track which role they have in this project
-        type: DataTypes.UUID,
-        references: { model: "role", key: "id" },
       },
     },
     {
@@ -27,9 +25,6 @@ export default (sequelize, DataTypes) => {
       freezeTableName: true,
     }
   );
-};
 
-// Repeat similar structure for:
-// - ProjectSupervisors.js (site_supervisor_ids)
-// - ProjectManagers.js (site_manager_ids)
-// - ProjectStoreManagers.js (site_store_manager_ids)
+  return ProjectEmployees;
+};

@@ -14,7 +14,7 @@ export default (sequelize) => {
       order_no: { type: DataTypes.BIGINT, allowNull: false },
       contract_tenure: { type: DataTypes.STRING, allowNull: false },
       contract_start_date: { type: DataTypes.DATE, allowNull: false },
-     
+
       // store_location_ids: { type: DataTypes.UUID }, // Use UUID
     },
     {
@@ -28,9 +28,6 @@ export default (sequelize) => {
     ProjectMasterModel.belongsTo(models.Partner, {
       foreignKey: "customer_id",
       as: "customer",
-      scope: {
-        isCustomer: true,
-      },
     });
     ProjectMasterModel.belongsToMany(models.Equipment, {
       through: models.EquipmentProject, // Join table

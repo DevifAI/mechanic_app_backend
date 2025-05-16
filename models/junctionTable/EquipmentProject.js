@@ -24,10 +24,6 @@ export default (sequelize) => {
           key: "id",
         },
       },
-      assignment_date: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       timestamps: true,

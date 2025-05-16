@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 const { Role } = models;
 
@@ -5,6 +6,21 @@ const { Role } = models;
 export const createRole = async (req, res) => {
   try {
     const { code, name } = req.body;
+
+    // Check if role with same code or name already exists
+    const existingRole = await Role.findOne({
+      where: {
+        [Op.or]: [{ code }, { name }],
+      },
+    });
+
+    if (existingRole) {
+      return res
+        .status(500)
+        .json({ message: "Role with same code or name already exists" });
+    }
+
+    // If no duplicate, create new role
     const newRole = await Role.create({ code, name });
     return res.status(201).json(newRole);
   } catch (error) {

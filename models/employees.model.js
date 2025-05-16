@@ -24,7 +24,6 @@ export default (sequelize) => {
       },
       is_active: { type: DataTypes.BOOLEAN, allowNull: false },
       shiftcode: { type: DataTypes.STRING, allowNull: false },
-      isActive: { type: DataTypes.BOOLEAN },
       role_id: {
         // Add this field
         type: DataTypes.UUID,

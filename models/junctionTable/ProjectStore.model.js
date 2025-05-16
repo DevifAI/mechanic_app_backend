@@ -13,7 +13,7 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      store_location_id: {
+      store_id: {
         type: DataTypes.UUID,
         allowNull: false,
       },

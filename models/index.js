@@ -11,6 +11,9 @@ import RoleModel from "./roles.model.js";
 import EmpPositions from "./emp_position.model.js";
 import EmployeeModel from "./employees.model.js";
 import EquipProjectModel from "./junctionTable/EquipmentProject.js";
+import EmpProjectModel from "./junctionTable/ProjectEmployees.js";
+import RevenueProjectModel from "./junctionTable/ProjectRevenue.js";
+import StoreProjectModel from "./junctionTable/ProjectStore.model.js";
 
 // Initialize models
 const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
@@ -25,6 +28,9 @@ const Role = RoleModel(sequelize);
 const EmpPositionsModel = EmpPositions(sequelize);
 const Employee = EmployeeModel(sequelize);
 const EquipmentProject = EquipProjectModel(sequelize);
+const ProjectEmployees = EmpProjectModel(sequelize);
+const RevenueProject = RevenueProjectModel(sequelize);
+const StoreProject = StoreProjectModel(sequelize);
 const models = {
   Partner,
   Project_Master,
@@ -38,12 +44,16 @@ const models = {
   EmpPositionsModel,
   Employee,
   EquipmentProject,
+  ProjectEmployees,
+  RevenueProject,
+  StoreProject
 };
 
 // Sync the models
 const syncModels = async () => {
   try {
-    await sequelize.sync({ alter: true }); // { force: true } for development
+    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync()
     console.log("✅ All models were synced.");
   } catch (err) {
     console.error("❌ Sync failed:", err);

@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 const { EmpPositionsModel } = models;
 
@@ -5,6 +6,21 @@ const { EmpPositionsModel } = models;
 export const createEmpPosition = async (req, res) => {
   try {
     const { designation } = req.body;
+
+    // Check if the designation already exists
+    const existingPosition = await EmpPositionsModel.findOne({
+      where: {
+        designation: {
+          [Op.iLike]: designation, // case-insensitive match (PostgreSQL). Use Op.eq for exact/case-sensitive.
+        },
+      },
+    });
+
+    if (existingPosition) {
+      return res.status(500).json({ message: "Designation already exists" });
+    }
+
+    // Create new position if no duplicate
     const newPosition = await EmpPositionsModel.create({ designation });
     return res.status(201).json(newPosition);
   } catch (error) {

@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 const { Shift } = models;
 
@@ -5,11 +6,29 @@ const { Shift } = models;
 export const createShift = async (req, res) => {
   try {
     const { shift_code, shift_from_time, shift_to_time } = req.body;
+
+    // Check if shift with the same code exists
+    const existingShift = await Shift.findOne({
+      where: {
+        shift_code: {
+          [Op.eq]: shift_code, // Use Op.iLike for PostgreSQL and case-insensitive match
+        },
+      },
+    });
+
+    if (existingShift) {
+      return res
+        .status(500)
+        .json({ message: "Shift with this code already exists" });
+    }
+
+    // Create new shift
     const newShift = await Shift.create({
       shift_code,
       shift_from_time,
       shift_to_time,
     });
+
     return res.status(201).json(newShift);
   } catch (error) {
     console.error("Error creating shift:", error);

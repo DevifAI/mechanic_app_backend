@@ -1,7 +1,6 @@
 import { models } from "../../models/index.js";
-const { Employee, Role, Shift, EmpPositions } = models;
+const { Employee, Role, Shift, EmpPositionsModel } = models;
 
-// Create Employee
 export const createEmployee = async (req, res) => {
   try {
     const {
@@ -16,6 +15,34 @@ export const createEmployee = async (req, res) => {
       role_id,
     } = req.body;
 
+    // 1. Check if emp_id already exists
+    const existingEmp = await Employee.findOne({ where: { emp_id } });
+    if (existingEmp) {
+      return res.status(500).json({ message: "Employee ID already exists" });
+    }
+
+    // 2. Check if role_id exists
+    const roleExists = await Role.findByPk(role_id);
+    if (!roleExists) {
+      return res.status(500).json({ message: "Invalid role_id" });
+    }
+
+    // 3. Check if position exists
+    const positionExists = await EmpPositionsModel.findByPk(position);
+
+    if (!positionExists) {
+      return res.status(500).json({ message: "Invalid position" });
+    }
+
+    // 4. Check if shiftcode exists
+    const shiftExists = await Shift.findOne({
+      where: { shift_code: shiftcode },
+    });
+    if (!shiftExists) {
+      return res.status(500).json({ message: "Invalid shiftcode" });
+    }
+
+    // 5. Create employee
     const newEmployee = await Employee.create({
       emp_id,
       emp_name,

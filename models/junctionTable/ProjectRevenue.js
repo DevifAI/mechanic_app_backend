@@ -1,5 +1,6 @@
 // models/ProjectRevenue.js
-export default (sequelize, DataTypes) => {
+import { DataTypes } from "sequelize";
+export default (sequelize) => {
   return sequelize.define('project_revenue', {
     id: {
       type: DataTypes.UUID,

@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createShift,
-  getShifts,
+  getAllShifts,
   getShiftById,
   updateShift,
   deleteShift,
@@ -9,10 +9,10 @@ import {
 
 const router = express.Router();
 
-router.post("/", createShift);
-router.get("/", getShifts);
-router.get("/:id", getShiftById);
-router.put("/:id", updateShift);
-router.delete("/:id", deleteShift);
+router.post("/create", createShift);
+router.get("/getAll", getAllShifts);
+router.get("/get/:id", getShiftById);
+router.patch("/update/:id", updateShift);
+router.delete("/delete/:id", deleteShift);
 
 export default router;

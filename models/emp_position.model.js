@@ -1,4 +1,7 @@
-export const EmpPositionsModel = (sequelize) => {
+// emp_position.model.js
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
   const EmpPositionsModel = sequelize.define(
     "emp_positions",
     {
@@ -21,5 +24,6 @@ export const EmpPositionsModel = (sequelize) => {
       as: "employees",
     });
   };
+
   return EmpPositionsModel;
 };

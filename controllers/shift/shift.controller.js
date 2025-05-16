@@ -1,25 +1,24 @@
-import { models } from "../../models/index.js"; // Adjust the path
+import { models } from "../../models/index.js";
 const { Shift } = models;
 
 // Create Shift
 export const createShift = async (req, res) => {
-  const { shift_code, shift_from_time, shift_to_time } = req.body;
-
   try {
-    const shift = await Shift.create({
+    const { shift_code, shift_from_time, shift_to_time } = req.body;
+    const newShift = await Shift.create({
       shift_code,
       shift_from_time,
       shift_to_time,
     });
-    return res.status(201).json(shift);
+    return res.status(201).json(newShift);
   } catch (error) {
     console.error("Error creating shift:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Get All Shifts
-export const getShifts = async (req, res) => {
+// Get all Shifts
+export const getAllShifts = async (req, res) => {
   try {
     const shifts = await Shift.findAll();
     return res.status(200).json(shifts);
@@ -31,26 +30,25 @@ export const getShifts = async (req, res) => {
 
 // Get Shift by ID
 export const getShiftById = async (req, res) => {
-  const { id } = req.params;
-
   try {
+    const { id } = req.params;
     const shift = await Shift.findByPk(id);
     if (!shift) {
       return res.status(404).json({ message: "Shift not found" });
     }
     return res.status(200).json(shift);
   } catch (error) {
-    console.error("Error fetching shift:", error);
+    console.error("Error fetching shift by ID:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 // Update Shift
 export const updateShift = async (req, res) => {
-  const { id } = req.params;
-  const { shift_code, shift_from_time, shift_to_time } = req.body;
-
   try {
+    const { id } = req.params;
+    const { shift_code, shift_from_time, shift_to_time } = req.body;
+
     const shift = await Shift.findByPk(id);
     if (!shift) {
       return res.status(404).json({ message: "Shift not found" });
@@ -66,9 +64,9 @@ export const updateShift = async (req, res) => {
 
 // Delete Shift
 export const deleteShift = async (req, res) => {
-  const { id } = req.params;
-
   try {
+    const { id } = req.params;
+
     const shift = await Shift.findByPk(id);
     if (!shift) {
       return res.status(404).json({ message: "Shift not found" });

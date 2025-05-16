@@ -7,6 +7,10 @@ import ShiftModel from "./shift.model.js";
 import StoreModel from "./store.model.js";
 import EquipmentGroupModel from "./equipment_group.model.js";
 import EquipmentModel from "./equipment.model.js";
+import RoleModel from "./roles.model.js";
+import EmpPositions from "./emp_position.model.js";
+import EmployeeModel from "./employees.model.js";
+import EquipProjectModel from "./junctionTable/EquipmentProject.js";
 
 // Initialize models
 const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
@@ -17,6 +21,10 @@ const Shift = ShiftModel(sequelize);
 const Store = StoreModel(sequelize);
 const EquipmentGroup = EquipmentGroupModel(sequelize);
 const Equipment = EquipmentModel(sequelize);
+const Role = RoleModel(sequelize);
+const EmpPositionsModel = EmpPositions(sequelize);
+const Employee = EmployeeModel(sequelize);
+const EquipmentProject = EquipProjectModel(sequelize);
 const models = {
   Partner,
   Project_Master,
@@ -25,7 +33,11 @@ const models = {
   Shift,
   Store,
   EquipmentGroup,
-  Equipment
+  Equipment,
+  Role,
+  EmpPositionsModel,
+  Employee,
+  EquipmentProject,
 };
 
 // Sync the models

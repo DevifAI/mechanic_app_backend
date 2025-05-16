@@ -1,0 +1,77 @@
+import { models } from "../../models/index.js";
+const { Role } = models;
+
+// Create Role
+export const createRole = async (req, res) => {
+  try {
+    const { code, name } = req.body;
+    const newRole = await Role.create({ code, name });
+    return res.status(201).json(newRole);
+  } catch (error) {
+    console.error("Error creating role:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Get all Roles
+export const getAllRoles = async (req, res) => {
+  try {
+    const roles = await Role.findAll();
+    return res.status(200).json(roles);
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Get Role by ID
+export const getRoleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const role = await Role.findByPk(id);
+    if (!role) {
+      return res.status(404).json({ message: "Role not found" });
+    }
+    return res.status(200).json(role);
+  } catch (error) {
+    console.error("Error fetching role by ID:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Update Role
+export const updateRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { code, name } = req.body;
+
+    const role = await Role.findByPk(id);
+    if (!role) {
+      return res.status(404).json({ message: "Role not found" });
+    }
+
+    await role.update({ code, name });
+    return res.status(200).json(role);
+  } catch (error) {
+    console.error("Error updating role:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Delete Role
+export const deleteRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const role = await Role.findByPk(id);
+    if (!role) {
+      return res.status(404).json({ message: "Role not found" });
+    }
+
+    await role.destroy();
+    return res.status(200).json({ message: "Role deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting role:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

@@ -14,11 +14,7 @@ export default (sequelize) => {
       order_no: { type: DataTypes.BIGINT, allowNull: false },
       contract_tenure: { type: DataTypes.STRING, allowNull: false },
       contract_start_date: { type: DataTypes.DATE, allowNull: false },
-      revenue_master_id: {
-        type: DataTypes.ARRAY(DataTypes.UUID),
-        allowNull: false,
-      }, // Use UUID array
-
+     
       // store_location_ids: { type: DataTypes.UUID }, // Use UUID
     },
     {

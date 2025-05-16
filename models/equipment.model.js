@@ -1,4 +1,6 @@
-export const EquipmentModel = (sequelize) => {
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
   const EquipmentModel = sequelize.define(
     "equipment",
     {
@@ -17,13 +19,13 @@ export const EquipmentModel = (sequelize) => {
       maintenance_log: { type: DataTypes.JSON, allowNull: false },
       other_log: { type: DataTypes.JSON, allowNull: false },
       project_tag: { type: DataTypes.JSON, allowNull: false },
-      equipment_group_id: {  // New field
+      equipment_group_id: {
         type: DataTypes.UUID,
-        allowNull: true,  // Set to false if every equipment must belong to a group
+        allowNull: true,
         references: {
-          model: 'equipment_group',  // References the equipment_group table
-          key: 'id'
-        }
+          model: "equipment_group",
+          key: "id",
+        },
       },
     },
     {
@@ -31,16 +33,18 @@ export const EquipmentModel = (sequelize) => {
       freezeTableName: true,
     }
   );
+
   EquipmentModel.associate = (models) => {
     EquipmentModel.belongsToMany(models.ProjectMaster, {
-      through: models.EquipmentProject, // Join table
+      through: models.EquipmentProject,
       foreignKey: "equipment_id",
-      as: "projects", // Optional alias
+      as: "projects",
     });
-     EquipmentModel.belongsTo(models.EquipmentGroup, {
+    EquipmentModel.belongsTo(models.EquipmentGroup, {
       foreignKey: "equipment_group_id",
       as: "equipmentGroup",
     });
   };
+
   return EquipmentModel;
 };

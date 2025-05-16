@@ -1,4 +1,6 @@
-export const EquipmentGroupModel = (sequelize) => {
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
   const EquipmentGroupModel = sequelize.define(
     "equipment_group",
     {
@@ -15,12 +17,13 @@ export const EquipmentGroupModel = (sequelize) => {
       freezeTableName: true,
     }
   );
-  
+
   EquipmentGroupModel.associate = (models) => {
     EquipmentGroupModel.hasMany(models.Equipment, {
       foreignKey: "equipment_group_id",
       as: "equipments",
     });
   };
+
   return EquipmentGroupModel;
 };

@@ -1,18 +1,18 @@
-import { models } from "../../models/index.js"; // Adjust path as needed
-const { Revenue_MasterModel } = models;
+import { models } from "../../models/index.js";
+const { RevenueMaster } = models;
 
-// Create Revenue
+// Create RevenueMaster
 export const createRevenue = async (req, res) => {
   const { revenue_code, revenue_description, revenue_value } = req.body;
 
   try {
-    const revenue = await Revenue_MasterModel.create({
+    const newRevenue = await RevenueMaster.create({
       revenue_code,
       revenue_description,
       revenue_value,
     });
 
-    return res.status(201).json(revenue);
+    return res.status(201).json(newRevenue);
   } catch (error) {
     console.error("Error creating revenue:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -20,9 +20,9 @@ export const createRevenue = async (req, res) => {
 };
 
 // Get All Revenues
-export const getRevenues = async (req, res) => {
+export const getAllRevenues = async (req, res) => {
   try {
-    const revenues = await Revenue_MasterModel.findAll();
+    const revenues = await RevenueMaster.findAll();
     return res.status(200).json(revenues);
   } catch (error) {
     console.error("Error fetching revenues:", error);
@@ -35,7 +35,7 @@ export const getRevenueById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const revenue = await Revenue_MasterModel.findByPk(id);
+    const revenue = await RevenueMaster.findByPk(id);
     if (!revenue) {
       return res.status(404).json({ message: "Revenue not found" });
     }
@@ -52,7 +52,7 @@ export const updateRevenue = async (req, res) => {
   const { revenue_code, revenue_description, revenue_value } = req.body;
 
   try {
-    const revenue = await Revenue_MasterModel.findByPk(id);
+    const revenue = await RevenueMaster.findByPk(id);
     if (!revenue) {
       return res.status(404).json({ message: "Revenue not found" });
     }
@@ -75,7 +75,7 @@ export const deleteRevenue = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const revenue = await Revenue_MasterModel.findByPk(id);
+    const revenue = await RevenueMaster.findByPk(id);
     if (!revenue) {
       return res.status(404).json({ message: "Revenue not found" });
     }

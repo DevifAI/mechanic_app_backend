@@ -1,5 +1,6 @@
 import { models } from "../../models/index.js"; // Correct import
-const { Partner,ProjectMaster } = models; // Extract Partner model
+const { Partner, ProjectMaster } = models; // Extract Partner model
+
 // Create Project
 export const createProject = async (req, res) => {
   const {
@@ -9,7 +10,7 @@ export const createProject = async (req, res) => {
     contract_tenure,
     contract_start_date,
     asset_allocated_ids,
-    revenue_master_id,
+    revenue_master_ids, // <-- Accept as array
     site_mechanic_ids,
     site_supervisor_ids,
     site_manager_ids,
@@ -17,16 +18,13 @@ export const createProject = async (req, res) => {
     store_location_ids,
   } = req.body;
 
-  // Validate customer_id is from a partner with isCustomer = false
   try {
     const partner = await Partner.findOne({ where: { id: customer_id } });
     if (!partner || partner.isCustomer !== false) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Invalid customer_id: Must reference a partner where isCustomer is false.",
-        });
+      return res.status(400).json({
+        message:
+          "Invalid customer_id: Must reference a partner where isCustomer is false.",
+      });
     }
 
     const project = await ProjectMaster.create({
@@ -36,7 +34,6 @@ export const createProject = async (req, res) => {
       contract_tenure,
       contract_start_date,
       asset_allocated_ids,
-      revenue_master_id,
       site_mechanic_ids,
       site_supervisor_ids,
       site_manager_ids,
@@ -44,17 +41,29 @@ export const createProject = async (req, res) => {
       store_location_ids,
     });
 
-    return res.status(201).json(project);
+    // Set revenues if provided
+    if (Array.isArray(revenue_master_ids)) {
+      await project.setRevenues(revenue_master_ids);
+    }
+
+    // Optionally, reload with associations
+    const result = await ProjectMaster.findByPk(project.id, {
+      include: [{ association: "revenues" }],
+    });
+
+    return res.status(201).json(result);
   } catch (error) {
     console.error("Error creating project:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Get all Projects
+// Get all Projects (with revenues)
 export const getProjects = async (req, res) => {
   try {
-    const projects = await ProjectMaster.findAll();
+    const projects = await ProjectMaster.findAll({
+      include: [{ association: "revenues" }],
+    });
     return res.status(200).json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -62,12 +71,14 @@ export const getProjects = async (req, res) => {
   }
 };
 
-// Get Project by ID
+// Get Project by ID (with revenues)
 export const getProjectById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const project = await ProjectMaster.findByPk(id);
+    const project = await ProjectMaster.findByPk(id, {
+      include: [{ association: "revenues" }],
+    });
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -88,7 +99,7 @@ export const updateProject = async (req, res) => {
     contract_tenure,
     contract_start_date,
     asset_allocated_ids,
-    revenue_master_id,
+    revenue_master_ids, // <-- Accept as array
     site_mechanic_ids,
     site_supervisor_ids,
     site_manager_ids,
@@ -96,16 +107,13 @@ export const updateProject = async (req, res) => {
     store_location_ids,
   } = req.body;
 
-  // Validate customer_id is from a partner with isCustomer = false
   try {
     const partner = await Partner.findOne({ where: { id: customer_id } });
     if (!partner || partner.isCustomer !== false) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Invalid customer_id: Must reference a partner where isCustomer is false.",
-        });
+      return res.status(400).json({
+        message:
+          "Invalid customer_id: Must reference a partner where isCustomer is false.",
+      });
     }
 
     const project = await ProjectMaster.findByPk(id);
@@ -120,7 +128,6 @@ export const updateProject = async (req, res) => {
       contract_tenure,
       contract_start_date,
       asset_allocated_ids,
-      revenue_master_id,
       site_mechanic_ids,
       site_supervisor_ids,
       site_manager_ids,
@@ -128,7 +135,17 @@ export const updateProject = async (req, res) => {
       store_location_ids,
     });
 
-    return res.status(200).json(project);
+    // Update revenues if provided
+    if (Array.isArray(revenue_master_ids)) {
+      await project.setRevenues(revenue_master_ids);
+    }
+
+    // Optionally, reload with associations
+    const result = await ProjectMaster.findByPk(project.id, {
+      include: [{ association: "revenues" }],
+    });
+
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error updating project:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -152,4 +169,3 @@ export const deleteProject = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-

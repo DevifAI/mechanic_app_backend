@@ -9,9 +9,9 @@ import {
 const router = express.Router();
 
 // Routes
-router.post("/create/partner", createPartner);
-router.get("/getpartners", getPartners);
-router.post("/partners/:id", updatePartner);
-router.delete("/partners/:id", deletePartner);
+router.post("/create", createPartner);
+router.get("/getall", getPartners);
+router.patch("/update/:id", updatePartner);
+router.delete("/delete/:id", deletePartner);
 
 export default router; // Ensure this is exported correctly

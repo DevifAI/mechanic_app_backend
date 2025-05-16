@@ -5,21 +5,27 @@ import ProjectMasterModel from "./project_master.model.js";
 import RevenueMasterModel from "./revenue.model.js";
 import ShiftModel from "./shift.model.js";
 import StoreModel from "./store.model.js";
+import EquipmentGroupModel from "./equipment_group.model.js";
+import EquipmentModel from "./equipment.model.js";
 
 // Initialize models
 const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
-const Revenue_MasterModel = RevenueMasterModel(sequelize);
+const RevenueMaster = RevenueMasterModel(sequelize);
 const JobMaster = JobMasterModel(sequelize);
 const Shift = ShiftModel(sequelize);
 const Store = StoreModel(sequelize);
+const EquipmentGroup = EquipmentGroupModel(sequelize);
+const Equipment = EquipmentModel(sequelize);
 const models = {
   Partner,
   Project_Master,
-  Revenue_MasterModel,
+  RevenueMaster,
   JobMaster,
   Shift,
-  Store
+  Store,
+  EquipmentGroup,
+  Equipment
 };
 
 // Sync the models

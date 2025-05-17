@@ -37,6 +37,7 @@ export async function processProjectRow({
   }
 
   // Find customer by partner_name
+  console.log({ customer });
   const partner = await Partner.findOne({ where: { partner_name: customer } });
   if (!partner) {
     return { projectNo, status: "failed", message: "Invalid customer name" };

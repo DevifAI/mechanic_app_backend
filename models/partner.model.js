@@ -26,9 +26,6 @@ export default (sequelize) => {
       // ✅ match the key in models/index.js
       foreignKey: "customer_id",
       as: "projects",
-      scope: {
-        isCustomer: true,
-      },
     });
   };
 

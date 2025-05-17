@@ -184,7 +184,7 @@ export const getProjects = async (req, res) => {
         },
         {
           association: "store_locations", // StoreLocation model
-          attributes: ["id", "store_code"],
+          attributes: ["id", "store_code", "store_name"],
           through: { attributes: [] },
         },
       ],
@@ -317,7 +317,7 @@ export const bulkUploadProjects = async (req, res) => {
     }
 
     // Skip header row if first cell starts with "PRJ-"
-    let dataRows = rows;
+    let dataRows = rows.slice(1); // This skips the first row (the header)
    
 
 
@@ -354,6 +354,7 @@ export const bulkUploadProjects = async (req, res) => {
         ? storelocationsStr.split(",").map((s) => s.trim())
         : [];
 
+        console.log({customer})
       // Process one project row and push results
       const result = await processProjectRow({
         projectNo,

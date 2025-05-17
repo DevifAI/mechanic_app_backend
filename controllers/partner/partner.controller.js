@@ -19,8 +19,7 @@ export const createPartner = async (req, res) => {
     !partner_name ||
     !partner_address ||
     !partner_gst ||
-    !partner_geo_id ||
-    !isCustomer
+    !partner_geo_id 
   ) {
     return res.status(400).json({ message: "Missing required fields" });
   }

@@ -82,6 +82,7 @@ export const getAllEmployees = async (req, res) => {
     });
 
     const formattedEmployees = employees.map((emp) => ({
+      id: emp.id,
       emp_id: emp.emp_id,
       emp_name: emp.emp_name,
       blood_group: emp.blood_group,
@@ -159,11 +160,13 @@ export const bulkUploadEmployees = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Parse Excel file buffer
+    // Read Excel file from buffer
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    // Convert sheet to JSON with default empty values to avoid undefined
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
     if (!rows.length) {
       return res.status(400).json({ message: "Excel sheet is empty" });
@@ -180,65 +183,56 @@ export const bulkUploadEmployees = async (req, res) => {
         blood_group,
         age,
         adress,
-        position, // <-- this is designation name now
-
+        position, // this is designation string
         shiftcode,
         role_name,
       } = row;
 
-      if (!emp_id) {
-        errors.push({ row: i + 2, message: "Missing emp_id" });
+      // Basic validation
+      if (!emp_id || !emp_name || !position || !shiftcode || !role_name) {
+        errors.push({
+          row: i + 2,
+          message: "Missing required fields",
+        });
         continue;
       }
-      const empIdStr =
-        typeof emp_id === "string" ? emp_id.trim() : String(emp_id);
 
-      // Validate emp_id uniqueness
-      const existingEmp = await Employee.findOne({
-        where: { emp_id: empIdStr },
-      });
+      const empIdStr = typeof emp_id === "string" ? emp_id.trim() : String(emp_id);
 
+      const existingEmp = await Employee.findOne({ where: { emp_id: empIdStr } });
       if (existingEmp) {
-        errors.push({ row: i + 2, message: "Employee ID already exists" });
+        errors.push({ row: i + 2, message: `Employee ID ${empIdStr} already exists` });
         continue;
       }
 
-      // Find role_id by role_name
       const role = await Role.findOne({ where: { name: role_name } });
       if (!role) {
         errors.push({ row: i + 2, message: `Invalid role_name: ${role_name}` });
         continue;
       }
 
-      // Find position by designation name (position is designation string now)
       const positionRecord = await EmpPositionsModel.findOne({
         where: { designation: position },
       });
       if (!positionRecord) {
-        errors.push({
-          row: i + 2,
-          message: `Invalid designation (position): ${position}`,
-        });
+        errors.push({ row: i + 2, message: `Invalid position: ${position}` });
         continue;
       }
 
-      // Validate shiftcode
-      const shiftExists = await Shift.findOne({
-        where: { shift_code: shiftcode },
-      });
-      if (!shiftExists) {
+      const shift = await Shift.findOne({ where: { shift_code: shiftcode } });
+      if (!shift) {
         errors.push({ row: i + 2, message: `Invalid shiftcode: ${shiftcode}` });
         continue;
       }
 
-      // Create employee record with position id
+      // Create employee
       const newEmployee = await Employee.create({
-        emp_id,
+        emp_id: empIdStr,
         emp_name,
         blood_group,
         age,
         adress,
-        position: positionRecord.id, // store id from position table
+        position: positionRecord.id,
         is_active: true,
         shiftcode,
         role_id: role.id,
@@ -254,6 +248,6 @@ export const bulkUploadEmployees = async (req, res) => {
     });
   } catch (error) {
     console.error("Bulk upload error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };

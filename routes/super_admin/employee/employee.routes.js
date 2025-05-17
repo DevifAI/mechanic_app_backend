@@ -5,7 +5,9 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
+  bulkUploadEmployees,
 } from "../../../controllers/employee/employee.controller.js";
+import upload from "../../../middleware/bulkUpload.js";
 
 const router = express.Router();
 
@@ -14,5 +16,6 @@ router.get("/getAll", getAllEmployees);
 router.get("/get/:id", getEmployeeById);
 router.patch("/get/:id", updateEmployee);
 router.delete("/delete/:id", deleteEmployee);
+router.post("/bulk-upload", upload.single("file"), bulkUploadEmployees);
 
 export default router;

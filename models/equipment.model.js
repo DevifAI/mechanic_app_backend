@@ -35,7 +35,7 @@ export default (sequelize) => {
   );
 
   EquipmentModel.associate = (models) => {
-    EquipmentModel.belongsToMany(models.ProjectMaster, {
+    EquipmentModel.belongsToMany(models.Project_Master, {
       through: models.EquipmentProject,
       foreignKey: "equipment_id",
       as: "projects",

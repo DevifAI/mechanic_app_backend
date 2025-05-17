@@ -1,5 +1,7 @@
 import { Op } from "sequelize";
 import { models } from "../../models/index.js"; // Correct import
+import XLSX from "xlsx";
+import { processProjectRow } from "../../utils/HelperFunctions/processProjectRow.js";
 const {
   Partner,
   Project_Master,
@@ -9,7 +11,7 @@ const {
   Store,
   EquipmentProject,
   ProjectEmployees,
-  RevenueProject,
+  ProjectRevenue,
   StoreProject,
 } = models; // Extract Partner model
 
@@ -17,20 +19,26 @@ const {
 
 export const createProject = async (req, res) => {
   const {
-    project_no,
-    customer_id,
-    order_no,
-    contract_tenure,
-    contract_start_date,
-    equipment_allocated_ids,
-    revenue_master_ids,
-    mechanic_ids,
-    mechanic_incharge_ids,
-    site_incharge_ids,
-    site_manager_ids,
-    store_manager_ids,
-    store_location_ids,
+    projectNo,
+    customer,
+    orderNo,
+    contractStartDate,
+    contractTenure,
+    revenueMaster,
+    equipments,
+    staff,
+    storeLocations,
   } = req.body;
+
+  const project_no = projectNo;
+  const customer_id = customer;
+  const order_no = orderNo;
+  const contract_start_date = contractStartDate;
+  const contract_tenure = contractTenure;
+  const revenue_master_ids = revenueMaster;
+  const equipment_allocated_ids = equipments;
+  const store_location_ids = storeLocations;
+  const staff_ids = staff; // renamed for clarity
 
   try {
     // 1. Duplicate project check
@@ -67,13 +75,19 @@ export const createProject = async (req, res) => {
     }
 
     // 5. Validate employee IDs
-    const allEmployeeIds = [
-      ...(mechanic_ids || []),
-      ...(mechanic_incharge_ids || []),
-      ...(site_incharge_ids || []),
-      ...(site_manager_ids || []),
-      ...(store_manager_ids || []),
-    ];
+    // 5. Validate employee IDs (staff is a combined array)
+    if (staff_ids?.length) {
+      const validEmployeeCount = await Employee.count({
+        where: { id: { [Op.in]: staff_ids } },
+      });
+
+      if (validEmployeeCount !== staff_ids.length) {
+        return res
+          .status(400)
+          .json({ message: "One or more employee IDs are invalid." });
+      }
+    }
+    const allEmployeeIds = staff_ids || [];
     if (allEmployeeIds.length > 0) {
       const validEmployeeCount = await Employee.count({
         where: { id: { [Op.in]: allEmployeeIds } },
@@ -113,28 +127,18 @@ export const createProject = async (req, res) => {
       );
     }
 
-    // 9. Create RevenueProject rows
+    // 9. Create ProjectRevenue rows
     if (revenue_master_ids?.length) {
-      await RevenueProject.bulkCreate(
-        revenue_master_ids.map((id) => ({ project_id, revenue_id: id }))
+      await ProjectRevenue.bulkCreate(
+        revenue_master_ids.map((id) => ({ project_id, revenue_master_id: id }))
       );
     }
 
     // 10. Create ProjectEmployees rows
-    const employeeMap = [
-      { ids: mechanic_ids, },
-      { ids: mechanic_incharge_ids,  },
-      { ids: site_incharge_ids,  },
-      { ids: site_manager_ids, },
-      { ids: store_manager_ids, },
-    ];
-
-    for (const { ids } of employeeMap) {
-      if (ids?.length) {
-        await ProjectEmployees.bulkCreate(
-          ids.map((employee_id) => ({ project_id, employee_id }))
-        );
-      }
+    if (staff_ids?.length) {
+      await ProjectEmployees.bulkCreate(
+        staff_ids.map((employee_id) => ({ project_id, emp_id: employee_id }))
+      );
     }
 
     // 11. Create StoreProject rows
@@ -154,11 +158,38 @@ export const createProject = async (req, res) => {
 };
 
 // Get all Projects (with revenues)
+// Get all Projects with all associated data
 export const getProjects = async (req, res) => {
   try {
-    const projects = await ProjectMaster.findAll({
-      include: [{ association: "revenues" }],
+    const projects = await Project_Master.findAll({
+      include: [
+        {
+          association: "customer", // Partner model
+          attributes: ["id", "partner_name"],
+        },
+        {
+          association: "equipments", // Equipment model
+          attributes: ["id", "equipment_name"],
+          through: { attributes: [] }, // exclude junction table data
+        },
+        {
+          association: "staff", // Employee model
+          attributes: ["id", "emp_name"],
+          through: { attributes: [] },
+        },
+        {
+          association: "revenues", // RevenueMaster model
+          attributes: ["id", "revenue_code", "revenue_description"],
+          through: { attributes: [] },
+        },
+        {
+          association: "store_locations", // StoreLocation model
+          attributes: ["id", "store_code"],
+          through: { attributes: [] },
+        },
+      ],
     });
+
     return res.status(200).json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -261,6 +292,90 @@ export const deleteProject = async (req, res) => {
     return res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
     console.error("Error deleting project:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+//Bulk upload
+// Controller to handle upload and processing
+export const bulkUploadProjects = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Parse uploaded Excel file from buffer
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Get rows as arrays (header: 1)
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel sheet is empty" });
+    }
+
+    // Skip header row if first cell starts with "PRJ-"
+    let dataRows = rows;
+   
+
+
+    const results = [];
+
+    // Process each row
+    for (const row of dataRows) {
+      // Destructure row data
+      const [
+        projectNo,
+        customer,
+        orderNo,
+        contractStartDate,
+        contractTenure,
+        revenuemasterStr,
+        equipmentsStr,
+        staffStr,
+        storelocationsStr,
+      ] = row;
+
+      if (!projectNo) continue; // skip empty row
+
+      // Convert comma-separated strings to arrays (trim spaces)
+      const revenue_master_ids = revenuemasterStr
+        ? revenuemasterStr.split(",").map((r) => r.trim())
+        : [];
+      const equipment_allocated_ids = equipmentsStr
+        ? equipmentsStr.split(",").map((e) => e.trim())
+        : [];
+      const staff_ids = staffStr
+        ? staffStr.split(",").map((s) => s.trim())
+        : [];
+      const store_location_ids = storelocationsStr
+        ? storelocationsStr.split(",").map((s) => s.trim())
+        : [];
+
+      // Process one project row and push results
+      const result = await processProjectRow({
+        projectNo,
+        customer,
+        orderNo,
+        contractStartDate,
+        contractTenure,
+        revenue_master_ids,
+        equipment_allocated_ids,
+        staff_ids,
+        store_location_ids,
+      });
+
+      results.push(result);
+    }
+
+    return res.status(201).json({
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Bulk upload error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

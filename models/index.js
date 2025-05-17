@@ -12,12 +12,12 @@ import EmpPositions from "./emp_position.model.js";
 import EmployeeModel from "./employees.model.js";
 import EquipProjectModel from "./junctionTable/EquipmentProject.js";
 import EmpProjectModel from "./junctionTable/ProjectEmployees.js";
-import RevenueProjectModel from "./junctionTable/ProjectRevenue.js";
+import ProjectRevenueModel from "./junctionTable/ProjectRevenue.js";
 import StoreProjectModel from "./junctionTable/ProjectStore.model.js";
 
-// Initialize models
-const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
+//Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
+const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
 const RevenueMaster = RevenueMasterModel(sequelize);
 const JobMaster = JobMasterModel(sequelize);
 const Shift = ShiftModel(sequelize);
@@ -29,7 +29,7 @@ const EmpPositionsModel = EmpPositions(sequelize);
 const Employee = EmployeeModel(sequelize);
 const EquipmentProject = EquipProjectModel(sequelize);
 const ProjectEmployees = EmpProjectModel(sequelize);
-const RevenueProject = RevenueProjectModel(sequelize);
+const ProjectRevenue = ProjectRevenueModel(sequelize);
 const StoreProject = StoreProjectModel(sequelize);
 const models = {
   Partner,
@@ -45,14 +45,21 @@ const models = {
   Employee,
   EquipmentProject,
   ProjectEmployees,
-  RevenueProject,
-  StoreProject
+  ProjectRevenue,
+  StoreProject,
 };
+
+// Step 2: Call associations AFTER all models are initialized
+Object.values(models).forEach((model) => {
+  if (model.associate) {
+    model.associate(models);
+  }
+});
 
 // Sync the models
 const syncModels = async () => {
   try {
-    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
     // await sequelize.sync()
     console.log("✅ All models were synced.");
   } catch (err) {

@@ -19,9 +19,9 @@ export default (sequelize) => {
     }
   );
   StoreModel.associate = (models) => {
-    StoreModel.belongsToMany(models.ProjectMaster, {
-      through: "ProjectStoreLocation",
-      foreignKey: "store_location_id",
+    StoreModel.belongsToMany(models.Project_Master, {
+      through: models.StoreProject,
+      foreignKey: "store_id",
       otherKey: "project_id",
       as: "projects",
     });

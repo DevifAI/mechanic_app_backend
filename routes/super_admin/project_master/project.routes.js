@@ -1,5 +1,6 @@
 import express from "express";
-import { createProject, deleteProject, getProjectById, getProjects, updateProject } from "../../../controllers/project_master/project_master.controller.js";
+import { bulkUploadProjects, createProject, deleteProject, getProjectById, getProjects, updateProject } from "../../../controllers/project_master/project_master.controller.js";
+import upload from "../../../middleware/bulkUpload.js";
 
 
 const router = express.Router();
@@ -10,5 +11,5 @@ router.get("/getAll", getProjects);
 router.get("/get/:id", getProjectById);
 router.patch("/update/:id", updateProject);
 router.delete("/delete/:id", deleteProject);
-
+router.post("/bulk-upload", upload.single("file"), bulkUploadProjects);
 export default router; // Ensure this is exported correctly

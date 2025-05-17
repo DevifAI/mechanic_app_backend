@@ -46,13 +46,20 @@ export default (sequelize) => {
       as: "role",
     });
 
+    EmployeeModel.belongsToMany(models.Project_Master, {
+      through: models.ProjectEmployees,
+      foreignKey: "emp_id", // 👈 match the column in the join table
+      otherKey: "project_id",
+      as: "projects",
+    });
+
     EmployeeModel.belongsTo(models.Shift, {
       foreignKey: "shiftcode", // This matches the field in EmployeeModel
       targetKey: "shift_code", // This matches the field in ShiftModel
       as: "shift",
     });
 
-    EmployeeModel.belongsTo(models.EmpPositions, {
+    EmployeeModel.belongsTo(models.EmpPositionsModel, {
       foreignKey: "position",
       as: "employeePosition",
     });

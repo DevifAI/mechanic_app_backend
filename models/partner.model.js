@@ -22,14 +22,15 @@ export default (sequelize) => {
   );
 
   PartnerModel.associate = (models) => {
-  PartnerModel.hasMany(models.ProjectMaster, {
-    foreignKey: "customer_id",
-    as: "projects",
-    scope: {
-      isCustomer: true,
-    },
-  });
-};
+    PartnerModel.hasMany(models.Project_Master, {
+      // ✅ match the key in models/index.js
+      foreignKey: "customer_id",
+      as: "projects",
+      scope: {
+        isCustomer: true,
+      },
+    });
+  };
 
   return PartnerModel;
 };

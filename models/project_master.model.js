@@ -37,8 +37,9 @@ export default (sequelize) => {
 
     // Staff relationship through ProjectStaff
     ProjectMasterModel.belongsToMany(models.Employee, {
-      through: models.ProjectStaff,
+      through: models.ProjectEmployees,
       foreignKey: "project_id",
+      otherKey: "emp_id", // 👈 This is the fix
       as: "staff",
     });
     // New revenue association
@@ -47,10 +48,10 @@ export default (sequelize) => {
       foreignKey: "project_id",
       as: "revenues",
     });
-    ProjectMasterModel.belongsToMany(models.StoreLocation, {
-      through: "ProjectStoreLocation",
+    ProjectMasterModel.belongsToMany(models.Store, {
+      through: models.StoreProject,
       foreignKey: "project_id",
-      otherKey: "store_location_id",
+      otherKey: "store_id",
       as: "store_locations",
     });
   };

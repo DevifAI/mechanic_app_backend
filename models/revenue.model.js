@@ -19,7 +19,7 @@ export default (sequelize) => {
     }
   );
   RevenueMasterModel.associate = (models) => {
-    RevenueMasterModel.belongsToMany(models.ProjectMaster, {
+    RevenueMasterModel.belongsToMany(models.Project_Master , {
       through: models.ProjectRevenue,
       foreignKey: "revenue_master_id",
       as: "projects",

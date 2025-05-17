@@ -14,7 +14,7 @@ export default (sequelize) => {
         allowNull: false,
         references: { model: "project_master", key: "id" },
       },
-      employee_id: {
+      emp_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: { model: "employee", key: "id" },

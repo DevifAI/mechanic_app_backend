@@ -1,5 +1,5 @@
 import { models } from "../../models/index.js";
-const { Equipment, EquipmentGroup } = models;
+const { Equipment, EquipmentGroup, EquipmentProject } = models;
 
 // Create Equipment
 export const createEquipment = async (req, res) => {
@@ -18,12 +18,21 @@ export const createEquipment = async (req, res) => {
   } = req.body;
 
   try {
-    // 1. Check if the equipment_group_id is provided and exists
-    if (equipment_group_id) {
-      const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
-      if (!groupExists) {
-        return res.status(404).json({ message: "Equipment group not found" });
-      }
+    // Validate required fields
+    if (
+      !equipment_name ||
+      !equipment_sr_no ||
+      !purchase_date ||
+      !oem ||
+      !equipment_group_id
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Check if the equipment_group_id exists
+    const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
+    if (!groupExists) {
+      return res.status(404).json({ message: "Equipment group not found" });
     }
 
     const newEquipment = await Equipment.create({
@@ -50,6 +59,9 @@ export const createEquipment = async (req, res) => {
 // Get All Equipment
 export const getAllEquipment = async (req, res) => {
   try {
+    // const equipments = await Equipment.findAll({
+    //   include: [{ model: EquipmentGroup, as: "equipment_group" }]
+    // });
     const equipments = await Equipment.findAll();
     return res.status(200).json(equipments);
   } catch (error) {
@@ -63,6 +75,9 @@ export const getEquipmentById = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // const equipment = await Equipment.findByPk(id, {
+    //   include: [{ model: EquipmentGroup, as: "equipment_group" }]
+    // });
     const equipment = await Equipment.findByPk(id);
 
     if (!equipment) {
@@ -99,6 +114,14 @@ export const updateEquipment = async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" });
     }
 
+    // If updating group, check existence
+    if (equipment_group_id) {
+      const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
+      if (!groupExists) {
+        return res.status(404).json({ message: "Equipment group not found" });
+      }
+    }
+
     await equipment.update({
       equipment_name,
       equipment_sr_no,
@@ -130,10 +153,13 @@ export const deleteEquipment = async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" });
     }
 
+    // Remove all references from EquipmentProject first
+    await EquipmentProject.destroy({ where: { equipment_id: id } });
+
     await equipment.destroy();
     return res.status(200).json({ message: "Equipment deleted successfully" });
   } catch (error) {
-    console.error("Error deleting equipment:", error);
+    console.error("Error deleting equipment:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

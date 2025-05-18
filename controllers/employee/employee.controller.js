@@ -149,7 +149,7 @@ export const deleteEmployee = async (req, res) => {
     await employee.destroy();
     return res.status(200).json({ message: "Employee deleted successfully" });
   } catch (error) {
-    console.error("Error deleting employee:", error);
+    console.error("Error deleting employee:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

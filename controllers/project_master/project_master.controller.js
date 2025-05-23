@@ -157,7 +157,6 @@ export const createProject = async (req, res) => {
   }
 };
 
-// Get all Projects (with revenues)
 // Get all Projects with all associated data
 export const getProjects = async (req, res) => {
   try {
@@ -197,17 +196,44 @@ export const getProjects = async (req, res) => {
   }
 };
 
-// Get Project by ID (with revenues)
+// Get Project by ID (with all associations)
 export const getProjectById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const project = await ProjectMaster.findByPk(id, {
-      include: [{ association: "revenues" }],
+    const project = await Project_Master.findByPk(id, {
+      include: [
+        {
+          association: "customer", // Partner model
+          attributes: ["id", "partner_name"],
+        },
+        {
+          association: "equipments", // Equipment model
+          attributes: ["id", "equipment_name"],
+          through: { attributes: [] }, // exclude junction table data
+        },
+        {
+          association: "staff", // Employee model
+          attributes: ["id", "emp_name"],
+          through: { attributes: [] },
+        },
+        {
+          association: "revenues", // RevenueMaster model
+          attributes: ["id", "revenue_code", "revenue_description"],
+          through: { attributes: [] },
+        },
+        {
+          association: "store_locations", // Store model
+          attributes: ["id", "store_code", "store_name"],
+          through: { attributes: [] },
+        },
+      ],
     });
+
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+
     return res.status(200).json(project);
   } catch (error) {
     console.error("Error fetching project:", error);
@@ -215,9 +241,12 @@ export const getProjectById = async (req, res) => {
   }
 };
 
+
 // Update Project
 export const updateProject = async (req, res) => {
   const { id } = req.params;
+  console.log("Update Project ID:", id);
+  console.log("Update Project Body:", req.body);
   const {
     project_no,
     customer_id,
@@ -235,6 +264,7 @@ export const updateProject = async (req, res) => {
 
   try {
     const partner = await Partner.findOne({ where: { id: customer_id } });
+    console.log("Partner found:", partner);
     if (!partner || partner.isCustomer !== false) {
       return res.status(400).json({
         message:
@@ -242,7 +272,7 @@ export const updateProject = async (req, res) => {
       });
     }
 
-    const project = await ProjectMaster.findByPk(id);
+    const project = await Project_Master.findByPk(id);
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -267,7 +297,7 @@ export const updateProject = async (req, res) => {
     }
 
     // Optionally, reload with associations
-    const result = await ProjectMaster.findByPk(project.id, {
+    const result = await Project_Master.findByPk(project.id, {
       include: [{ association: "revenues" }],
     });
 
@@ -283,7 +313,7 @@ export const deleteProject = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const project = await ProjectMaster.findByPk(id);
+    const project = await Project_Master.findByPk(id);
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }

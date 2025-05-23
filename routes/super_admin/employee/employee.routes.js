@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/create", createEmployee);
 router.get("/getAll", getAllEmployees);
 router.get("/get/:id", getEmployeeById);
-router.patch("/get/:id", updateEmployee);
+router.patch("/update/:id", updateEmployee);
 router.delete("/delete/:id", deleteEmployee);
 router.post("/bulk-upload", upload.single("file"), bulkUploadEmployees);
 

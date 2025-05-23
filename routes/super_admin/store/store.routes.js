@@ -19,7 +19,7 @@ router.get("/getAll", getStores);
 router.get("/get/:id", getStoreById);
 
 // PUT /store/update/:id
-router.put("/update/:id", updateStore);
+router.patch("/update/:id", updateStore);
 
 // DELETE /store/delete/:id
 router.delete("/delete/:id", deleteStore);

@@ -124,6 +124,8 @@ export const updateEmployee = async (req, res) => {
     const { id } = req.params;
 
     const employee = await Employee.findByPk(id);
+
+    console.log("Employee found:", req.body);
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }

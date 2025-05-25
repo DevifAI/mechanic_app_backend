@@ -1,0 +1,18 @@
+import express from 'express';
+import {
+  createConsumptionSheet,
+  getAllConsumptionSheets,
+  getConsumptionSheetById,
+  updateConsumptionSheet,
+  deleteConsumptionSheet,
+} from '../../../controllers/Mechanic/consumption_sheet/consumption_sheet.controller.js';
+
+const router = express.Router();
+
+router.post('/', createConsumptionSheet);
+router.get('/', getAllConsumptionSheets);
+router.get('/:id', getConsumptionSheetById);
+router.put('/:id', updateConsumptionSheet);
+router.delete('/:id', deleteConsumptionSheet);
+
+export default router;

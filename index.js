@@ -23,6 +23,7 @@ import ConsumableItemsRoutes  from "./routes/super_admin/consumableItems/consuma
 import AccountRoutes  from "./routes/super_admin/account/account.routes.js"; // Import uom routes
 import diselRequisitionRoutes  from "./routes/Mechanic/diesel_requisitions/diesel_requisition.routes.js"; // Import uom routes
 import dieselReceiptRoutes  from "./routes/Mechanic/diesel_reciept/diesel_reciept.routes.js"; // Import uom routes
+import consumptionSheetRoutes  from "./routes/Mechanic/consumption_sheet/consumption_sheet.routes.js"; // Import uom routes
 import { syncModels } from "./models/index.js";
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.use("/api/master/super/admin/consumableitems", ConsumableItemsRoutes);
 app.use("/api/master/super/admin/account", AccountRoutes);
 app.use("/api/master/mechanic/diselrequisition", diselRequisitionRoutes);
 app.use("/api/master/mechanic/diselreciept", dieselReceiptRoutes);
+app.use("/api/master/mechanic/consumptionsheet", consumptionSheetRoutes);
 
 // Initialize database connection
 connection();

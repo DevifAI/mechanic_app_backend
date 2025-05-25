@@ -23,6 +23,7 @@ import { OEMModel } from "./oem.model.js";
 import { AccountGroupModel } from "./account_group.model.js";
 import { AccountModel } from "./account.model.js";
 import { DieselReceiptModel } from "./diesel_reciept.model.js";
+import { ConsumptionSheetModel } from "./consumption_sheet.model.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -49,6 +50,7 @@ const OEM = OEMModel(sequelize)
 const AccountGroup = AccountGroupModel(sequelize)
 const Account = AccountModel(sequelize)
 const DieselReceipt = DieselReceiptModel(sequelize)
+const ConsumptionSheet = ConsumptionSheetModel(sequelize)
 const models = {
   Partner,
   Project_Master,
@@ -73,9 +75,8 @@ const models = {
   OEM,
   AccountGroup,
   Account,
-  DieselReceipt
-
-
+  DieselReceipt,
+  ConsumptionSheet
 };
 
 // Step 2: Call associations AFTER all models are initialized
@@ -88,8 +89,8 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
-    // await sequelize.sync()
+    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    await sequelize.sync()
     console.log("✅ All models were synced.");
   } catch (err) {
     console.error("❌ Sync failed:", err);

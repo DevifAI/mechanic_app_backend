@@ -60,7 +60,6 @@ export const getAllConsumptionSheets = async (req, res) => {
         { model: Equipment, as: 'equipmentData' },
         { model: ConsumableItem, as: 'itemData' },
         { model: UOM, as: 'uomData' },
-        { model: UOM, as: 'readingMeterUOMData' },
         { model: Employee, as: 'createdByUser' },
         { model: Organisations, as: 'organisation' },
       ],

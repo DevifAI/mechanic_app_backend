@@ -89,8 +89,8 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
-    await sequelize.sync()
+    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync()
     console.log("✅ All models were synced.");
   } catch (err) {
     console.error("❌ Sync failed:", err);

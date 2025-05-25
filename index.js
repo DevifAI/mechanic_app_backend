@@ -14,6 +14,15 @@ import shiftRoutes from "./routes/super_admin/shift/shift.routes.js";
 import empPositionRoutes from "./routes/super_admin/empPosition/empPosition.routes.js";
 import employeeRoutes from "./routes/super_admin/employee/employee.routes.js";
 import storeRoutes from "./routes/super_admin/store/store.routes.js"; // Import store routes
+import orgRoutes from "./routes/super_admin/organisation/organisation.routes.js"; // Import organisations routes
+import UOMRoutes from "./routes/super_admin/uom/uom.routes.js"; // Import uom routes
+import ItemGroupRoutes from "./routes/super_admin/itemGroup/itemGroup.routes.js"; // Import uom routes
+import OEMRoutes  from "./routes/super_admin/oem/oem.routes.js"; // Import uom routes
+import AccountGroupRoutes  from "./routes/super_admin/account_group/account_group.routes.js"; // Import uom routes
+import ConsumableItemsRoutes  from "./routes/super_admin/consumableItems/consumable_items.routes.js"; // Import uom routes
+import AccountRoutes  from "./routes/super_admin/account/account.routes.js"; // Import uom routes
+import diselRequisitionRoutes  from "./routes/Mechanic/diesel_requisitions/diesel_requisition.routes.js"; // Import uom routes
+import dieselReceiptRoutes  from "./routes/Mechanic/diesel_reciept/diesel_reciept.routes.js"; // Import uom routes
 import { syncModels } from "./models/index.js";
 
 dotenv.config();
@@ -34,6 +43,15 @@ app.use("/api/master/super/admin/shift", shiftRoutes);
 app.use("/api/master/super/admin/empPosition", empPositionRoutes);
 app.use("/api/master/super/admin/employee", employeeRoutes);
 app.use("/api/master/super/admin/store", storeRoutes);
+app.use("/api/master/super/admin/organisations", orgRoutes);
+app.use("/api/master/super/admin/uom", UOMRoutes);
+app.use("/api/master/super/admin/itemgroup", ItemGroupRoutes);
+app.use("/api/master/super/admin/oem", OEMRoutes);
+app.use("/api/master/super/admin/accountgroup", AccountGroupRoutes);
+app.use("/api/master/super/admin/consumableitems", ConsumableItemsRoutes);
+app.use("/api/master/super/admin/account", AccountRoutes);
+app.use("/api/master/mechanic/diselrequisition", diselRequisitionRoutes);
+app.use("/api/master/mechanic/diselreciept", dieselReceiptRoutes);
 
 // Initialize database connection
 connection();

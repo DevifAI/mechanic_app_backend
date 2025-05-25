@@ -1,22 +1,22 @@
 import { DataTypes } from "sequelize";
 
-export const AccountGroupModel = (sequelize) => {
-  const AccountGroup = sequelize.define(
-    "account_group",
+export const OEMModel = (sequelize) => {
+  const OEM = sequelize.define(
+    "oem",
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      account_group_code: {
+      oem_name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
-      account_group_name: {
+      oem_code: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true, // Enforces uniqueness of code
       },
     },
     {
@@ -25,12 +25,12 @@ export const AccountGroupModel = (sequelize) => {
     }
   );
 
-  AccountGroup.associate = (models) => {
-    AccountGroup.hasMany(models.Account, {
-      foreignKey: "account_group",
-      as: "accounts",
+  OEM.associate = (models) => {
+    OEM.hasMany(models.ConsumableItem, {
+      foreignKey: "item_make",
+      as: "items",
     });
   };
 
-  return AccountGroup;
+  return OEM;
 };

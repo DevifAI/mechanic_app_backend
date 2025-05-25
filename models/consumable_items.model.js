@@ -12,30 +12,66 @@ export const ConsumableItemsModel = (sequelize) => {
       item_code: { type: DataTypes.STRING, allowNull: false },
       item_name: { type: DataTypes.STRING, allowNull: false },
       item_description: { type: DataTypes.TEXT, allowNull: false },
-      product_type: { type: DataTypes.STRING, allowNull: false },
-      item_make: { type: DataTypes.STRING, allowNull: false },
+
+      product_type: {
+        type: DataTypes.ENUM("Goods", "Services"),
+        allowNull: false,
+      },
+
+      item_group_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "item_group", // table name
+          key: "id",
+        },
+      },
+
+      item_make: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "oem", // table name
+          key: "id",
+        },
+      },
+
       unit_of_measurement: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "uom", // This references the table name
+          model: "uom", // table name
           key: "id",
         },
       },
+
       item_qty_in_hand: { type: DataTypes.INTEGER, allowNull: false },
-      account_code_in: {
-        type: DataTypes.UUID, // Changed from STRING to UUID
+
+      item_avg_cost: { type: DataTypes.FLOAT, allowNull: false },
+
+      inventory_account_code: {
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "account",
+          model: "account", // table name
           key: "id",
         },
       },
-      account_code_out: {
-        type: DataTypes.UUID, // Changed from STRING to UUID
+
+      expense_account_code: {
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "account",
+          model: "account", // table name
+          key: "id",
+        },
+      },
+
+      revenue_account_code: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "revenue_master", // table name
           key: "id",
         },
       },
@@ -47,20 +83,39 @@ export const ConsumableItemsModel = (sequelize) => {
   );
 
   ConsumableItem.associate = (models) => {
-    // Link to AccountModel via account_code
-    ConsumableItem.belongsTo(models.AccountModel, {
-      foreignKey: "account_code_in",
-      as: "accountIn",
-    });
-    ConsumableItem.belongsTo(models.AccountModel, {
-      foreignKey: "account_code_out",
-      as: "accountOut",
+    // Item group relation
+    ConsumableItem.belongsTo(models.ItemGroup, {
+      foreignKey: "item_group_id",
+      as: "itemGroup",
     });
 
-    // Link to UOM model
-    ConsumableItem.belongsTo(models.UOMModel, {
+    // OEM relation
+    ConsumableItem.belongsTo(models.OEM, {
+      foreignKey: "item_make",
+      as: "oem",
+    });
+
+    // UOM relation
+    ConsumableItem.belongsTo(models.UOM, {
       foreignKey: "unit_of_measurement",
       as: "uom",
+    });
+
+    // Account code relations
+    ConsumableItem.belongsTo(models.Account, {
+      foreignKey: "inventory_account_code",
+      as: "inventoryAccount",
+    });
+
+    ConsumableItem.belongsTo(models.Account, {
+      foreignKey: "expense_account_code",
+      as: "expenseAccount",
+    });
+
+    // Revenue master relation
+    ConsumableItem.belongsTo(models.RevenueMaster, {
+      foreignKey: "revenue_account_code",
+      as: "revenueAccount",
     });
   };
 

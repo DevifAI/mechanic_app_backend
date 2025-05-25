@@ -9,14 +9,20 @@ export const AccountModel = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      account_code: { type: DataTypes.STRING, allowNull: false },
-      account_name: { type: DataTypes.STRING, allowNull: false },
+      account_code: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      account_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       account_group: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "account_group", // References the account_group table
-          key: "id", // References the id field in account_group
+          model: "account_group", // table name
+          key: "id",
         },
       },
     },
@@ -27,17 +33,19 @@ export const AccountModel = (sequelize) => {
   );
 
   Account.associate = (models) => {
-    Account.hasMany(models.ConsumableItemsModel, {
-      foreignKey: "account_code_in",
-      as: "incomingItems",
-    });
-    Account.hasMany(models.ConsumableItemsModel, {
-      foreignKey: "account_code_out",
-      as: "outgoingItems",
-    });
-    Account.belongsTo(models.AccountGroupModel, {
+    Account.belongsTo(models.Account, {
       foreignKey: "account_group",
       as: "group",
+    });
+
+    Account.hasMany(models.ConsumableItem, {
+      foreignKey: "inventory_account_code",
+      as: "inventoryItems",
+    });
+
+    Account.hasMany(models.ConsumableItem, {
+      foreignKey: "expense_account_code",
+      as: "expenseItems",
     });
   };
 

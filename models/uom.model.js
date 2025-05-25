@@ -1,3 +1,4 @@
+import { DataTypes } from "sequelize";
 export const UOMModel = (sequelize) => {
   const UOMModel = sequelize.define(
     "uom",
@@ -16,12 +17,7 @@ export const UOMModel = (sequelize) => {
     }
   );
 
-  UOMModel.associate = (models) => {
-    UOMModel.hasMany(models.ConsumableItemsModel, {
-      foreignKey: "unit_of_measurement", // This should match the field in ConsumableItemsModel
-      as: "items",
-    });
-  };
+  
 
   return UOMModel;
 };

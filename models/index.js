@@ -14,6 +14,15 @@ import EquipProjectModel from "./junctionTable/EquipmentProject.js";
 import EmpProjectModel from "./junctionTable/ProjectEmployees.js";
 import ProjectRevenueModel from "./junctionTable/ProjectRevenue.js";
 import StoreProjectModel from "./junctionTable/ProjectStore.model.js";
+import { OrganisationModel } from "./organisation.model.js";
+import { UOMModel } from "./uom.model.js";
+import { DieselRequisitionModel } from "./diesel_requisition.model.js";
+import { ConsumableItemsModel } from "./consumable_items.model.js";
+import { ItemGroupModel } from "./item_group.model.js";
+import { OEMModel } from "./oem.model.js";
+import { AccountGroupModel } from "./account_group.model.js";
+import { AccountModel } from "./account.model.js";
+import { DieselReceiptModel } from "./diesel_reciept.model.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -31,6 +40,15 @@ const EquipmentProject = EquipProjectModel(sequelize);
 const ProjectEmployees = EmpProjectModel(sequelize);
 const ProjectRevenue = ProjectRevenueModel(sequelize);
 const StoreProject = StoreProjectModel(sequelize);
+const Organisations = OrganisationModel(sequelize);
+const UOM = UOMModel(sequelize)
+const DieselRequisitions = DieselRequisitionModel(sequelize)
+const ConsumableItem = ConsumableItemsModel(sequelize)
+const ItemGroup = ItemGroupModel(sequelize)
+const OEM = OEMModel(sequelize)
+const AccountGroup = AccountGroupModel(sequelize)
+const Account = AccountModel(sequelize)
+const DieselReceipt = DieselReceiptModel(sequelize)
 const models = {
   Partner,
   Project_Master,
@@ -47,6 +65,17 @@ const models = {
   ProjectEmployees,
   ProjectRevenue,
   StoreProject,
+  Organisations,
+  UOM,
+  DieselRequisitions,
+  ConsumableItem,
+  ItemGroup,
+  OEM,
+  AccountGroup,
+  Account,
+  DieselReceipt
+
+
 };
 
 // Step 2: Call associations AFTER all models are initialized

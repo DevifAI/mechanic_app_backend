@@ -7,7 +7,7 @@ export const createConsumableItem = async (req, res) => {
     const item = await ConsumableItem.create(req.body);
     return res.status(201).json(item);
   } catch (error) {
-    console.error("Error creating item:", error);
+    console.error("Error creating item:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

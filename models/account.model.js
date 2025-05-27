@@ -33,7 +33,7 @@ export const AccountModel = (sequelize) => {
   );
 
   Account.associate = (models) => {
-    Account.belongsTo(models.Account, {
+    Account.belongsTo(models.AccountGroup, {
       foreignKey: "account_group",
       as: "group",
     });

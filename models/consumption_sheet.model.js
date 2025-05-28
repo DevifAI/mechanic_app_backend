@@ -1,3 +1,4 @@
+
 import { DataTypes } from 'sequelize';
 
 export const ConsumptionSheetModel = (sequelize) => {
@@ -12,34 +13,6 @@ export const ConsumptionSheetModel = (sequelize) => {
       date: {
         type: DataTypes.DATE,
         allowNull: false,
-      },
-      equipment: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      item: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      uom_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      notes: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      reading_meter_uom: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      reading_meter_number: {
-        type: DataTypes.STRING,
-        allowNull: true,
       },
       createdBy: {
         type: DataTypes.UUID,
@@ -68,23 +41,7 @@ export const ConsumptionSheetModel = (sequelize) => {
     }
   );
 
-  // Associations
   ConsumptionSheet.associate = (models) => {
-    ConsumptionSheet.belongsTo(models.Equipment, {
-      foreignKey: 'equipment',
-      as: 'equipmentData',
-    });
-
-    ConsumptionSheet.belongsTo(models.ConsumableItem, {
-      foreignKey: 'item',
-      as: 'itemData',
-    });
-
-    ConsumptionSheet.belongsTo(models.UOM, {
-      foreignKey: 'uom_id',
-      as: 'uomData',
-    });
-
     ConsumptionSheet.belongsTo(models.Employee, {
       foreignKey: 'createdBy',
       as: 'createdByUser',
@@ -93,6 +50,13 @@ export const ConsumptionSheetModel = (sequelize) => {
     ConsumptionSheet.belongsTo(models.Organisations, {
       foreignKey: 'org_id',
       as: 'organisation',
+    });
+
+    // new: one-to-many relation
+    ConsumptionSheet.hasMany(models.ConsumptionSheetItem, {
+      foreignKey: 'consumption_sheet_id',
+      as: 'items',
+      onDelete: 'CASCADE',
     });
   };
 

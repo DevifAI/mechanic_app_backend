@@ -14,33 +14,10 @@ export const DieselRequisitionModel = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      item: {
-        type: DataTypes.UUID,
-        references: {
-          model: 'consumable_items', // Adjust table name if needed
-          key: 'id',
-        },
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      UOM: {
-        type: DataTypes.UUID,
-        references: {
-          model: 'uom', // Adjust table name if needed
-          key: 'id',
-        },
-        allowNull: false,
-      },
-      Notes: {
-        type: DataTypes.STRING(255),
-      },
       createdBy: {
         type: DataTypes.UUID,
         references: {
-          model: 'employee', // Adjust table name if needed
+          model: 'employee',
           key: 'id',
         },
         allowNull: false,
@@ -73,27 +50,22 @@ export const DieselRequisitionModel = (sequelize) => {
   );
 
   DieselRequisition.associate = (models) => {
-  DieselRequisition.belongsTo(models.ConsumableItem, {
-    foreignKey: 'item',
-    as: 'consumableItem',
-  });
+    DieselRequisition.belongsTo(models.Employee, {
+      foreignKey: 'createdBy',
+      as: 'createdByEmployee',
+    });
 
-  DieselRequisition.belongsTo(models.UOM, {
-    foreignKey: 'UOM',
-    as: 'unitOfMeasurement',
-  });
+    DieselRequisition.belongsTo(models.Organisations, {
+      foreignKey: 'org_id',
+      as: 'organisation',
+    });
 
-  DieselRequisition.belongsTo(models.Employee, {
-    foreignKey: 'createdBy',
-    as: 'createdByEmployee',
-  });
-
-  DieselRequisition.belongsTo(models.Organisations, {
-    foreignKey: 'org_id',
-    as: 'organisation',
-  });
-};
-
+    // 👇 Association with the items table
+    DieselRequisition.hasMany(models.DieselRequisitionItems, {
+      foreignKey: 'requisition_id',
+      as: 'items',
+    });
+  };
 
   return DieselRequisition;
 };

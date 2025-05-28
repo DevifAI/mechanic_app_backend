@@ -1,8 +1,13 @@
-
-
-import { models } from "../../../models/index.js"; // adjust path if needed
-const { DieselRequisitions, ConsumableItem,UOM,OEM,Employee, Organisations } = models;
-
+import { models } from "../../../models/index.js";
+const {
+  DieselRequisitions,
+  DieselRequisitionItems,
+  ConsumableItem,
+  UOM,
+  OEM,
+  Employee,
+  Organisations,
+} = models;
 
 // Create a new diesel requisition
 export const createDieselRequisition = async (req, res) => {
@@ -14,38 +19,41 @@ export const createDieselRequisition = async (req, res) => {
       is_approve_mic = false,
       is_approve_sic = false,
       is_approve_pm = false,
-      org_id
+      org_id,
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Items array is required." });
     }
 
-    const createdRecords = [];
+    const requisition = await DieselRequisitions.create({
+      date,
+      createdBy,
+      is_approve_mic,
+      is_approve_sic,
+      is_approve_pm,
+      org_id,
+    });
 
-    for (const entry of items) {
-      const newEntry = await DieselRequisitions.create({
-        date,
-        item: entry.item,
-        quantity: entry.quantity,
-        UOM: entry.UOM,
-        Notes: entry.Notes || "",
-        createdBy,
-        is_approve_mic,
-        is_approve_sic,
-        is_approve_pm,
-        org_id
-      });
-
-      createdRecords.push(newEntry);
-    }
+    const createdItems = await Promise.all(
+      items.map((item) =>
+        DieselRequisitionItems.create({
+          requisition_id: requisition.id,
+          item: item.item,
+          quantity: item.quantity,
+          UOM: item.UOM,
+          Notes: item.Notes || "",
+        })
+      )
+    );
 
     return res.status(201).json({
-      message: "Diesel requisitions created successfully",
-      data: createdRecords,
+      message: "Diesel requisition created successfully",
+      requisition,
+      items: createdItems,
     });
   } catch (error) {
-    console.error("Error creating diesel requisitions:", error);
+    console.error("Error creating diesel requisition:", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
@@ -56,79 +64,168 @@ export const getAllDieselRequisitions = async (req, res) => {
     const requisitions = await DieselRequisitions.findAll({
       include: [
         {
-          model: ConsumableItem,
-          as: 'consumableItem',
-          attributes: ['id', 'item_name', 'item_description'], // adjust fields
-        },
-        {
-          model: UOM,
-          as: 'unitOfMeasurement',
-          attributes: ['id', 'unit_name', 'unit_code'], // adjust fields
+          model: DieselRequisitionItems,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
         },
         {
           model: Employee,
-          as: 'createdByEmployee',
-          attributes: ['id', 'emp_name'], // adjust fields
+          as: "createdByEmployee",
+          attributes: ["id", "emp_name"],
         },
         {
           model: Organisations,
-          as: 'organisation',
-          attributes: ['id', 'org_name'], // adjust fields
+          as: "organisation",
+          attributes: ["id", "org_name"],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [["createdAt", "DESC"]],
     });
 
     return res.status(200).json(requisitions);
   } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: 'Failed to retrieve requisitions', error: error.message });
+    console.error("Error retrieving diesel requisitions:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve requisitions",
+      error: error.message,
+    });
   }
 };
-
 
 // Get a single diesel requisition by ID
 export const getDieselRequisitionById = async (req, res) => {
   try {
-    const requisition = await DieselRequisitions.findByPk(req.params.id);
+    const requisition = await DieselRequisitions.findByPk(req.params.id, {
+      include: [
+        {
+          model: DieselRequisitionItems,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Employee,
+          as: "createdByEmployee",
+          attributes: ["id", "emp_name"],
+        },
+        {
+          model: Organisations,
+          as: "organisation",
+          attributes: ["id", "org_name"],
+        },
+      ],
+    });
+
     if (!requisition) {
       return res.status(404).json({ message: "Requisition not found" });
     }
+
     return res.status(200).json(requisition);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to retrieve requisition", error: error.message });
+    return res.status(500).json({
+      message: "Failed to retrieve requisition",
+      error: error.message,
+    });
   }
 };
 
-// Update a diesel requisition
+// Update a diesel requisition (optionally update items too)
 export const updateDieselRequisition = async (req, res) => {
   try {
-    const [updated] = await DieselRequisitions.update(req.body, {
+    const { items, ...updateData } = req.body;
+
+    const [updated] = await DieselRequisitions.update(updateData, {
       where: { id: req.params.id },
     });
+
     if (!updated) {
-      return res.status(404).json({ message: "Requisition not found or no changes made" });
+      return res
+        .status(404)
+        .json({ message: "Requisition not found or no changes made" });
     }
-    const updatedRequisition = await DieselRequisitions.findByPk(req.params.id);
+
+    if (items && Array.isArray(items)) {
+      await DieselRequisitionItems.destroy({
+        where: { requisition_id: req.params.id },
+      });
+
+      await Promise.all(
+        items.map((item) =>
+          DieselRequisitionItems.create({
+            requisition_id: req.params.id,
+            item: item.item,
+            quantity: item.quantity,
+            UOM: item.UOM,
+            Notes: item.Notes || "",
+          })
+        )
+      );
+    }
+
+    const updatedRequisition = await DieselRequisitions.findByPk(
+      req.params.id,
+      {
+        include: [
+          {
+            model: DieselRequisitionItems,
+            as: "items",
+          },
+        ],
+      }
+    );
+
     return res.status(200).json(updatedRequisition);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to update requisition", error: error.message });
+    return res.status(500).json({
+      message: "Failed to update requisition",
+      error: error.message,
+    });
   }
 };
 
-// Delete a diesel requisition
+// Delete a diesel requisition (and its items)
 export const deleteDieselRequisition = async (req, res) => {
   try {
-    const deleted = await DieselRequisitions.destroy({
-      where: { id: req.params.id },
-    });
-    if (!deleted) {
+    const requisition = await DieselRequisitions.findByPk(req.params.id);
+
+    if (!requisition) {
       return res.status(404).json({ message: "Requisition not found" });
     }
-    return res.status(200).json({ message: "Requisition deleted successfully" });
+
+    await DieselRequisitionItems.destroy({
+      where: { requisition_id: req.params.id },
+    });
+
+    await requisition.destroy();
+
+    return res
+      .status(200)
+      .json({ message: "Requisition and its items deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to delete requisition", error: error.message });
+    return res.status(500).json({
+      message: "Failed to delete requisition",
+      error: error.message,
+    });
   }
 };

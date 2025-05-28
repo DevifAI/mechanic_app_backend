@@ -1,4 +1,4 @@
-// models/DieselRequisition.js
+// models/DieselReceipt.js
 import { DataTypes } from 'sequelize';
 
 export const DieselReceiptModel = (sequelize) => {
@@ -14,35 +14,8 @@ export const DieselReceiptModel = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      item: {
-        type: DataTypes.UUID,
-        references: {
-          model: 'consumable_items', // Adjust table name if needed
-          key: 'id',
-        },
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      UOM: {
-        type: DataTypes.UUID,
-        references: {
-          model: 'uom', // Adjust table name if needed
-          key: 'id',
-        },
-        allowNull: false,
-      },
-      Notes: {
-        type: DataTypes.STRING(255),
-      },
       createdBy: {
         type: DataTypes.UUID,
-        references: {
-          model: 'employee', // Adjust table name if needed
-          key: 'id',
-        },
         allowNull: false,
       },
       is_approve_mic: {
@@ -59,10 +32,6 @@ export const DieselReceiptModel = (sequelize) => {
       },
       org_id: {
         type: DataTypes.UUID,
-        references: {
-          model: 'organisation',
-          key: 'id',
-        },
         allowNull: true,
       },
     },
@@ -73,27 +42,22 @@ export const DieselReceiptModel = (sequelize) => {
   );
 
   DieselReceipt.associate = (models) => {
-  DieselReceipt.belongsTo(models.ConsumableItem, {
-    foreignKey: 'item',
-    as: 'consumableItem',
-  });
+    DieselReceipt.belongsTo(models.Employee, {
+      foreignKey: 'createdBy',
+      as: 'createdByEmployee',
+    });
 
-  DieselReceipt.belongsTo(models.UOM, {
-    foreignKey: 'UOM',
-    as: 'unitOfMeasurement',
-  });
+    DieselReceipt.belongsTo(models.Organisations, {
+      foreignKey: 'org_id',
+      as: 'organisation',
+    });
 
-  DieselReceipt.belongsTo(models.Employee, {
-    foreignKey: 'createdBy',
-    as: 'createdByEmployee',
-  });
-
-  DieselReceipt.belongsTo(models.Organisations, {
-    foreignKey: 'org_id',
-    as: 'organisation',
-  });
-};
-
+    DieselReceipt.hasMany(models.DieselReceiptItem, {
+      foreignKey: 'receipt_id',
+      as: 'items',
+      onDelete: 'CASCADE',
+    });
+  };
 
   return DieselReceipt;
 };

@@ -1,11 +1,18 @@
 import { models } from '../../../models/index.js'; // Adjust path if needed
-const { Equipment, ConsumableItem, UOM, Employee, Organisations, ConsumptionSheet } = models; // Ensure these are correctly imported
+const {
+  Equipment,
+  ConsumableItem,
+  UOM,
+  Employee,
+  Organisations,
+  ConsumptionSheet,
+  ConsumptionSheetItem,
+} = models;
 
-// Create a new consumption sheet entry
+// ✅ CREATE
 export const createConsumptionSheet = async (req, res) => {
   const {
     date,
-    equipment,
     createdBy,
     org_id,
     is_approved_mic = false,
@@ -19,47 +26,55 @@ export const createConsumptionSheet = async (req, res) => {
   }
 
   try {
-    const createdSheets = await Promise.all(
-      items.map((item) =>
-        ConsumptionSheet.create({
-          date,
-          equipment,
-          createdBy,
-          org_id,
-          is_approved_mic,
-          is_approved_sic,
-          is_approved_pm,
-          item: item.item,
-          quantity: item.quantity,
-          uom_id: item.uom_id,
-          notes: item.notes || "",
-          reading_meter_uom: item.reading_meter_uom || null,
-          reading_meter_number: item.reading_meter_number || null,
-        })
-      )
+    const sheet = await ConsumptionSheet.create({
+      date,
+      createdBy,
+      org_id,
+      is_approved_mic,
+      is_approved_sic,
+      is_approved_pm,
+    });
+
+    const itemPromises = items.map(item =>
+      ConsumptionSheetItem.create({
+        consumption_sheet_id: sheet.id,
+        item: item.item,
+        quantity: item.quantity,
+        uom_id: item.uom_id,
+        notes: item.notes || '',
+        reading_meter_uom: item.reading_meter_uom || null,
+        reading_meter_number: item.reading_meter_number || null,
+      })
     );
 
+    const createdItems = await Promise.all(itemPromises);
+
     return res.status(201).json({
-      message: 'Consumption sheets created successfully',
-      data: createdSheets,
+      message: 'Consumption sheet created successfully',
+      sheet,
+      items: createdItems,
     });
   } catch (error) {
     return res.status(500).json({
-      message: 'Failed to create consumption sheets',
+      message: 'Failed to create consumption sheet',
       error: error.message,
     });
   }
 };
 
-
-// Get all entries with associations
+// ✅ READ ALL
 export const getAllConsumptionSheets = async (req, res) => {
   try {
     const sheets = await ConsumptionSheet.findAll({
       include: [
-        { model: Equipment, as: 'equipmentData' },
-        { model: ConsumableItem, as: 'itemData' },
-        { model: UOM, as: 'uomData' },
+        {
+          model: ConsumptionSheetItem,
+          as: 'items',
+          include: [
+            { model: ConsumableItem, as: 'itemData' },
+            { model: UOM, as: 'uomData' },
+          ],
+        },
         { model: Employee, as: 'createdByUser' },
         { model: Organisations, as: 'organisation' },
       ],
@@ -70,15 +85,19 @@ export const getAllConsumptionSheets = async (req, res) => {
   }
 };
 
-// Get one entry by ID
+// ✅ READ ONE
 export const getConsumptionSheetById = async (req, res) => {
   try {
     const sheet = await ConsumptionSheet.findByPk(req.params.id, {
       include: [
-        { model: Equipment, as: 'equipmentData' },
-        { model: ConsumableItem, as: 'itemData' },
-        { model: UOM, as: 'uomData' },
-        { model: UOM, as: 'readingMeterUOMData' },
+        {
+          model: ConsumptionSheetItem,
+          as: 'items',
+          include: [
+            { model: ConsumableItem, as: 'itemData' },
+            { model: UOM, as: 'uomData' },
+          ],
+        },
         { model: Employee, as: 'createdByUser' },
         { model: Organisations, as: 'organisation' },
       ],
@@ -94,37 +113,72 @@ export const getConsumptionSheetById = async (req, res) => {
   }
 };
 
-// Update an entry
+// ✅ UPDATE
 export const updateConsumptionSheet = async (req, res) => {
-  try {
-    const [updated] = await ConsumptionSheet.update(req.body, {
-      where: { id: req.params.id },
-    });
+  const { id } = req.params;
+  const {
+    date,
+    createdBy,
+    org_id,
+    is_approved_mic,
+    is_approved_sic,
+    is_approved_pm,
+    items = [],
+  } = req.body;
 
-    if (!updated) {
-      return res.status(404).json({ message: 'Entry not found or not updated' });
+  try {
+    const sheet = await ConsumptionSheet.findByPk(id);
+    if (!sheet) {
+      return res.status(404).json({ message: 'Consumption sheet not found' });
     }
 
-    const updatedEntry = await ConsumptionSheet.findByPk(req.params.id);
-    return res.status(200).json(updatedEntry);
+    await sheet.update({
+      date,
+      createdBy,
+      org_id,
+      is_approved_mic,
+      is_approved_sic,
+      is_approved_pm,
+    });
+
+    // Optional: Delete existing items and re-create (or do smart update if needed)
+    await ConsumptionSheetItem.destroy({ where: { consumption_sheet_id: id } });
+
+    const newItems = await Promise.all(
+      items.map(item =>
+        ConsumptionSheetItem.create({
+          consumption_sheet_id: id,
+          item: item.item,
+          quantity: item.quantity,
+          uom_id: item.uom_id,
+          notes: item.notes || '',
+          reading_meter_uom: item.reading_meter_uom || null,
+          reading_meter_number: item.reading_meter_number || null,
+        })
+      )
+    );
+
+    return res.status(200).json({ message: 'Updated successfully', sheet, items: newItems });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to update entry', error: error.message });
+    return res.status(500).json({ message: 'Failed to update', error: error.message });
   }
 };
 
-// Delete an entry
+// ✅ DELETE
 export const deleteConsumptionSheet = async (req, res) => {
-  try {
-    const deleted = await ConsumptionSheet.destroy({
-      where: { id: req.params.id },
-    });
+  const { id } = req.params;
 
-    if (!deleted) {
-      return res.status(404).json({ message: 'Entry not found or already deleted' });
+  try {
+    const sheet = await ConsumptionSheet.findByPk(id);
+    if (!sheet) {
+      return res.status(404).json({ message: 'Entry not found' });
     }
 
-    return res.status(200).json({ message: 'Entry deleted successfully' });
+    await ConsumptionSheetItem.destroy({ where: { consumption_sheet_id: id } });
+    await sheet.destroy();
+
+    return res.status(200).json({ message: 'Deleted successfully' });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to delete entry', error: error.message });
+    return res.status(500).json({ message: 'Failed to delete', error: error.message });
   }
 };

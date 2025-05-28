@@ -24,6 +24,12 @@ import { AccountGroupModel } from "./account_group.model.js";
 import { AccountModel } from "./account.model.js";
 import { DieselReceiptModel } from "./diesel_reciept.model.js";
 import { ConsumptionSheetModel } from "./consumption_sheet.model.js";
+import { MaintenanceSheetModel } from "./maintenance_sheet.js";
+import { DieselRequisitionItemModel } from "./diesel_requisition_item.model.js";
+import { DieselReceiptItemModel } from "./diesel_reciept_item.model.js";
+import { ConsumptionSheetItemModel } from "./consumption_sheet_item.model.js";
+import { MaintenanceSheetItemModel } from "./maintenanceSheetItem.model.js";
+import { EmployeeOrganisationsModel } from "./junctionTable/EmployeeOrganisations.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -44,13 +50,21 @@ const StoreProject = StoreProjectModel(sequelize);
 const Organisations = OrganisationModel(sequelize);
 const UOM = UOMModel(sequelize)
 const DieselRequisitions = DieselRequisitionModel(sequelize)
+const DieselRequisitionItems = DieselRequisitionItemModel(sequelize);
+
 const ConsumableItem = ConsumableItemsModel(sequelize)
 const ItemGroup = ItemGroupModel(sequelize)
 const OEM = OEMModel(sequelize)
 const AccountGroup = AccountGroupModel(sequelize)
 const Account = AccountModel(sequelize)
 const DieselReceipt = DieselReceiptModel(sequelize)
+const DieselReceiptItem = DieselReceiptItemModel(sequelize)
 const ConsumptionSheet = ConsumptionSheetModel(sequelize)
+const ConsumptionSheetItem = ConsumptionSheetItemModel(sequelize)
+const MaintenanceSheet = MaintenanceSheetModel(sequelize)
+const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize)
+const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize)
+
 const models = {
   Partner,
   Project_Master,
@@ -70,13 +84,19 @@ const models = {
   Organisations,
   UOM,
   DieselRequisitions,
+  DieselRequisitionItems,
   ConsumableItem,
   ItemGroup,
   OEM,
   AccountGroup,
   Account,
   DieselReceipt,
-  ConsumptionSheet
+  DieselReceiptItem,
+  ConsumptionSheet,
+  MaintenanceSheet,
+  ConsumptionSheetItem,
+  MaintenanceSheetItem,
+  EmployeeOrganisations
 };
 
 // Step 2: Call associations AFTER all models are initialized

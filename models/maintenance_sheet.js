@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes } from "sequelize";
 
 export const MaintenanceSheetModel = (sequelize) => {
   const MaintenanceSheet = sequelize.define(
@@ -17,35 +17,18 @@ export const MaintenanceSheetModel = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-       notes: {
+      notes: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
       },
       next_date: {
         type: DataTypes.DATE,
         allowNull: false,
       },
-  action_planned: {
+      action_planned: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      item: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      uom_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      notes: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-     
       createdBy: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -73,21 +56,10 @@ export const MaintenanceSheetModel = (sequelize) => {
     }
   );
 
-  // Associations
   MaintenanceSheet.associate = (models) => {
-    ConsumptionSheet.belongsTo(models.Equipment, {
+    MaintenanceSheet.belongsTo(models.Equipment, {
       foreignKey: 'equipment',
       as: 'equipmentData',
-    });
-
-    MaintenanceSheet.belongsTo(models.ConsumableItem, {
-      foreignKey: 'item',
-      as: 'itemData',
-    });
-
-    MaintenanceSheet.belongsTo(models.UOM, {
-      foreignKey: 'uom_id',
-      as: 'uomData',
     });
 
     MaintenanceSheet.belongsTo(models.Employee, {
@@ -98,6 +70,12 @@ export const MaintenanceSheetModel = (sequelize) => {
     MaintenanceSheet.belongsTo(models.Organisations, {
       foreignKey: 'org_id',
       as: 'organisation',
+    });
+
+    MaintenanceSheet.hasMany(models.MaintenanceSheetItem, {
+      foreignKey: 'maintenance_sheet_id',
+      as: 'items',
+      onDelete: 'CASCADE',
     });
   };
 

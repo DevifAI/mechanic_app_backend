@@ -14,36 +14,34 @@ export const createEmployee = async (req, res) => {
       is_active,
       shiftcode,
       role_id,
+      org_id, // ✅ Extract org_id from the request body
     } = req.body;
 
     // 1. Check if emp_id already exists
     const existingEmp = await Employee.findOne({ where: { emp_id } });
     if (existingEmp) {
-      return res.status(500).json({ message: "Employee ID already exists" });
+      return res.status(400).json({ message: "Employee ID already exists" });
     }
 
     // 2. Check if role_id exists
     const roleExists = await Role.findByPk(role_id);
     if (!roleExists) {
-      return res.status(500).json({ message: "Invalid role_id" });
+      return res.status(400).json({ message: "Invalid role_id" });
     }
 
     // 3. Check if position exists
     const positionExists = await EmpPositionsModel.findByPk(position);
-
     if (!positionExists) {
-      return res.status(500).json({ message: "Invalid position" });
+      return res.status(400).json({ message: "Invalid position" });
     }
 
     // 4. Check if shiftcode exists
-    const shiftExists = await Shift.findOne({
-      where: { shift_code: shiftcode },
-    });
+    const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
     if (!shiftExists) {
-      return res.status(500).json({ message: "Invalid shiftcode" });
+      return res.status(400).json({ message: "Invalid shiftcode" });
     }
 
-    // 5. Create employee
+    // 5. Create employee with emp_id as password
     const newEmployee = await Employee.create({
       emp_id,
       emp_name,
@@ -54,9 +52,14 @@ export const createEmployee = async (req, res) => {
       is_active,
       shiftcode,
       role_id,
+      org_id, // ✅ Include org_id here
+      password: emp_id, // This will be hashed in beforeCreate hook
     });
 
-    return res.status(201).json(newEmployee);
+    return res.status(201).json({
+      message: "Employee created successfully",
+      employee: newEmployee,
+    });
   } catch (error) {
     console.error("Error creating employee:", error);
     return res.status(500).json({ message: "Internal Server Error" });

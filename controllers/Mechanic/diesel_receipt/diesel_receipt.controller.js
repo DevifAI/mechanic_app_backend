@@ -1,11 +1,15 @@
 
 
 import { models } from "../../../models/index.js"; // adjust path if needed
-const { DieselReceipt, ConsumableItem,UOM,OEM,Employee, Organisations } = models;
+const { DieselReceipt, ConsumableItem,UOM,OEM,Employee, Organisations, DieselReceiptItem } = models;
 
 
 // Create a new diesel requisition
+
+
+// Create receipt with items
 export const createDieselReciept = async (req, res) => {
+  const t = await models.sequelize.transaction();
   try {
     const {
       date,
@@ -14,121 +18,137 @@ export const createDieselReciept = async (req, res) => {
       is_approve_mic = false,
       is_approve_sic = false,
       is_approve_pm = false,
-      org_id
+      org_id,
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: "Items array is required." });
+      return res.status(400).json({ message: 'Items array is required.' });
     }
 
-    const createdRecords = [];
-
-    for (const entry of items) {
-      const newEntry = await DieselReceipt.create({
+    const receipt = await DieselReceipt.create(
+      {
         date,
-        item: entry.item,
-        quantity: entry.quantity,
-        UOM: entry.UOM,
-        Notes: entry.Notes || "",
         createdBy,
         is_approve_mic,
         is_approve_sic,
         is_approve_pm,
-        org_id
-      });
+        org_id,
+      },
+      { transaction: t }
+    );
 
-      createdRecords.push(newEntry);
-    }
+    const itemEntries = items.map((entry) => ({
+      receipt_id: receipt.id,
+      item: entry.item,
+      quantity: entry.quantity,
+      UOM: entry.UOM,
+      Notes: entry.Notes || '',
+    }));
+
+    await DieselReceiptItem.bulkCreate(itemEntries, { transaction: t });
+
+    await t.commit();
 
     return res.status(201).json({
-      message: "Diesel requisitions created successfully",
-      data: createdRecords,
+      message: 'Diesel requisition created successfully',
+      data: receipt,
     });
   } catch (error) {
-    console.error("Error creating diesel requisitions:", error);
-    res.status(500).json({ message: "Internal server error", error });
+    await t.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error', error });
   }
 };
 
-// Get all diesel requisitions
+// Get all receipts with items
 export const getAllDieselReciept = async (req, res) => {
   try {
-    const receipt = await DieselReceipt.findAll({
+    const receipts = await DieselReceipt.findAll({
       include: [
         {
-          model: ConsumableItem,
-          as: 'consumableItem',
-          attributes: ['id', 'item_name', 'item_description'], // adjust fields
-        },
-        {
-          model: UOM,
-          as: 'unitOfMeasurement',
-          attributes: ['id', 'unit_name', 'unit_code'], // adjust fields
+          model: DieselReceiptItem,
+          as: 'items',
+          include: [
+            { model: ConsumableItem, as: 'consumableItem' },
+            { model: UOM, as: 'unitOfMeasurement' },
+          ],
         },
         {
           model: Employee,
           as: 'createdByEmployee',
-          attributes: ['id', 'emp_name'], // adjust fields
         },
         {
           model: Organisations,
           as: 'organisation',
-          attributes: ['id', 'org_name'], // adjust fields
         },
       ],
       order: [['createdAt', 'DESC']],
     });
 
-    return res.status(200).json(receipt);
+    return res.status(200).json(receipts);
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({ message: 'Failed to retrieve requisitions', error: error.message });
+    return res.status(500).json({ message: 'Failed to retrieve data', error });
   }
 };
 
-
-// Get a single diesel requisition by ID
+// Get single receipt
 export const getDieselRecieptById = async (req, res) => {
   try {
-    const requisition = await DieselReceipt.findByPk(req.params.id);
-    if (!requisition) {
-      return res.status(404).json({ message: "Requisition not found" });
+    const receipt = await DieselReceipt.findByPk(req.params.id, {
+      include: [
+        {
+          model: DieselReceiptItem,
+          as: 'items',
+          include: [
+            { model: ConsumableItem, as: 'consumableItem' },
+            { model: UOM, as: 'unitOfMeasurement' },
+          ],
+        },
+      ],
+    });
+
+    if (!receipt) {
+      return res.status(404).json({ message: 'Requisition not found' });
     }
-    return res.status(200).json(requisition);
+
+    return res.status(200).json(receipt);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to retrieve requisition", error: error.message });
+    return res.status(500).json({ message: 'Failed to retrieve requisition', error });
   }
 };
 
-// Update a diesel requisition
+// Update receipt (basic only, not deep item updates here)
 export const updateDieselReceipt = async (req, res) => {
   try {
     const [updated] = await DieselReceipt.update(req.body, {
       where: { id: req.params.id },
     });
+
     if (!updated) {
-      return res.status(404).json({ message: "Requisition not found or no changes made" });
+      return res.status(404).json({ message: 'Requisition not found or unchanged' });
     }
-    const updatedReciept = await DieselReceipt.findByPk(req.params.id);
-    return res.status(200).json(updatedReciept);
+
+    const updatedReceipt = await DieselReceipt.findByPk(req.params.id);
+    return res.status(200).json(updatedReceipt);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to update requisition", error: error.message });
+    return res.status(500).json({ message: 'Update failed', error });
   }
 };
 
-// Delete a diesel requisition
+// Delete receipt and associated items
 export const deleteDieselRequisition = async (req, res) => {
   try {
     const deleted = await DieselReceipt.destroy({
       where: { id: req.params.id },
     });
+
     if (!deleted) {
-      return res.status(404).json({ message: "Requisition not found" });
+      return res.status(404).json({ message: 'Requisition not found' });
     }
-    return res.status(200).json({ message: "Requisition deleted successfully" });
+
+    return res.status(200).json({ message: 'Requisition deleted successfully' });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to delete requisition", error: error.message });
+    return res.status(500).json({ message: 'Delete failed', error });
   }
 };

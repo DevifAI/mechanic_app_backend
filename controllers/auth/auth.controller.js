@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { models } from "../../models/index.js"; // Adjust path if needed
 
-const { Employee } = models;
+const { Employee, Role, Organisations } = models;
 
 // ✅ LOGIN
 export const login = async (req, res) => {
@@ -15,6 +15,7 @@ export const login = async (req, res) => {
 
   try {
     const employee = await Employee.findOne({ where: { emp_id } });
+
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
@@ -24,12 +25,30 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
+    // Fetch role and organisation separately
+    const role = await Role.findOne({
+      where: { id: employee.role_id },
+      attributes: ["id", "name"], // or "name" if that's the correct field
+    });
+
+    const organisation = await Organisations.findOne({
+      where: { id: employee.org_id },
+      attributes: ["id", "org_name"],
+    });
+
     return res.status(200).json({
       message: "Login successful",
       employee: {
         emp_id: employee.emp_id,
         emp_name: employee.emp_name,
-        role_id: employee.role_id,
+        role: {
+          id: role?.id,
+          name: role?.name, // or role?.name
+        },
+        organisation: {
+          id: organisation?.id,
+          name: organisation?.org_name,
+        },
       },
     });
   } catch (error) {

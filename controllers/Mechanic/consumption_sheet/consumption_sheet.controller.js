@@ -74,6 +74,7 @@ export const getAllConsumptionSheets = async (req, res) => {
           include: [
             { model: ConsumableItem, as: "itemData" },
             { model: UOM, as: "uomData" },
+            { model: Equipment, as: "equipmentData" }, // ✅ Include equipment
           ],
         },
         { model: Employee, as: "createdByUser" },

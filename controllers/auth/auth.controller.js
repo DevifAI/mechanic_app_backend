@@ -39,6 +39,7 @@ export const login = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       employee: {
+        id: employee.id,
         emp_id: employee.emp_id,
         emp_name: employee.emp_name,
         role: {

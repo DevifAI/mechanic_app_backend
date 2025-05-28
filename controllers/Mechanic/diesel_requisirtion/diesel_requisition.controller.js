@@ -53,7 +53,16 @@ export const createDieselRequisition = async (req, res) => {
       items: createdItems,
     });
   } catch (error) {
-    console.error("Error creating diesel requisition:", error);
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      return res.status(400).json({
+        message: "Foreign key constraint error",
+        detail: error.parent?.detail || "Invalid foreign key reference.",
+        constraint: error?.constraint,
+        table: error?.table,
+        field: error?.index || error?.fields,
+      });
+    }
+
     res.status(500).json({ message: "Internal server error", error });
   }
 };

@@ -66,6 +66,7 @@ const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize)
 const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize)
 
 const models = {
+  sequelize,
   Partner,
   Project_Master,
   RevenueMaster,

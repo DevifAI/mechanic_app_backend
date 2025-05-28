@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { models } from '../../models/index.js'; // Adjust path if needed
+import { models } from "../../models/index.js"; // Adjust path if needed
 
 const { Employee } = models;
 
@@ -8,7 +8,9 @@ export const login = async (req, res) => {
   const { emp_id, password } = req.body;
 
   if (!emp_id || !password) {
-    return res.status(400).json({ message: "emp_id and password are required" });
+    return res
+      .status(400)
+      .json({ message: "emp_id and password are required" });
   }
 
   try {
@@ -36,15 +38,14 @@ export const login = async (req, res) => {
   }
 };
 
-
-
-
 // ✅ CHANGE PASSWORD
 export const changePassword = async (req, res) => {
   const { emp_id, resetCode, oldPassword, newPassword } = req.body;
 
   if (!emp_id || !newPassword) {
-    return res.status(400).json({ message: "emp_id and newPassword are required" });
+    return res
+      .status(400)
+      .json({ message: "emp_id and newPassword are required" });
   }
 
   try {
@@ -61,7 +62,9 @@ export const changePassword = async (req, res) => {
         !employee.resetCodeExpiry ||
         employee.resetCodeExpiry < new Date()
       ) {
-        return res.status(400).json({ message: "Invalid or expired reset code" });
+        return res
+          .status(400)
+          .json({ message: "Invalid or expired reset code" });
       }
     } else if (oldPassword) {
       // Normal password change flow
@@ -70,7 +73,9 @@ export const changePassword = async (req, res) => {
         return res.status(401).json({ message: "Old password is incorrect" });
       }
     } else {
-      return res.status(400).json({ message: "Provide either resetCode or oldPassword" });
+      return res
+        .status(400)
+        .json({ message: "Provide either resetCode or oldPassword" });
     }
 
     // Update password - assume password hashing happens in model hooks

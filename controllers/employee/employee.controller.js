@@ -17,6 +17,7 @@ export const createEmployee = async (req, res) => {
       org_id, // ✅ Extract org_id from the request body
     } = req.body;
 
+
     // 1. Check if emp_id already exists
     const existingEmp = await Employee.findOne({ where: { emp_id } });
     if (existingEmp) {
@@ -61,7 +62,10 @@ export const createEmployee = async (req, res) => {
       employee: newEmployee,
     });
   } catch (error) {
-    console.error("Error creating employee:", error);
+    console.error("Error creating employee:", error.message);
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({ message: error.errors.map((e) => e.message) });
+    }
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

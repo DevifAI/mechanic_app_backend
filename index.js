@@ -17,15 +17,15 @@ import storeRoutes from "./routes/super_admin/store/store.routes.js"; // Import 
 import orgRoutes from "./routes/super_admin/organisation/organisation.routes.js"; // Import organisations routes
 import UOMRoutes from "./routes/super_admin/uom/uom.routes.js"; // Import uom routes
 import ItemGroupRoutes from "./routes/super_admin/itemGroup/itemGroup.routes.js"; // Import uom routes
-import OEMRoutes  from "./routes/super_admin/oem/oem.routes.js"; // Import uom routes
-import AccountGroupRoutes  from "./routes/super_admin/account_group/account_group.routes.js"; // Import uom routes
-import ConsumableItemsRoutes  from "./routes/super_admin/consumableItems/consumable_items.routes.js"; // Import uom routes
-import AccountRoutes  from "./routes/super_admin/account/account.routes.js"; // Import uom routes
-import diselRequisitionRoutes  from "./routes/Mechanic/diesel_requisitions/diesel_requisition.routes.js"; // Import uom routes
-import dieselReceiptRoutes  from "./routes/Mechanic/diesel_reciept/diesel_reciept.routes.js"; // Import uom routes
-import consumptionSheetRoutes  from "./routes/Mechanic/consumption_sheet/consumption_sheet.routes.js"; // Import uom routes
-import maintenanceSheetRoutes  from "./routes/Mechanic/maintenance_sheet/maintenance_sheet.routes.js"; // Import uom routes
-import authentcationRoutes  from "./routes/Auth/auth.route.js"; // Import uom routes
+import OEMRoutes from "./routes/super_admin/oem/oem.routes.js"; // Import uom routes
+import AccountGroupRoutes from "./routes/super_admin/account_group/account_group.routes.js"; // Import uom routes
+import ConsumableItemsRoutes from "./routes/super_admin/consumableItems/consumable_items.routes.js"; // Import uom routes
+import AccountRoutes from "./routes/super_admin/account/account.routes.js"; // Import uom routes
+import diselRequisitionRoutes from "./routes/Mechanic/diesel_requisitions/diesel_requisition.routes.js"; // Import uom routes
+import dieselReceiptRoutes from "./routes/Mechanic/diesel_reciept/diesel_reciept.routes.js"; // Import uom routes
+import consumptionSheetRoutes from "./routes/Mechanic/consumption_sheet/consumption_sheet.routes.js"; // Import uom routes
+import maintenanceSheetRoutes from "./routes/Mechanic/maintenance_sheet/maintenance_sheet.routes.js"; // Import uom routes
+import authentcationRoutes from "./routes/authentications/auth.routes.js"; // Import authentication routes
 import { syncModels } from "./models/index.js";
 
 dotenv.config();

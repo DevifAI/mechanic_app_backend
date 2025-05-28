@@ -4,8 +4,8 @@ import { changePassword, login } from "../../controllers/auth/auth.controller.js
 
 const router = express.Router();
 
-router.post("/", login);
-router.post("/", changePassword);
+router.post('/login', login);
+router.post('/change/pass', changePassword);
 
 
 export default router;

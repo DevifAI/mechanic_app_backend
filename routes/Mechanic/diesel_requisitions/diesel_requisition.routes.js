@@ -4,7 +4,8 @@ import {
   getAllDieselRequisitions,
   getDieselRequisitionById,
   updateDieselRequisition,
-  deleteDieselRequisition
+  deleteDieselRequisition,
+  getAllDieselRequisitionsByCreator
 } from '../../../controllers/Mechanic/diesel_requisirtion/diesel_requisition.controller.js';
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.post('/', createDieselRequisition);
 
 // GET: Get all diesel requisitions
 router.get('/', getAllDieselRequisitions);
+router.get('/getByCreator', getAllDieselRequisitionsByCreator);
 
 // GET: Get a single diesel requisition by ID
 router.get('/:id', getDieselRequisitionById);

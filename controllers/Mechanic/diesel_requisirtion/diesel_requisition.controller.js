@@ -103,6 +103,64 @@ export const getAllDieselRequisitions = async (req, res) => {
   }
 };
 
+export const getAllDieselRequisitionsByCreator = async (req, res) => {
+  try {
+    const { org_id, createdBy } = req.body; // or req.query depending on your frontend
+
+    // Defensive checks
+    if (!org_id) {
+      return res.status(400).json({ message: "Missing org_id parameter" });
+    }
+    if (!createdBy) {
+      return res.status(400).json({ message: "Missing createdBy parameter" });
+    }
+
+    const requisitions = await DieselRequisitions.findAll({
+      where: {
+        org_id,
+        createdBy,
+      },
+      include: [
+        {
+          model: DieselRequisitionItems,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Employee,
+          as: "createdByEmployee",
+          attributes: ["id", "emp_name"],
+        },
+        {
+          model: Organisations,
+          as: "organisation",
+          attributes: ["id", "org_name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(requisitions);
+  } catch (error) {
+    console.error("Error retrieving diesel requisitions:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve requisitions",
+      error: error.message,
+    });
+  }
+};
+
 // Get a single diesel requisition by ID
 export const getDieselRequisitionById = async (req, res) => {
   try {

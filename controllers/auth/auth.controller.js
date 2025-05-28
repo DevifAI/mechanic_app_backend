@@ -41,7 +41,7 @@ export const login = async (req, res) => {
 
 // ✅ CHANGE PASSWORD
 export const changePassword = async (req, res) => {
-  const { emp_id, resetCode, oldPassword, newPassword } = req.body;
+  const { emp_id, oldPassword, newPassword } = req.body;
 
   if (!emp_id || !newPassword) {
     return res.status(400).json({ message: "emp_id and newPassword are required" });
@@ -53,32 +53,20 @@ export const changePassword = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    if (resetCode) {
-      // Forgot password flow
-      if (
-        !employee.resetCode ||
-        employee.resetCode !== resetCode ||
-        !employee.resetCodeExpiry ||
-        employee.resetCodeExpiry < new Date()
-      ) {
-        return res.status(400).json({ message: "Invalid or expired reset code" });
-      }
-    } else if (oldPassword) {
+    if (oldPassword) {
       // Normal password change flow
       const isMatch = await bcrypt.compare(oldPassword, employee.password);
       if (!isMatch) {
         return res.status(401).json({ message: "Old password is incorrect" });
       }
     } else {
-      return res.status(400).json({ message: "Provide either resetCode or oldPassword" });
+      return res.status(400).json({ message: "Provide  oldPassword" });
     }
 
     // Update password - assume password hashing happens in model hooks
     employee.password = newPassword;
 
-    // Clear reset code and expiry if used
-    employee.resetCode = null;
-    employee.resetCodeExpiry = null;
+
 
     await employee.save();
 

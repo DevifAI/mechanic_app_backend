@@ -62,12 +62,8 @@ export const createConsumptionSheet = async (req, res) => {
       is_approved_pm,
     });
 
-<<<<<<< HEAD
     // Create items
     const itemPromises = items.map(item =>
-=======
-    const itemPromises = items.map((item) =>
->>>>>>> 80f4de154207d69705cb5770b57c279b50f76be4
       ConsumptionSheetItem.create({
         consumption_sheet_id: sheet.id,
         equipment: item.equipment,

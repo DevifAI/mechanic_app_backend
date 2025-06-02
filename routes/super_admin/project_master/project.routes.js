@@ -8,7 +8,7 @@ const router = express.Router();
 // Routes
 router.post("/create/", createProject);
 router.get("/getAll", getProjects);
-router.get("/get/:id", getProjectById);
+router.post("/get/", getProjectById);
 router.patch("/update/:id", updateProject);
 router.delete("/delete/:id", deleteProject);
 router.post("/bulk-upload", upload.single("file"), bulkUploadProjects);

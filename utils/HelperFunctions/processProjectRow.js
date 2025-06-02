@@ -44,11 +44,12 @@ export async function processProjectRow({
   }
 
   const customer_id = partner.id;
-
+  console.log({ revenue_master_ids })
   // Find RevenueMaster by revenue_code
   const revenues = await RevenueMaster.findAll({
     where: { revenue_code: { [Op.in]: revenue_master_ids } },
   });
+  console.log({ revenues });
   if (revenues.length !== revenue_master_ids.length) {
     return {
       projectNo,
@@ -117,7 +118,7 @@ export async function processProjectRow({
 
   if (revenue_ids.length > 0) {
     await ProjectRevenue.bulkCreate(
-      revenue_ids.map((id) => ({ project_id, revenue_id: id }))
+      revenue_ids.map((id) => ({ project_id, revenue_master_id: id }))
     );
   }
 

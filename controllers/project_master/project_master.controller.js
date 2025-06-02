@@ -13,9 +13,11 @@ const {
   ProjectEmployees,
   ProjectRevenue,
   StoreProject,
+  Role
 } = models; // Extract Partner model
 
 // Create Project
+
 
 export const createProject = async (req, res) => {
   const {
@@ -24,135 +26,168 @@ export const createProject = async (req, res) => {
     orderNo,
     contractStartDate,
     contractTenure,
-    revenueMaster,
-    equipments,
-    staff,
-    storeLocations,
+    revenueMaster = [],
+    equipments = [],
+    staff = [],
+    storeLocations = [],
   } = req.body;
 
-  const project_no = projectNo;
-  const customer_id = customer;
-  const order_no = orderNo;
-  const contract_start_date = contractStartDate;
-  const contract_tenure = contractTenure;
-  const revenue_master_ids = revenueMaster;
-  const equipment_allocated_ids = equipments;
-  const store_location_ids = storeLocations;
-  const staff_ids = staff; // renamed for clarity
-
   try {
-    // 1. Duplicate project check
+    // Validate required relationships
+    if (!equipments.length) {
+      return res.status(400).json({ message: "At least one equipment is required." });
+    }
+    if (staff.length < 6) {
+      return res.status(400).json({ message: "Minimum 6 staff members are required." });
+    }
+    if (!storeLocations.length) {
+      return res.status(400).json({ message: "At least one store location is required." });
+    }
+    if (!revenueMaster.length) {
+      return res.status(400).json({ message: "At least one revenue master is required." });
+    }
+
+    // Check if project number already exists
     const existingProject = await Project_Master.findOne({
-      where: { project_no },
+      where: { project_no: projectNo },
     });
+
     if (existingProject) {
-      return res
-        .status(400)
-        .json({ message: "Project number already exists." });
+      return res.status(400).json({ message: "Project number already exists." });
     }
 
-    // 2. Validate customer
-    const partner = await Partner.findOne({ where: { id: customer_id } });
-    if (!partner)
-      return res.status(400).json({ message: "Invalid customer_id" });
+    // Validate customer_id
+    const customerExists = await Partner.findByPk(customer);
+    if (!customerExists) {
+      return res.status(400).json({ message: "Invalid customer ID." });
+    }
 
-    // 3. Validate revenue_master_ids
-    if (revenue_master_ids?.length) {
+    // Define required roles
+    const requiredRoles = [
+      'mechanic',
+      'mechanicIncharge',
+      'siteIncharge',
+      'storeManager',
+      'accountManager',
+      'ProjectManager'
+    ];
+
+    // Fetch staff details with their roles
+    const staffDetails = await Employee.findAll({
+      where: { id: { [Op.in]: staff } },
+      include: [{
+        model: Role,
+        as: 'role', // adjust this based on your actual association name
+        attributes: ['name']
+      }]
+    });
+
+    // Check if all staff IDs are valid
+    if (staffDetails.length !== staff.length) {
+      return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
+    }
+
+    // Get all unique roles present in the staff
+    const presentRoles = [...new Set(staffDetails.map(emp => emp.role?.name))];
+
+    // Check if all required roles are present (at least one staff for each role)
+    const missingRoles = requiredRoles.filter(role => !presentRoles.includes(role));
+
+    if (missingRoles.length > 0) {
+      return res.status(400).json({
+        message: `Missing required staff roles: ${missingRoles.join(', ')}. 
+                 Each of these roles must have at least one staff member assigned.`
+      });
+    }
+
+    // Rest of your existing validation for other relationships...
+    // Validate revenueMaster IDs
+    if (revenueMaster.length > 0) {
       const validRevenueCount = await RevenueMaster.count({
-        where: { id: { [Op.in]: revenue_master_ids } },
+        where: { id: { [Op.in]: revenueMaster } },
       });
-      if (validRevenueCount !== revenue_master_ids.length)
-        return res.status(400).json({ message: "Invalid revenue provided." });
-    }
-
-    // 4. Validate equipment_allocated_ids
-    if (equipment_allocated_ids?.length) {
-      const validEquipments = await Equipment.count({
-        where: { id: { [Op.in]: equipment_allocated_ids } },
-      });
-      if (validEquipments !== equipment_allocated_ids.length)
-        return res.status(400).json({ message: "Invalid equipment provided." });
-    }
-
-    // 5. Validate employee IDs
-    // 5. Validate employee IDs (staff is a combined array)
-    if (staff_ids?.length) {
-      const validEmployeeCount = await Employee.count({
-        where: { id: { [Op.in]: staff_ids } },
-      });
-
-      if (validEmployeeCount !== staff_ids.length) {
-        return res
-          .status(400)
-          .json({ message: "One or more employee IDs are invalid." });
+      if (validRevenueCount !== revenueMaster.length) {
+        return res.status(400).json({ message: "Invalid revenue master ID(s)." });
       }
     }
-    const allEmployeeIds = staff_ids || [];
-    if (allEmployeeIds.length > 0) {
-      const validEmployeeCount = await Employee.count({
-        where: { id: { [Op.in]: allEmployeeIds } },
+
+    // Validate equipment IDs
+    if (equipments.length > 0) {
+      const validEquipmentCount = await Equipment.count({
+        where: { id: { [Op.in]: equipments } },
       });
-      if (validEmployeeCount !== allEmployeeIds.length)
-        return res
-          .status(400)
-          .json({ message: "One or more site employee IDs are invalid." });
+      if (validEquipmentCount !== equipments.length) {
+        return res.status(400).json({ message: "Invalid equipment ID(s)." });
+      }
     }
 
-    // 6. Validate store_location_ids
-    if (store_location_ids?.length) {
+    // Validate store location IDs
+    if (storeLocations.length > 0) {
       const validStoreCount = await Store.count({
-        where: { id: { [Op.in]: store_location_ids } },
+        where: { id: { [Op.in]: storeLocations } },
       });
-      if (validStoreCount !== store_location_ids.length)
-        return res
-          .status(400)
-          .json({ message: "Invalid store location provided." });
+      if (validStoreCount !== storeLocations.length) {
+        return res.status(400).json({ message: "Invalid store location ID(s)." });
+      }
     }
 
-    // 7. Create project
+    // Create project
     const project = await Project_Master.create({
-      project_no,
-      customer_id,
-      order_no,
-      contract_tenure,
-      contract_start_date,
+      project_no: projectNo,
+      customer_id: customer,
+      order_no: orderNo,
+      contract_start_date: contractStartDate,
+      contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
-    // 8. Create EquipmentProject rows
-    if (equipment_allocated_ids?.length) {
+    // Associate Equipments
+    if (equipments.length > 0) {
       await EquipmentProject.bulkCreate(
-        equipment_allocated_ids.map((id) => ({ project_id, equipment_id: id }))
+        equipments.map((equipment_id) => ({
+          project_id,
+          equipment_id,
+        }))
       );
     }
 
-    // 9. Create ProjectRevenue rows
-    if (revenue_master_ids?.length) {
+    // Associate RevenueMasters
+    if (revenueMaster.length > 0) {
       await ProjectRevenue.bulkCreate(
-        revenue_master_ids.map((id) => ({ project_id, revenue_master_id: id }))
+        revenueMaster.map((revenue_master_id) => ({
+          project_id,
+          revenue_master_id,
+        }))
       );
     }
 
-    // 10. Create ProjectEmployees rows
-    if (staff_ids?.length) {
+    // Associate Staff
+    if (staff.length > 0) {
       await ProjectEmployees.bulkCreate(
-        staff_ids.map((employee_id) => ({ project_id, emp_id: employee_id }))
+        staff.map((emp_id) => ({
+          project_id,
+          emp_id,
+        }))
       );
     }
 
-    // 11. Create StoreProject rows
-    if (store_location_ids?.length) {
+    // Associate Stores
+    if (storeLocations.length > 0) {
       await StoreProject.bulkCreate(
-        store_location_ids.map((store_id) => ({ project_id, store_id }))
+        storeLocations.map((store_id) => ({
+          project_id,
+          store_id,
+        }))
       );
     }
 
-    return res
-      .status(201)
-      .json({ message: "Project created successfully", project });
+    return res.status(201).json({
+      message: "Project created successfully",
+      project,
+    });
   } catch (error) {
-    console.error("Error creating project:", error);
+    console.error("Error in createProject:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -198,32 +233,36 @@ export const getProjects = async (req, res) => {
 
 // Get Project by ID (with all associations)
 export const getProjectById = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.body;
 
   try {
     const project = await Project_Master.findByPk(id, {
       include: [
         {
-          association: "customer", // Partner model
+          association: "customer",
           attributes: ["id", "partner_name"],
         },
         {
-          association: "equipments", // Equipment model
+          association: "equipments",
           attributes: ["id", "equipment_name"],
-          through: { attributes: [] }, // exclude junction table data
-        },
-        {
-          association: "staff", // Employee model
-          attributes: ["id", "emp_name"],
           through: { attributes: [] },
         },
         {
-          association: "revenues", // RevenueMaster model
+          association: "staff",
+          attributes: ["id", "emp_name", "role_id"],
+          through: { attributes: [] },
+          include: [{
+            association: "role", // Include the role association
+            attributes: ["name"] // Only include the role name
+          }]
+        },
+        {
+          association: "revenues",
           attributes: ["id", "revenue_code", "revenue_description"],
           through: { attributes: [] },
         },
         {
-          association: "store_locations", // Store model
+          association: "store_locations",
           attributes: ["id", "store_code", "store_name"],
           through: { attributes: [] },
         },
@@ -237,76 +276,136 @@ export const getProjectById = async (req, res) => {
     return res.status(200).json(project);
   } catch (error) {
     console.error("Error fetching project:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 };
 
 
 // Update Project
 export const updateProject = async (req, res) => {
-  const { id } = req.params;
-  console.log("Update Project ID:", id);
-  console.log("Update Project Body:", req.body);
   const {
-    project_no,
-    customer_id,
-    order_no,
-    contract_tenure,
-    contract_start_date,
-    asset_allocated_ids,
-    revenue_master_ids, // <-- Accept as array
-    site_mechanic_ids,
-    site_supervisor_ids,
-    site_manager_ids,
-    site_store_manager_ids,
-    store_location_ids,
+    projectNo,
+    customer,
+    orderNo,
+    contractStartDate,
+    contractTenure,
+    revenueMaster = [],
+    equipments = [],
+    staff = [],
+    storeLocations = [],
   } = req.body;
 
   try {
-    const partner = await Partner.findOne({ where: { id: customer_id } });
-    console.log("Partner found:", partner);
-    if (!partner || partner.isCustomer !== false) {
-      return res.status(400).json({
-        message:
-          "Invalid customer_id: Must reference a partner where isCustomer is false.",
-      });
-    }
-
+    const { id } = req.params;
     const project = await Project_Master.findByPk(id);
     if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "Project not found." });
     }
 
+    // Validate required relationships
+    if (!equipments.length) {
+      return res.status(400).json({ message: "At least one equipment is required." });
+    }
+    if (!staff.length) {
+      return res.status(400).json({ message: "At least one staff member is required." });
+    }
+    if (!storeLocations.length) {
+      return res.status(400).json({ message: "At least one store location is required." });
+    }
+    if (!revenueMaster.length) {
+      return res.status(400).json({ message: "At least one revenue master is required." });
+    }
+
+    // Check if project number is being updated to a duplicate
+    if (project.project_no !== projectNo) {
+      const existingProject = await Project_Master.findOne({
+        where: { project_no: projectNo },
+      });
+      if (existingProject) {
+        return res.status(400).json({ message: "Project number already exists." });
+      }
+    }
+
+    // Validate customer_id
+    const customerExists = await Partner.findByPk(customer);
+    if (!customerExists) {
+      return res.status(400).json({ message: "Invalid customer ID." });
+    }
+
+    // Validate related IDs
+    const [
+      validRevenueCount,
+      validEquipmentCount,
+      validStaffCount,
+      validStoreCount
+    ] = await Promise.all([
+      RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } }),
+      Equipment.count({ where: { id: { [Op.in]: equipments } } }),
+      Employee.count({ where: { id: { [Op.in]: staff } } }),
+      Store.count({ where: { id: { [Op.in]: storeLocations } } })
+    ]);
+
+    if (validRevenueCount !== revenueMaster.length) {
+      return res.status(400).json({ message: "Invalid revenue master ID(s)." });
+    }
+    if (validEquipmentCount !== equipments.length) {
+      return res.status(400).json({ message: "Invalid equipment ID(s)." });
+    }
+    if (validStaffCount !== staff.length) {
+      return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
+    }
+    if (validStoreCount !== storeLocations.length) {
+      return res.status(400).json({ message: "Invalid store location ID(s)." });
+    }
+
+    // Update main project
     await project.update({
-      project_no,
-      customer_id,
-      order_no,
-      contract_tenure,
-      contract_start_date,
-      asset_allocated_ids,
-      site_mechanic_ids,
-      site_supervisor_ids,
-      site_manager_ids,
-      site_store_manager_ids,
-      store_location_ids,
+      project_no: projectNo,
+      customer_id: customer,
+      order_no: orderNo,
+      contract_start_date: contractStartDate,
+      contract_tenure: contractTenure,
     });
 
-    // Update revenues if provided
-    if (Array.isArray(revenue_master_ids)) {
-      await project.setRevenues(revenue_master_ids);
-    }
+    const project_id = project.id;
 
-    // Optionally, reload with associations
-    const result = await Project_Master.findByPk(project.id, {
-      include: [{ association: "revenues" }],
+    // Clear and re-insert related data
+    await Promise.all([
+      EquipmentProject.destroy({ where: { project_id } }),
+      ProjectRevenue.destroy({ where: { project_id } }),
+      ProjectEmployees.destroy({ where: { project_id } }),
+      StoreProject.destroy({ where: { project_id } }),
+    ]);
+
+    await Promise.all([
+      EquipmentProject.bulkCreate(
+        equipments.map((equipment_id) => ({ project_id, equipment_id }))
+      ),
+      ProjectRevenue.bulkCreate(
+        revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
+      ),
+      ProjectEmployees.bulkCreate(
+        staff.map((emp_id) => ({ project_id, emp_id }))
+      ),
+      StoreProject.bulkCreate(
+        storeLocations.map((store_id) => ({ project_id, store_id }))
+      ),
+    ]);
+
+    return res.status(200).json({
+      message: "Project updated successfully",
+      project,
     });
-
-    return res.status(200).json(result);
   } catch (error) {
-    console.error("Error updating project:", error);
+    console.error("Error in updateProject:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
 
 // Delete Project
 export const deleteProject = async (req, res) => {
@@ -318,13 +417,35 @@ export const deleteProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    await project.destroy();
-    return res.status(200).json({ message: "Project deleted successfully" });
+    // Use transaction to ensure all deletions are atomic
+    const transaction = await Project_Master.sequelize.transaction();
+    try {
+      // Delete all junction table entries first
+      await Promise.all([
+        EquipmentProject.destroy({ where: { project_id: id }, transaction }),
+        ProjectRevenue.destroy({ where: { project_id: id }, transaction }),
+        ProjectEmployees.destroy({ where: { project_id: id }, transaction }),
+        StoreProject.destroy({ where: { project_id: id }, transaction }),
+      ]);
+
+      // Then delete the project itself
+      await project.destroy({ transaction });
+
+      await transaction.commit();
+      return res.status(200).json({ message: "Project deleted successfully" });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error("Error deleting project:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 };
+
 
 //Bulk upload
 // Controller to handle upload and processing
@@ -348,7 +469,7 @@ export const bulkUploadProjects = async (req, res) => {
 
     // Skip header row if first cell starts with "PRJ-"
     let dataRows = rows.slice(1); // This skips the first row (the header)
-   
+
 
 
     const results = [];
@@ -384,7 +505,6 @@ export const bulkUploadProjects = async (req, res) => {
         ? storelocationsStr.split(",").map((s) => s.trim())
         : [];
 
-        console.log({customer})
       // Process one project row and push results
       const result = await processProjectRow({
         projectNo,

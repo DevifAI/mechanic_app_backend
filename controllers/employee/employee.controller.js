@@ -260,3 +260,114 @@ export const bulkUploadEmployees = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+// Get Employees by Role
+export const getEmployeesByRole = async (req, res) => {
+  try {
+    const { role_name } = req.params;
+
+    // First get the role_id from the Role table
+    const role = await Role.findOne({
+      where: { name: role_name },
+      attributes: ['id']
+    });
+
+    if (!role) {
+      return res.status(404).json({ message: "Role not found" });
+    }
+
+    // Then find all employees with this role_id
+    const employees = await Employee.findAll({
+      where: { role_id: role.id },
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: ["name"],
+        },
+        {
+          model: EmpPositionsModel,
+          as: "employeePosition",
+          attributes: ["designation"],
+        },
+      ],
+    });
+
+    // Format the response
+    const formattedEmployees = employees.map((emp) => ({
+      id: emp.id,
+      emp_id: emp.emp_id,
+      emp_name: emp.emp_name,
+      blood_group: emp.blood_group,
+      age: emp.age,
+      address: emp.adress,
+      position: emp.employeePosition?.designation || "N/A",
+      shiftcode: emp.shiftcode,
+      role: emp.role?.name || "N/A",
+      active: emp.is_active ? "Yes" : "No",
+    }));
+
+    return res.status(200).json(formattedEmployees);
+  } catch (error) {
+    console.error("Error fetching employees by role:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Get All Employees Grouped by Role
+export const getAllEmployeesGroupedByRole = async (req, res) => {
+  try {
+    // First get all roles
+    const roles = await Role.findAll({
+      attributes: ['id', 'name'],
+    });
+
+    // Then get all employees with their role information
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: ["name"],
+        },
+        {
+          model: EmpPositionsModel,
+          as: "employeePosition",
+          attributes: ["designation"],
+        },
+      ],
+    });
+
+    // Format the response and group by role
+    const result = {};
+
+    // Initialize empty arrays for each role
+    roles.forEach(role => {
+      result[role.name] = [];
+    });
+
+    // Group employees by role
+    employees.forEach(emp => {
+      const roleName = emp.role?.name || 'Unknown';
+      if (!result[roleName]) {
+        result[roleName] = [];
+      }
+
+      result[roleName].push({
+        id: emp.id,
+        emp_id: emp.emp_id,
+        emp_name: emp.emp_name,
+        blood_group: emp.blood_group,
+        age: emp.age,
+        address: emp.adress,
+        position: emp.employeePosition?.designation || "N/A",
+        shiftcode: emp.shiftcode,
+        active: emp.is_active ? "Yes" : "No",
+      });
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching employees grouped by role:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

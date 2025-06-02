@@ -11,7 +11,7 @@ export default (sequelize) => {
       },
       project_no: { type: DataTypes.STRING, allowNull: false },
       customer_id: { type: DataTypes.UUID, allowNull: false },
-      order_no: { type: DataTypes.BIGINT, allowNull: false },
+      order_no: { type: DataTypes.STRING, allowNull: false },
       contract_tenure: { type: DataTypes.STRING, allowNull: false },
       contract_start_date: { type: DataTypes.DATE, allowNull: false },
 

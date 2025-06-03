@@ -5,7 +5,9 @@ import {
   getRoleById,
   updateRole,
   deleteRole,
+  bulkUploadRoles,
 } from "../../../controllers/role/role.controller.js";
+import upload from "../../../middleware/bulkUpload.js";
 
 const router = express.Router();
 
@@ -14,5 +16,7 @@ router.get("/getall", getAllRoles);
 router.get("/get/:id", getRoleById);
 router.patch("/update/:id", updateRole);
 router.delete("/delete/:id", deleteRole);
+router.post("/bulk-upload", upload.single("file"), bulkUploadRoles);
+
 
 export default router;

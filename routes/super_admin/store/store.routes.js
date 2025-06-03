@@ -5,7 +5,9 @@ import {
   getStoreById,
   updateStore,
   deleteStore,
+  bulkUploadStores,
 } from "../../../controllers/store/store.controller.js"; // Adjust path if needed
+import upload from "../../../middleware/bulkUpload.js";
 
 const router = express.Router();
 
@@ -23,5 +25,5 @@ router.patch("/update/:id", updateStore);
 
 // DELETE /store/delete/:id
 router.delete("/delete/:id", deleteStore);
-
+router.post("/bulk-upload", upload.single("file"), bulkUploadStores);
 export default router;

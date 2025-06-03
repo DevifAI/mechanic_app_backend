@@ -1,5 +1,5 @@
 import { models } from "../../../models/index.js";
-const { MaintenanceSheet, MaintenanceSheetItem, ConsumableItem, UOM, Employee, Organisations } = models;
+const { MaintenanceSheet, MaintenanceSheetItem, ConsumableItem, UOM, Equipment, Organisations } = models;
 
 // Create Maintenance Sheet with items
 export const createMaintenanceSheet = async (req, res) => {
@@ -152,11 +152,11 @@ export const deleteMaintenanceSheet = async (req, res) => {
   }
 };
 
+
 export const getAllMaintenanceSheetByCreator = async (req, res) => {
   try {
-    const { org_id, createdBy, project_id } = req.body; // or req.query depending on your frontend
+    const { org_id, createdBy, project_id } = req.body;
 
-    // Defensive checks
     if (!org_id) {
       return res.status(400).json({ message: "Missing org_id parameter" });
     }
@@ -168,11 +168,7 @@ export const getAllMaintenanceSheetByCreator = async (req, res) => {
     }
 
     const requisitions = await MaintenanceSheet.findAll({
-      where: {
-        org_id,
-        createdBy,
-        project_id
-      },
+      where: { org_id, createdBy, project_id },
       include: [
         {
           model: MaintenanceSheetItem,
@@ -180,7 +176,7 @@ export const getAllMaintenanceSheetByCreator = async (req, res) => {
           include: [
             {
               model: ConsumableItem,
-              as: "itemData", // ✅ match the alias in association
+              as: "itemData",
               attributes: ["id", "item_name", "item_description"],
             },
             {
@@ -190,16 +186,32 @@ export const getAllMaintenanceSheetByCreator = async (req, res) => {
             },
           ],
         },
-        
       ],
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json(requisitions);
+    // Map over each requisition and add equipment details manually
+    const enrichedRequisitions = await Promise.all(
+      requisitions.map(async (reqItem) => {
+        const equipmentDetails = reqItem.equipment
+          ? await Equipment.findByPk(reqItem.equipment, {
+            attributes: ["id", "equipment_name", ], // select relevant fields
+          })
+          : null;
+
+        // Convert Sequelize instance to plain object
+        const plainReqItem = reqItem.toJSON();
+        plainReqItem.equipment = equipmentDetails;
+
+        return plainReqItem;
+      })
+    );
+
+    return res.status(200).json(enrichedRequisitions);
   } catch (error) {
-    console.error("Error retrieving diesel requisitions:", error);
+    console.error("Error retrieving maintenance sheets:", error);
     return res.status(500).json({
-      message: "Failed to retrieve requisitions",
+      message: "Failed to retrieve maintenance sheets",
       error: error.message,
     });
   }

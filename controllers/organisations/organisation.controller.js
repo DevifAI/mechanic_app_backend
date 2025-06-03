@@ -1,6 +1,6 @@
 import { models } from "../../models/index.js"; 
 const { Organisations } = models;
-
+import XLSX from "xlsx";
 // Create an Organisation
 export const createOrganisation = async (req, res) => {
   const { org_name, org_code, org_image } = req.body;
@@ -96,6 +96,83 @@ export const deleteOrganisation = async (req, res) => {
     return res.status(200).json({ message: "Organisation deleted successfully" });
   } catch (error) {
     console.error("Error deleting organisation:", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const bulkUploadOrganisations = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Parse rows as JSON using first row as header
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel sheet is empty" });
+    }
+
+    const results = [];
+
+    for (const [index, row] of rows.entries()) {
+      const { org_name, org_code, org_image } = row;
+
+      // Validate required fields
+      if (!org_name || !org_code) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: "Missing required fields (org_name or org_code)",
+        });
+        continue;
+      }
+
+      try {
+        // Check duplicate org_code
+        const existingOrg = await Organisations.findOne({ where: { org_code } });
+        if (existingOrg) {
+          results.push({
+            row: index + 2,
+            status: "failed",
+            message: "Organisation with this org_code already exists",
+          });
+          continue;
+        }
+
+        // Create organisation with default image fallback
+        const organisation = await Organisations.create({
+          org_name,
+          org_code,
+          org_image:
+            org_image ||
+            "https://bcassetcdn.com/public/blog/wp-content/uploads/2022/09/01203355/blue-building-circle-by-simplepixelsl-brandcrowd.png",
+        });
+
+        results.push({
+          row: index + 2,
+          status: "success",
+          organisationId: organisation.id,
+        });
+      } catch (error) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: error.message,
+        });
+      }
+    }
+
+    return res.status(201).json({
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Bulk upload organisations error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

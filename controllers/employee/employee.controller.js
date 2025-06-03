@@ -1,6 +1,6 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
-const { Employee, Role, Shift, EmpPositionsModel } = models;
+const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees } = models;
 
 export const createEmployee = async (req, res) => {
   try {
@@ -59,7 +59,6 @@ export const createEmployee = async (req, res) => {
 
     return res.status(201).json({
       message: "Employee created successfully",
-      employee: newEmployee,
     });
   } catch (error) {
     console.error("Error creating employee:", error.message);
@@ -125,6 +124,40 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
+
+
+
+export const getProjectsByEmployeeId = async (req, res) => {
+  try {
+    const { id: emp_id } = req.params;
+
+    // Step 1: Find all project IDs assigned to the employee
+    const projectLinks = await ProjectEmployees.findAll({
+      where: { emp_id },
+      attributes: ["project_id"],
+    });
+
+    if (!projectLinks || projectLinks.length === 0) {
+      return res.status(404).json({ message: "No projects found for this employee" });
+    }
+
+    // Step 2: Extract project IDs
+    const projectIds = projectLinks.map((link) => link.project_id);
+
+    // Step 3: Find all projects using those IDs
+    const projects = await Project_Master.findAll({
+      where: {
+        id: projectIds,
+      },
+    });
+
+    return res.status(200).json({ projects });
+  } catch (error) {
+    console.error("Error fetching projects by employee ID:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 // Update Employee
 export const updateEmployee = async (req, res) => {
   try {
@@ -169,12 +202,9 @@ export const bulkUploadEmployees = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Read Excel file from buffer
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
-    // Convert sheet to JSON with default empty values to avoid undefined
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
     if (!rows.length) {
@@ -192,17 +222,15 @@ export const bulkUploadEmployees = async (req, res) => {
         blood_group,
         age,
         adress,
-        position, // this is designation string
+        position,       // designation string
         shiftcode,
         role_name,
+        organisation,   // org_name in Excel
       } = row;
 
-      // Basic validation
-      if (!emp_id || !emp_name || !position || !shiftcode || !role_name) {
-        errors.push({
-          row: i + 2,
-          message: "Missing required fields",
-        });
+      // Validate required fields
+      if (!emp_id || !emp_name || !position || !shiftcode || !role_name || !organisation) {
+        errors.push({ row: i + 2, message: "Missing required fields" });
         continue;
       }
 
@@ -234,6 +262,12 @@ export const bulkUploadEmployees = async (req, res) => {
         continue;
       }
 
+      const org = await Organisations.findOne({ where: { org_name: organisation } });
+      if (!org) {
+        errors.push({ row: i + 2, message: `Invalid organisation: ${organisation}` });
+        continue;
+      }
+
       // Create employee
       const newEmployee = await Employee.create({
         emp_id: empIdStr,
@@ -242,9 +276,11 @@ export const bulkUploadEmployees = async (req, res) => {
         age,
         adress,
         position: positionRecord.id,
-        is_active: true,
         shiftcode,
         role_id: role.id,
+        is_active: true,
+        password: empIdStr, // will be hashed in beforeCreate
+        org_id: org.id,
       });
 
       createdEmployees.push(newEmployee);
@@ -260,6 +296,7 @@ export const bulkUploadEmployees = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 // Get Employees by Role
 export const getEmployeesByRole = async (req, res) => {
   try {

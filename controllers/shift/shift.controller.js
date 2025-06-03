@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 const { Shift } = models;
-
+import XLSX from "xlsx";
 // Create Shift
 export const createShift = async (req, res) => {
   try {
@@ -95,6 +95,90 @@ export const deleteShift = async (req, res) => {
     return res.status(200).json({ message: "Shift deleted successfully" });
   } catch (error) {
     console.error("Error deleting shift:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+export const bulkUploadShifts = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Parse Excel buffer
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Convert to JSON using header row as keys
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel sheet is empty" });
+    }
+
+    const results = [];
+
+    for (const [index, row] of rows.entries()) {
+      const { shift_code, shift_from_time, shift_to_time } = row;
+
+      // Basic validation
+      if (!shift_code || !shift_from_time || !shift_to_time) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: "Missing required fields",
+        });
+        continue;
+      }
+
+      try {
+        // Check if shift_code exists (case-insensitive if needed)
+        const existingShift = await Shift.findOne({
+          where: {
+            shift_code: {
+              [Op.eq]: shift_code,
+            },
+          },
+        });
+
+        if (existingShift) {
+          results.push({
+            row: index + 2,
+            status: "failed",
+            message: "Shift code already exists",
+          });
+          continue;
+        }
+
+        // Create new shift
+        const newShift = await Shift.create({
+          shift_code,
+          shift_from_time,
+          shift_to_time,
+        });
+
+        results.push({
+          row: index + 2,
+          status: "success",
+          shiftId: newShift.id,
+        });
+      } catch (error) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: error.message,
+        });
+      }
+    }
+
+    return res.status(201).json({
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Bulk upload shifts error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

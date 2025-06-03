@@ -163,3 +163,105 @@ export const deleteEquipment = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+export const bulkUploadEquipment = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Parse Excel file buffer
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Convert to JSON with header keys, empty cells as empty string
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel sheet is empty" });
+    }
+
+    const results = [];
+
+    for (const [index, row] of rows.entries()) {
+      const {
+        equipment_name,
+        equipment_sr_no,
+        additional_id,
+        purchase_date,
+        oem,
+        purchase_cost,
+        equipment_manual,
+        maintenance_log,
+        other_log,
+        project_tag,
+        equipment_group_id,
+      } = row;
+
+      // Validate required fields
+      if (
+        !equipment_name ||
+        !equipment_sr_no ||
+        !purchase_date ||
+        !oem ||
+        !equipment_group_id
+      ) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: "Missing required fields",
+        });
+        continue;
+      }
+
+      // Check if equipment group exists
+      const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
+      if (!groupExists) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: "Equipment group not found",
+        });
+        continue;
+      }
+
+      try {
+        const newEquipment = await Equipment.create({
+          equipment_name,
+          equipment_sr_no,
+          additional_id,
+          purchase_date,
+          oem,
+          purchase_cost,
+          equipment_manual,
+          maintenance_log,
+          other_log,
+          project_tag,
+          equipment_group_id,
+        });
+
+        results.push({
+          row: index + 2,
+          status: "success",
+          equipmentId: newEquipment.id,
+        });
+      } catch (error) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: error.message,
+        });
+      }
+    }
+
+    return res.status(201).json({
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Bulk upload equipment error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

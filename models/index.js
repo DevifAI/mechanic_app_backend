@@ -110,8 +110,8 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
-    await sequelize.sync()
+    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync()
     // Fill in the default project_id for existing rows
 
     console.log("✅ All models were synced.");

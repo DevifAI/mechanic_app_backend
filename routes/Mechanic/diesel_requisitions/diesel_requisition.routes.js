@@ -7,6 +7,7 @@ import {
   deleteDieselRequisition,
   getAllDieselRequisitionsByCreator
 } from '../../../controllers/Mechanic/diesel_requisirtion/diesel_requisition.controller.js';
+import { getRecentDieselRequisitionsByCreator } from '../../../controllers/Mechanic/lastRequisitions/lastRequisiiton.controller.js';
 
 const router = express.Router();
 
@@ -25,5 +26,6 @@ router.put('/:id', updateDieselRequisition);
 
 // DELETE: Delete diesel requisition by ID
 router.delete('/:id', deleteDieselRequisition);
+router.post('/latest', getRecentDieselRequisitionsByCreator);
 
 export default router;

@@ -1,4 +1,6 @@
 import { models } from "../../models/index.js";
+import XLSX from "xlsx";
+
 const { Account, AccountGroup } = models;
 
 export const createAccount = async (req, res) => {
@@ -65,5 +67,54 @@ export const deleteAccount = async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const bulkUploadAccount = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Parse rows as JSON, header row assumed
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel sheet is empty" });
+    }
+
+    const results = [];
+
+    for (const [index, row] of rows.entries()) {
+      try {
+        // Create account from each row object directly
+        const account = await Account.create(row);
+
+        results.push({
+          row: index + 2, // +2 to account for header row and 0-based index
+          status: "success",
+          accountId: account.id,
+        });
+      } catch (error) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: error.message,
+        });
+      }
+    }
+
+    return res.status(201).json({
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Bulk upload Account error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };

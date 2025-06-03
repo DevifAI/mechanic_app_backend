@@ -1,5 +1,5 @@
 import { models } from "../../../models/index.js";
-const { MaintenanceSheet, MaintenanceSheetItem } = models;
+const { MaintenanceSheet, MaintenanceSheetItem, ConsumableItem, UOM, Employee, Organisations } = models;
 
 // Create Maintenance Sheet with items
 export const createMaintenanceSheet = async (req, res) => {
@@ -149,5 +149,58 @@ export const deleteMaintenanceSheet = async (req, res) => {
     await t.rollback();
     console.error("Error deleting maintenance sheet:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getAllMaintenanceSheetByCreator = async (req, res) => {
+  try {
+    const { org_id, createdBy, project_id } = req.body; // or req.query depending on your frontend
+
+    // Defensive checks
+    if (!org_id) {
+      return res.status(400).json({ message: "Missing org_id parameter" });
+    }
+    if (!createdBy) {
+      return res.status(400).json({ message: "Missing createdBy parameter" });
+    }
+    if (!project_id) {
+      return res.status(400).json({ message: "Missing project id parameter" });
+    }
+
+    const requisitions = await MaintenanceSheet.findAll({
+      where: {
+        org_id,
+        createdBy,
+        project_id
+      },
+      include: [
+        {
+          model: MaintenanceSheetItem,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "itemData", // ✅ match the alias in association
+              attributes: ["id", "item_name", "item_description"],
+            },
+            {
+              model: UOM,
+              as: "uomData",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(requisitions);
+  } catch (error) {
+    console.error("Error retrieving diesel requisitions:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve requisitions",
+      error: error.message,
+    });
   }
 };

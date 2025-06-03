@@ -15,7 +15,7 @@ router.post('/', createDieselRequisition);
 
 // GET: Get all diesel requisitions
 router.get('/', getAllDieselRequisitions);
-router.get('/getByCreator', getAllDieselRequisitionsByCreator);
+router.post('/getByCreator', getAllDieselRequisitionsByCreator);
 
 // GET: Get a single diesel requisition by ID
 router.get('/:id', getDieselRequisitionById);

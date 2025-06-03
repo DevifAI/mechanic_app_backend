@@ -42,6 +42,10 @@ export const DieselRequisitionModel = (sequelize) => {
         },
         allowNull: true,
       },
+      project_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       timestamps: true,

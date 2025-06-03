@@ -23,6 +23,7 @@ export const createDieselReciept = async (req, res) => {
       is_approve_sic = false,
       is_approve_pm = false,
       org_id,
+      project_id,
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -37,6 +38,7 @@ export const createDieselReciept = async (req, res) => {
         is_approve_sic,
         is_approve_pm,
         org_id,
+        project_id
       },
       { transaction: t }
     );
@@ -54,7 +56,7 @@ export const createDieselReciept = async (req, res) => {
     await t.commit();
 
     return res.status(201).json({
-      message: "Diesel requisition created successfully",
+      message: "Diesel receipt created successfully",
       data: receipt,
     });
   } catch (error) {
@@ -160,5 +162,68 @@ export const deleteDieselRequisition = async (req, res) => {
       .json({ message: "Requisition deleted successfully" });
   } catch (error) {
     return res.status(500).json({ message: "Delete failed", error });
+  }
+};
+
+
+export const getAllDieselReceiptByCreator = async (req, res) => {
+  try {
+    const { org_id, createdBy,project_id } = req.body; // or req.query depending on your frontend
+
+    // Defensive checks
+    if (!org_id) {
+      return res.status(400).json({ message: "Missing org_id parameter" });
+    }
+    if (!createdBy) {
+      return res.status(400).json({ message: "Missing createdBy parameter" });
+    }
+    if (!project_id) {
+      return res.status(400).json({ message: "Missing project id parameter" });
+    }
+
+    const receipts = await DieselReceipt.findAll({
+      where: {
+        org_id,
+        createdBy,
+        project_id
+      },
+      include: [
+        {
+          model: DieselReceiptItem,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Employee,
+          as: "createdByEmployee",
+          attributes: ["id", "emp_name"],
+        },
+        {
+          model: Organisations,
+          as: "organisation",
+          attributes: ["id", "org_name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(receipts);
+  } catch (error) {
+    console.error("Error retrieving diesel receipt:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve receipt",
+      error: error.message,
+    });
   }
 };

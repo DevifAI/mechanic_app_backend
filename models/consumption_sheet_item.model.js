@@ -41,6 +41,7 @@ export const ConsumptionSheetItemModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      
     },
     {
       timestamps: true,

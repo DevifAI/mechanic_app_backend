@@ -16,6 +16,7 @@ export const createConsumptionSheet = async (req, res) => {
     date,
     createdBy,
     org_id,
+    project_id, // Assuming project_id is required
     is_approved_mic = false,
     is_approved_sic = false,
     is_approved_pm = false,
@@ -60,6 +61,7 @@ export const createConsumptionSheet = async (req, res) => {
       is_approved_mic,
       is_approved_sic,
       is_approved_pm,
+      project_id
     });
 
     // Create items
@@ -232,7 +234,7 @@ export const deleteConsumptionSheet = async (req, res) => {
 // // ✅  get by creator
 export const getConsumptionSheetsByCreator = async (req, res) => {
   try {
-    const { createdBy, org_id } = req.body; // Use req.body or req.query based on your frontend
+    const { createdBy, org_id, project_id } = req.body; // Use req.body or req.query based on your frontend
 
     // Defensive checks
     if (!createdBy) {
@@ -241,12 +243,16 @@ export const getConsumptionSheetsByCreator = async (req, res) => {
     if (!org_id) {
       return res.status(400).json({ message: 'Missing org_id parameter' });
     }
+     if (!project_id) {
+      return res.status(400).json({ message: 'Missing project_id parameter' });
+    }
 
     // Fetching consumption sheets by creator and org
     const sheets = await ConsumptionSheet.findAll({
       where: {
         createdBy,
         org_id,
+        project_id
       },
       include: [
         {

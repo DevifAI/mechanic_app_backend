@@ -6,6 +6,7 @@ import {
   getMaintenanceSheetById,
   updateMaintenanceSheet,
   deleteMaintenanceSheet,
+  getAllMaintenanceSheetByCreator,
 } from "../../../controllers/Mechanic/maintenance_sheet/maintenance_sheet.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/", getAllMaintenanceSheets);
 router.get("/:id", getMaintenanceSheetById);
 router.put("/:id", updateMaintenanceSheet);
 router.delete("/:id", deleteMaintenanceSheet);
+router.post("/byCreator", getAllMaintenanceSheetByCreator);
 
 export default router;

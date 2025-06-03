@@ -34,6 +34,10 @@ export const DieselReceiptModel = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
       },
+      project_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

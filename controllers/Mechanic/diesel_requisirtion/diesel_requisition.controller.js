@@ -20,6 +20,7 @@ export const createDieselRequisition = async (req, res) => {
       is_approve_sic = false,
       is_approve_pm = false,
       org_id,
+      project_id
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -33,6 +34,7 @@ export const createDieselRequisition = async (req, res) => {
       is_approve_sic,
       is_approve_pm,
       org_id,
+      project_id
     });
 
     const createdItems = await Promise.all(
@@ -114,7 +116,7 @@ export const getAllDieselRequisitions = async (req, res) => {
 
 export const getAllDieselRequisitionsByCreator = async (req, res) => {
   try {
-    const { org_id, createdBy } = req.body; // or req.query depending on your frontend
+    const { org_id, createdBy,project_id } = req.body; // or req.query depending on your frontend
 
     // Defensive checks
     if (!org_id) {
@@ -123,11 +125,15 @@ export const getAllDieselRequisitionsByCreator = async (req, res) => {
     if (!createdBy) {
       return res.status(400).json({ message: "Missing createdBy parameter" });
     }
+    if (!project_id) {
+      return res.status(400).json({ message: "Missing project id parameter" });
+    }
 
     const requisitions = await DieselRequisitions.findAll({
       where: {
         org_id,
         createdBy,
+        project_id
       },
       include: [
         {

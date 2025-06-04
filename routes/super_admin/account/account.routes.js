@@ -16,6 +16,6 @@ router.get("/", getAllAccounts);
 router.get("/:id", getAccountById);
 router.put("/:id", updateAccount);
 router.delete("/:id", deleteAccount);
-router.post("/bulk-upload", upload.single("file"), bulkUploadAccount);
+router.post("/upload/bulk-upload", upload.single("file"), bulkUploadAccount);
 
 export default router;

@@ -9,7 +9,7 @@ router.get('/', getUOMs);
 router.get('/:id', getUOMById);
 router.post('/:id', updateUOM);
 router.delete('/:id', deleteUOM);
-router.post("/bulk-upload", upload.single("file"), bulkUploadUOM);
+router.post("/upload/bulk-upload", upload.single("file"), bulkUploadUOM);
 
 
 export default router;

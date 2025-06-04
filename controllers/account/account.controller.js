@@ -3,6 +3,7 @@ import XLSX from "xlsx";
 
 const { Account, AccountGroup } = models;
 
+
 export const createAccount = async (req, res) => {
   try {
     const account = await Account.create(req.body);
@@ -81,7 +82,6 @@ export const bulkUploadAccount = async (req, res) => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    // Parse rows as JSON, header row assumed
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
     if (!rows.length) {
@@ -91,12 +91,39 @@ export const bulkUploadAccount = async (req, res) => {
     const results = [];
 
     for (const [index, row] of rows.entries()) {
+      const { account_code, account_name, account_group } = row;
+
+      if (!account_code || !account_name || !account_group) {
+        results.push({
+          row: index + 2,
+          status: "failed",
+          message: "Missing required fields (account_code, account_name, or account_group)",
+        });
+        continue;
+      }
+
       try {
-        // Create account from each row object directly
-        const account = await Account.create(row);
+        // Find AccountGroup by name
+        const group = await AccountGroup.findOne({ where: { account_group_name: account_group } });
+
+        if (!group) {
+          results.push({
+            row: index + 2,
+            status: "failed",
+            message: `Account group "${account_group}" not found`,
+          });
+          continue;
+        }
+
+        // Create account with group id
+        const account = await Account.create({
+          account_code,
+          account_name,
+          account_group: group.id,
+        });
 
         results.push({
-          row: index + 2, // +2 to account for header row and 0-based index
+          row: index + 2,
           status: "success",
           accountId: account.id,
         });

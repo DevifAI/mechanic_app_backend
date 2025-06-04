@@ -1,5 +1,7 @@
+import XLSX from "xlsx";
 import { models } from "../../models/index.js";
 const { Equipment, EquipmentGroup, EquipmentProject } = models;
+
 
 // Create Equipment
 export const createEquipment = async (req, res) => {
@@ -197,7 +199,7 @@ export const bulkUploadEquipment = async (req, res) => {
         maintenance_log,
         other_log,
         project_tag,
-        equipment_group_id,
+        equipment_group, // <-- string name coming from Excel
       } = row;
 
       // Validate required fields
@@ -206,7 +208,7 @@ export const bulkUploadEquipment = async (req, res) => {
         !equipment_sr_no ||
         !purchase_date ||
         !oem ||
-        !equipment_group_id
+        !equipment_group
       ) {
         results.push({
           row: index + 2,
@@ -216,13 +218,16 @@ export const bulkUploadEquipment = async (req, res) => {
         continue;
       }
 
-      // Check if equipment group exists
-      const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
-      if (!groupExists) {
+      // Find group by name
+      const group = await EquipmentGroup.findOne({
+        where: { equipment_group: equipment_group },
+      });
+
+      if (!group) {
         results.push({
           row: index + 2,
           status: "failed",
-          message: "Equipment group not found",
+          message: `Equipment group '${equipment_group}' not found`,
         });
         continue;
       }
@@ -239,7 +244,7 @@ export const bulkUploadEquipment = async (req, res) => {
           maintenance_log,
           other_log,
           project_tag,
-          equipment_group_id,
+          equipment_group_id: group.id, // ← use ID from DB
         });
 
         results.push({

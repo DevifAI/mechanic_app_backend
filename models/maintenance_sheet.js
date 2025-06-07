@@ -34,16 +34,16 @@ export const MaintenanceSheetModel = (sequelize) => {
         allowNull: false,
       },
       is_approved_mic: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       is_approved_sic: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       is_approved_pm: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       org_id: {
         type: DataTypes.UUID,

@@ -19,9 +19,9 @@ export const createDieselReciept = async (req, res) => {
       date,
       items,
       createdBy,
-      is_approve_mic = false,
-      is_approve_sic = false,
-      is_approve_pm = false,
+      is_approve_mic = "pending",
+      is_approve_sic = "pending",
+      is_approve_pm ="pending",
       org_id,
       project_id,
     } = req.body;

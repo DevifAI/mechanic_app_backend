@@ -16,10 +16,10 @@ export const createConsumptionSheet = async (req, res) => {
     date,
     createdBy,
     org_id,
-    project_id, // Assuming project_id is required
-    is_approved_mic = false,
-    is_approved_sic = false,
-    is_approved_pm = false,
+    project_id, // Assuming project_id isrequired
+    is_approved_mic = "pending",
+    is_approved_sic = "pending",
+    is_approved_pm = "pending",
     items = [],
   } = req.body;
 

@@ -1,42 +1,42 @@
 import { models } from "../../models/index.js";
 const {
-  DieselRequisitions,
-  DieselRequisitionItems,
+  ConsumptionSheet,
+  ConsumptionSheetItem,
   ConsumableItem,
   UOM,
-  OEM,
   Employee,
   Organisations,
 } = models;
 
-export const getAllDieselRequisitions = async (req, res) => {
+/**
+ * Get all consumption sheets for a project
+ */
+export const getAllConsumptionSheets = async (req, res) => {
   try {
     const { projectId } = req.body;
 
-    const requisitions = await DieselRequisitions.findAll({
-      where: {
-        project_id: projectId,
-      },
+    const sheets = await ConsumptionSheet.findAll({
+      where: { project_id: projectId },
       include: [
         {
-          model: DieselRequisitionItems,
+          model: ConsumptionSheetItem,
           as: "items",
           include: [
             {
               model: ConsumableItem,
-              as: "consumableItem",
+              as: "itemData",
               attributes: ["id", "item_name", "item_description"],
             },
             {
               model: UOM,
-              as: "unitOfMeasurement",
+              as: "uomData",
               attributes: ["id", "unit_name", "unit_code"],
             },
           ],
         },
         {
           model: Employee,
-          as: "createdByEmployee",
+          as: "createdByUser",
           attributes: ["id", "emp_name"],
         },
         {
@@ -48,45 +48,48 @@ export const getAllDieselRequisitions = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json(requisitions);
+    return res.status(200).json(sheets);
   } catch (error) {
-    console.error("Error retrieving diesel requisitions:", error);
+    console.error("Error fetching all consumption sheets:", error);
     return res.status(500).json({
-      message: "Failed to retrieve requisitions",
+      message: "Failed to fetch consumption sheets",
       error: error.message,
     });
   }
 };
 
-export const getPendingDieselRequisitions = async (req, res) => {
+/**
+ * Get pending MIC-approved consumption sheets
+ */
+export const getPendingConsumptionSheets = async (req, res) => {
   try {
     const { projectId } = req.body;
 
-    const requisitions = await DieselRequisitions.findAll({
+    const sheets = await ConsumptionSheet.findAll({
       where: {
         project_id: projectId,
-        is_approve_mic: "pending"
+        is_approved_mic: "pending",
       },
       include: [
         {
-          model: DieselRequisitionItems,
+          model: ConsumptionSheetItem,
           as: "items",
           include: [
             {
               model: ConsumableItem,
-              as: "consumableItem",
+              as: "itemData",
               attributes: ["id", "item_name", "item_description"],
             },
             {
               model: UOM,
-              as: "unitOfMeasurement",
+              as: "uomData",
               attributes: ["id", "unit_name", "unit_code"],
             },
           ],
         },
         {
           model: Employee,
-          as: "createdByEmployee",
+          as: "createdByUser",
           attributes: ["id", "emp_name"],
         },
         {
@@ -98,44 +101,48 @@ export const getPendingDieselRequisitions = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json(requisitions);
+    return res.status(200).json(sheets);
   } catch (error) {
-    console.error("Error retrieving diesel requisitions:", error);
+    console.error("Error fetching pending sheets:", error);
     return res.status(500).json({
-      message: "Failed to retrieve requisitions",
+      message: "Failed to fetch pending sheets",
       error: error.message,
     });
   }
 };
-export const getCompleteDieselRequisitions = async (req, res) => {
+
+/**
+ * Get complete MIC-approved consumption sheets
+ */
+export const getCompleteConsumptionSheets = async (req, res) => {
   try {
     const { projectId } = req.body;
 
-    const requisitions = await DieselRequisitions.findAll({
+    const sheets = await ConsumptionSheet.findAll({
       where: {
         project_id: projectId,
-        is_approve_mic: "approved"
+        is_approved_mic: "approved",
       },
       include: [
         {
-          model: DieselRequisitionItems,
+          model: ConsumptionSheetItem,
           as: "items",
           include: [
             {
               model: ConsumableItem,
-              as: "consumableItem",
+              as: "itemData",
               attributes: ["id", "item_name", "item_description"],
             },
             {
               model: UOM,
-              as: "unitOfMeasurement",
+              as: "uomData",
               attributes: ["id", "unit_name", "unit_code"],
             },
           ],
         },
         {
           model: Employee,
-          as: "createdByEmployee",
+          as: "createdByUser",
           attributes: ["id", "emp_name"],
         },
         {
@@ -147,37 +154,41 @@ export const getCompleteDieselRequisitions = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json(requisitions);
+    return res.status(200).json(sheets);
   } catch (error) {
-    console.error("Error retrieving diesel requisitions:", error);
+    console.error("Error fetching approved sheets:", error);
     return res.status(500).json({
-      message: "Failed to retrieve requisitions",
+      message: "Failed to fetch approved sheets",
       error: error.message,
     });
   }
 };
 
-export const updateDieselRequisitionMicApproval = async (req, res) => {
+/**
+ * Update MIC approval status for a consumption sheet
+ */
+export const updateConsumptionSheetMicApproval = async (req, res) => {
   try {
-    const { requisitionId, status } = req.body;
+    const { sheetId, status } = req.body;
 
-    const allowedStatuses = ["approved", "pending", "rejected"];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid approval status. Must be 'approved', 'pending', or 'rejected'." });
+    const validStatuses = ["approved", "pending", "rejected"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status. Must be 'approved', 'pending', or 'rejected'.",
+      });
     }
 
-    const requisition = await DieselRequisitions.findByPk(requisitionId);
-
-    if (!requisition) {
-      return res.status(404).json({ message: "Diesel requisition not found." });
+    const sheet = await ConsumptionSheet.findByPk(sheetId);
+    if (!sheet) {
+      return res.status(404).json({ message: "Consumption sheet not found." });
     }
 
-    requisition.is_approve_mic = status;
-    await requisition.save();
+    sheet.is_approved_mic = status;
+    await sheet.save();
 
     return res.status(200).json({
       message: "MIC approval status updated successfully.",
-      requisition,
+      sheet,
     });
   } catch (error) {
     console.error("Error updating MIC approval:", error);

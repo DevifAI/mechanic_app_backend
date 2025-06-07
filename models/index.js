@@ -113,6 +113,9 @@ const syncModels = async () => {
     // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
     // await sequelize.sync()
     // Fill in the default project_id for existing rows
+    // Optional: use alter in dev
+
+
 
     console.log("✅ All models were synced.");
   } catch (err) {

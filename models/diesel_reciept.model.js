@@ -19,16 +19,16 @@ export const DieselReceiptModel = (sequelize) => {
         allowNull: false,
       },
       is_approve_mic: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       is_approve_sic: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       is_approve_pm: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        defaultValue: "pending",
       },
       org_id: {
         type: DataTypes.UUID,

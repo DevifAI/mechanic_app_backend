@@ -47,7 +47,16 @@ export const getAllDieselReceipts = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json(receipts);
+    // Format date field
+    const formattedReceipts = receipts.map((receipt) => {
+      const receiptData = receipt.toJSON();
+      if (receiptData.date) {
+        receiptData.date = new Date(receiptData.date).toISOString().split("T")[0];
+      }
+      return receiptData;
+    });
+
+    return res.status(200).json(formattedReceipts);
   } catch (error) {
     console.error("Error retrieving diesel receipts:", error);
     return res.status(500).json({
@@ -56,6 +65,7 @@ export const getAllDieselReceipts = async (req, res) => {
     });
   }
 };
+
 
 export const getPendingDieselReceipts = async (req, res) => {
   try {

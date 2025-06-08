@@ -47,6 +47,10 @@ export const DieselRequisitionModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+       reject_reason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

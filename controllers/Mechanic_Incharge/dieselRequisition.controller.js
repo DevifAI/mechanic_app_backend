@@ -159,7 +159,7 @@ export const getCompleteDieselRequisitions = async (req, res) => {
 
 export const updateDieselRequisitionMicApproval = async (req, res) => {
   try {
-    const { requisitionId, status } = req.body;
+    const { requisitionId, status, reason_reject } = req.body;
 
     const allowedStatuses = ["approved", "pending", "rejected"];
     if (!allowedStatuses.includes(status)) {
@@ -173,6 +173,16 @@ export const updateDieselRequisitionMicApproval = async (req, res) => {
     }
 
     requisition.is_approve_mic = status;
+
+    if (status === "rejected") {
+      if (!reason_reject || reason_reject.trim() === "") {
+        return res.status(400).json({ message: "Rejection reason is required when status is 'rejected'." });
+      }
+      requisition.reject_reason = reason_reject;
+    } else {
+      requisition.reject_reason = null; // clear rejection reason if not rejected
+    }
+
     await requisition.save();
 
     return res.status(200).json({
@@ -187,3 +197,4 @@ export const updateDieselRequisitionMicApproval = async (req, res) => {
     });
   }
 };
+

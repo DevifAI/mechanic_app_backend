@@ -169,7 +169,7 @@ export const getCompleteConsumptionSheets = async (req, res) => {
  */
 export const updateConsumptionSheetMicApproval = async (req, res) => {
   try {
-    const { sheetId, status } = req.body;
+    const { sheetId, status, reject_reason } = req.body;
 
     const validStatuses = ["approved", "pending", "rejected"];
     if (!validStatuses.includes(status)) {
@@ -184,6 +184,16 @@ export const updateConsumptionSheetMicApproval = async (req, res) => {
     }
 
     sheet.is_approved_mic = status;
+
+    if (status === "rejected") {
+      if (!reject_reason || reject_reason.trim() === "") {
+        return res.status(400).json({ message: "Rejection reason is required when status is 'rejected'." });
+      }
+      sheet.reject_reason = reject_reason;
+    } else {
+      sheet.reject_reason = null;
+    }
+
     await sheet.save();
 
     return res.status(200).json({

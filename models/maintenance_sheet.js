@@ -53,6 +53,10 @@ export const MaintenanceSheetModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+       reject_reason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

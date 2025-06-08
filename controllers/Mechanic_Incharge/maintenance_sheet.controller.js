@@ -156,22 +156,34 @@ export const getApprovedMaintenanceSheets = async (req, res) => {
 
 // Update MIC approval
 export const updateMaintenanceSheetMicApproval = async (req, res) => {
-    try {
-        const { sheetId, status } = req.body;
-        const validStatus = ["approved", "pending", "rejected"];
+  try {
+    const { sheetId, status, reject_reason } = req.body;
+    const validStatus = ["approved", "pending", "rejected"];
 
-        if (!validStatus.includes(status)) {
-            return res.status(400).json({ message: "Invalid approval status" });
-        }
-
-        const sheet = await MaintenanceSheet.findByPk(sheetId);
-        if (!sheet) return res.status(404).json({ message: "Maintenance sheet not found" });
-
-        sheet.is_approved_mic = status;
-        await sheet.save();
-
-        res.status(200).json({ message: "Status updated", sheet });
-    } catch (error) {
-        res.status(500).json({ message: "Failed to update approval", error: error.message });
+    if (!validStatus.includes(status)) {
+      return res.status(400).json({ message: "Invalid approval status" });
     }
+
+    const sheet = await MaintenanceSheet.findByPk(sheetId);
+    if (!sheet) {
+      return res.status(404).json({ message: "Maintenance sheet not found" });
+    }
+
+    sheet.is_approved_mic = status;
+
+    if (status === "rejected") {
+      if (!reject_reason || reject_reason.trim() === "") {
+        return res.status(400).json({ message: "Rejection reason is required when status is 'rejected'." });
+      }
+      sheet.reject_reason = reject_reason;
+    } else {
+      sheet.reject_reason = null;
+    }
+
+    await sheet.save();
+
+    res.status(200).json({ message: "Status updated", sheet });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update approval", error: error.message });
+  }
 };

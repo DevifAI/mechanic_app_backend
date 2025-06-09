@@ -14,6 +14,11 @@ export default (sequelize) => {
       order_no: { type: DataTypes.STRING, allowNull: false },
       contract_tenure: { type: DataTypes.STRING, allowNull: false },
       contract_start_date: { type: DataTypes.DATE, allowNull: false },
+      contract_end_date: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: DataTypes.NOW, // 👈 Default to current date
+      },
 
       // store_location_ids: { type: DataTypes.UUID }, // Use UUID
     },

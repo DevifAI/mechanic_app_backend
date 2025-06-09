@@ -26,6 +26,7 @@ export const createProject = async (req, res) => {
     orderNo,
     contractStartDate,
     contractTenure,
+    contractEndDate, // ✅ New field
     revenueMaster = [],
     equipments = [],
     staff = [],
@@ -62,7 +63,7 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: "Invalid customer ID." });
     }
 
-    // Define required roles
+    // Required roles
     const requiredRoles = [
       'mechanic',
       'mechanicIncharge',
@@ -72,64 +73,46 @@ export const createProject = async (req, res) => {
       'ProjectManager'
     ];
 
-    // Fetch staff details with their roles
     const staffDetails = await Employee.findAll({
       where: { id: { [Op.in]: staff } },
       include: [{
         model: Role,
-        as: 'role', // adjust this based on your actual association name
+        as: 'role',
         attributes: ['name']
       }]
     });
 
-    // Check if all staff IDs are valid
     if (staffDetails.length !== staff.length) {
       return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
     }
 
-    // Get all unique roles present in the staff
     const presentRoles = [...new Set(staffDetails.map(emp => emp.role?.name))];
-
-    // Check if all required roles are present (at least one staff for each role)
     const missingRoles = requiredRoles.filter(role => !presentRoles.includes(role));
 
     if (missingRoles.length > 0) {
       return res.status(400).json({
-        message: `Missing required staff roles: ${missingRoles.join(', ')}. 
-                 Each of these roles must have at least one staff member assigned.`
+        message: `Missing required staff roles: ${missingRoles.join(', ')}. Each of these roles must have at least one staff member assigned.`
       });
     }
 
-    // Rest of your existing validation for other relationships...
-    // Validate revenueMaster IDs
-    if (revenueMaster.length > 0) {
-      const validRevenueCount = await RevenueMaster.count({
-        where: { id: { [Op.in]: revenueMaster } },
-      });
-      if (validRevenueCount !== revenueMaster.length) {
-        return res.status(400).json({ message: "Invalid revenue master ID(s)." });
-      }
+    // Validate related entities
+    const validRevenueCount = await RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } });
+    if (validRevenueCount !== revenueMaster.length) {
+      return res.status(400).json({ message: "Invalid revenue master ID(s)." });
     }
 
-    // Validate equipment IDs
-    if (equipments.length > 0) {
-      const validEquipmentCount = await Equipment.count({
-        where: { id: { [Op.in]: equipments } },
-      });
-      if (validEquipmentCount !== equipments.length) {
-        return res.status(400).json({ message: "Invalid equipment ID(s)." });
-      }
+    const validEquipmentCount = await Equipment.count({ where: { id: { [Op.in]: equipments } } });
+    if (validEquipmentCount !== equipments.length) {
+      return res.status(400).json({ message: "Invalid equipment ID(s)." });
     }
 
-    // Validate store location IDs
-    if (storeLocations.length > 0) {
-      const validStoreCount = await Store.count({
-        where: { id: { [Op.in]: storeLocations } },
-      });
-      if (validStoreCount !== storeLocations.length) {
-        return res.status(400).json({ message: "Invalid store location ID(s)." });
-      }
+    const validStoreCount = await Store.count({ where: { id: { [Op.in]: storeLocations } } });
+    if (validStoreCount !== storeLocations.length) {
+      return res.status(400).json({ message: "Invalid store location ID(s)." });
     }
+
+    // ✅ Default today's date if not provided
+    const endDate = contractEndDate ? new Date(contractEndDate) : new Date();
 
     // Create project
     const project = await Project_Master.create({
@@ -137,50 +120,27 @@ export const createProject = async (req, res) => {
       customer_id: customer,
       order_no: orderNo,
       contract_start_date: contractStartDate,
+      contract_end_date: endDate, // ✅ Added here
       contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
-    // Associate Equipments
-    if (equipments.length > 0) {
-      await EquipmentProject.bulkCreate(
-        equipments.map((equipment_id) => ({
-          project_id,
-          equipment_id,
-        }))
-      );
-    }
+    await EquipmentProject.bulkCreate(
+      equipments.map((equipment_id) => ({ project_id, equipment_id }))
+    );
 
-    // Associate RevenueMasters
-    if (revenueMaster.length > 0) {
-      await ProjectRevenue.bulkCreate(
-        revenueMaster.map((revenue_master_id) => ({
-          project_id,
-          revenue_master_id,
-        }))
-      );
-    }
+    await ProjectRevenue.bulkCreate(
+      revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
+    );
 
-    // Associate Staff
-    if (staff.length > 0) {
-      await ProjectEmployees.bulkCreate(
-        staff.map((emp_id) => ({
-          project_id,
-          emp_id,
-        }))
-      );
-    }
+    await ProjectEmployees.bulkCreate(
+      staff.map((emp_id) => ({ project_id, emp_id }))
+    );
 
-    // Associate Stores
-    if (storeLocations.length > 0) {
-      await StoreProject.bulkCreate(
-        storeLocations.map((store_id) => ({
-          project_id,
-          store_id,
-        }))
-      );
-    }
+    await StoreProject.bulkCreate(
+      storeLocations.map((store_id) => ({ project_id, store_id }))
+    );
 
     return res.status(201).json({
       message: "Project created successfully",
@@ -191,6 +151,7 @@ export const createProject = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Get all Projects with all associated data
 export const getProjects = async (req, res) => {
@@ -455,43 +416,36 @@ export const bulkUploadProjects = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Parse uploaded Excel file from buffer
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
-    // Get rows as arrays (header: 1)
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
     if (!rows.length) {
       return res.status(400).json({ message: "Excel sheet is empty" });
     }
 
-    // Skip header row if first cell starts with "PRJ-"
-    let dataRows = rows.slice(1); // This skips the first row (the header)
-
-
+    // Skip the first row (header)
+    const dataRows = rows.slice(1);
 
     const results = [];
 
-    // Process each row
     for (const row of dataRows) {
-      // Destructure row data
       const [
         projectNo,
         customer,
         orderNo,
         contractStartDate,
         contractTenure,
+        contractEndDate, // ✅ New field
         revenuemasterStr,
         equipmentsStr,
         staffStr,
         storelocationsStr,
       ] = row;
 
-      if (!projectNo) continue; // skip empty row
+      if (!projectNo) continue;
 
-      // Convert comma-separated strings to arrays (trim spaces)
       const revenue_master_ids = revenuemasterStr
         ? revenuemasterStr.split(",").map((r) => r.trim())
         : [];
@@ -505,13 +459,13 @@ export const bulkUploadProjects = async (req, res) => {
         ? storelocationsStr.split(",").map((s) => s.trim())
         : [];
 
-      // Process one project row and push results
       const result = await processProjectRow({
         projectNo,
         customer,
         orderNo,
         contractStartDate,
         contractTenure,
+        contractEndDate, // ✅ Pass to processor
         revenue_master_ids,
         equipment_allocated_ids,
         staff_ids,

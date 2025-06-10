@@ -159,33 +159,45 @@ export const getProjects = async (req, res) => {
     const projects = await Project_Master.findAll({
       include: [
         {
-          association: "customer", // Partner model
+          association: "customer",
           attributes: ["id", "partner_name"],
         },
         {
-          association: "equipments", // Equipment model
+          association: "equipments",
           attributes: ["id", "equipment_name"],
-          through: { attributes: [] }, // exclude junction table data
+          through: { attributes: [] },
         },
         {
-          association: "staff", // Employee model
+          association: "staff",
           attributes: ["id", "emp_name"],
           through: { attributes: [] },
         },
         {
-          association: "revenues", // RevenueMaster model
+          association: "revenues",
           attributes: ["id", "revenue_code", "revenue_description"],
           through: { attributes: [] },
         },
         {
-          association: "store_locations", // StoreLocation model
+          association: "store_locations",
           attributes: ["id", "store_code", "store_name"],
           through: { attributes: [] },
         },
       ],
     });
 
-    return res.status(200).json(projects);
+    const projectsWithDuration = projects.map((project) => {
+      const start = new Date(project.contract_start_date);
+      const end = new Date(project.contract_end_date);
+      const duration = `${Math.ceil((end - start) / (1000 * 60 * 60 * 24))} Days`; // in days
+
+      return {
+        ...project.toJSON(),
+        contract_end_date: project.contract_end_date,
+        duration,
+      };
+    });
+
+    return res.status(200).json(projectsWithDuration);
   } catch (error) {
     console.error("Error fetching projects:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -212,10 +224,12 @@ export const getProjectById = async (req, res) => {
           association: "staff",
           attributes: ["id", "emp_name", "role_id"],
           through: { attributes: [] },
-          include: [{
-            association: "role", // Include the role association
-            attributes: ["name"] // Only include the role name
-          }]
+          include: [
+            {
+              association: "role",
+              attributes: ["name"],
+            },
+          ],
         },
         {
           association: "revenues",
@@ -234,15 +248,24 @@ export const getProjectById = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    return res.status(200).json(project);
+    const start = new Date(project.contract_start_date);
+    const end = new Date(project.contract_end_date);
+    const duration = `${Math.ceil((end - start) / (1000 * 60 * 60 * 24))} days`; // duration in days
+
+    return res.status(200).json({
+      ...project.toJSON(),
+      contract_end_date: project.contract_end_date,
+      duration, // number of days between start and end
+    });
   } catch (error) {
     console.error("Error fetching project:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message
+      error: error.message,
     });
   }
 };
+
 
 
 // Update Project
@@ -252,6 +275,7 @@ export const updateProject = async (req, res) => {
     customer,
     orderNo,
     contractStartDate,
+    contractEndDate, // ← added
     contractTenure,
     revenueMaster = [],
     equipments = [],
@@ -266,7 +290,6 @@ export const updateProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found." });
     }
 
-    // Validate required relationships
     if (!equipments.length) {
       return res.status(400).json({ message: "At least one equipment is required." });
     }
@@ -280,7 +303,6 @@ export const updateProject = async (req, res) => {
       return res.status(400).json({ message: "At least one revenue master is required." });
     }
 
-    // Check if project number is being updated to a duplicate
     if (project.project_no !== projectNo) {
       const existingProject = await Project_Master.findOne({
         where: { project_no: projectNo },
@@ -290,23 +312,21 @@ export const updateProject = async (req, res) => {
       }
     }
 
-    // Validate customer_id
     const customerExists = await Partner.findByPk(customer);
     if (!customerExists) {
       return res.status(400).json({ message: "Invalid customer ID." });
     }
 
-    // Validate related IDs
     const [
       validRevenueCount,
       validEquipmentCount,
       validStaffCount,
-      validStoreCount
+      validStoreCount,
     ] = await Promise.all([
       RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } }),
       Equipment.count({ where: { id: { [Op.in]: equipments } } }),
       Employee.count({ where: { id: { [Op.in]: staff } } }),
-      Store.count({ where: { id: { [Op.in]: storeLocations } } })
+      Store.count({ where: { id: { [Op.in]: storeLocations } } }),
     ]);
 
     if (validRevenueCount !== revenueMaster.length) {
@@ -322,18 +342,17 @@ export const updateProject = async (req, res) => {
       return res.status(400).json({ message: "Invalid store location ID(s)." });
     }
 
-    // Update main project
     await project.update({
       project_no: projectNo,
       customer_id: customer,
       order_no: orderNo,
       contract_start_date: contractStartDate,
+      contract_end_date: contractEndDate, // ← update field
       contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
-    // Clear and re-insert related data
     await Promise.all([
       EquipmentProject.destroy({ where: { project_id } }),
       ProjectRevenue.destroy({ where: { project_id } }),
@@ -365,7 +384,6 @@ export const updateProject = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 
 // Delete Project

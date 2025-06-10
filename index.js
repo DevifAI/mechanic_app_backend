@@ -27,6 +27,7 @@ import consumptionSheetRoutes from "./routes/Mechanic/consumption_sheet/consumpt
 import maintenanceSheetRoutes from "./routes/Mechanic/maintenance_sheet/maintenance_sheet.routes.js"; // Import uom routes
 import authentcationRoutes from "./routes/authentications/auth.routes.js"; // Import authentication routes
 import mechanicInchargeRoutes from "./routes/MechanicIncharge/mechanic_incharge.routes.js"; // Import authentication routes
+import siteInchargeRoutes from "./routes/SiteIncharge/site_incharge.routes.js"; // Import authentication routes
 import { syncModels } from "./models/index.js";
 
 dotenv.config();
@@ -60,6 +61,7 @@ app.use("/api/master/mechanic/consumptionsheet", consumptionSheetRoutes);
 app.use("/api/master/mechanic/maintenanceSheet", maintenanceSheetRoutes);
 app.use("/api/master/auth", authentcationRoutes);
 app.use("/api/master/mechanic_incharge", mechanicInchargeRoutes);
+app.use("/api/master/site_incharge", siteInchargeRoutes);
 
 // Initialize database connection
 connection();

@@ -1,6 +1,6 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
-const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees } = models;
+const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees, DieselReceipt, DieselRequisitions, ConsumptionSheet, MaintenanceSheet } = models;
 
 export const createEmployee = async (req, res) => {
   try {
@@ -188,13 +188,26 @@ export const deleteEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
+    // Delete associated records first
+    await Promise.all([
+      ProjectEmployees.destroy({ where: { emp_id: employee.emp_id } }),
+      DieselRequisitions.destroy({ where: { createdBy: id } }),
+      DieselReceipt.destroy({ where: { createdBy: id } }),
+      ConsumptionSheet.destroy({ where: { createdBy: id } }),
+      MaintenanceSheet.destroy({ where: { createdBy: id } }),
+      // Add more association deletions as needed
+    ]);
+
+    // Delete the employee
     await employee.destroy();
-    return res.status(200).json({ message: "Employee deleted successfully" });
+
+    return res.status(200).json({ message: "Employee and associations deleted successfully" });
   } catch (error) {
     console.error("Error deleting employee:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export const bulkUploadEmployees = async (req, res) => {
   try {

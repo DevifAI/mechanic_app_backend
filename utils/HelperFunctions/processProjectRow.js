@@ -21,7 +21,7 @@ export async function processProjectRow({
   contractTenure,
   revenue_master_ids, // these are revenue_codes now
   equipment_allocated_ids, // these are equipment_names
-  staff_ids, // these are emp_names
+  // staff_ids, // these are emp_names
   store_location_ids, // these are store_codes
 }) {
   // Check duplicate project no
@@ -73,17 +73,17 @@ export async function processProjectRow({
   const equipment_ids = equipments.map((e) => e.id);
 
   // Find Employees by emp_name
-  const employees = await Employee.findAll({
-    where: { emp_name: { [Op.in]: staff_ids } },
-  });
-  if (employees.length !== staff_ids.length) {
-    return {
-      projectNo,
-      status: "failed",
-      message: "One or more employee names are invalid.",
-    };
-  }
-  const employee_ids = employees.map((e) => e.id);
+  // const employees = await Employee.findAll({
+  //   where: { emp_name: { [Op.in]: staff_ids } },
+  // });
+  // if (employees.length !== staff_ids.length) {
+  //   return {
+  //     projectNo,
+  //     status: "failed",
+  //     message: "One or more employee names are invalid.",
+  //   };
+  // }
+  // const employee_ids = employees.map((e) => e.id);
 
   // Find Stores by store_code
   const stores = await Store.findAll({
@@ -122,11 +122,11 @@ export async function processProjectRow({
     );
   }
 
-  if (employee_ids.length > 0) {
-    await ProjectEmployees.bulkCreate(
-      employee_ids.map((id) => ({ project_id, emp_id: id }))
-    );
-  }
+  // if (employee_ids.length > 0) {
+  //   await ProjectEmployees.bulkCreate(
+  //     employee_ids.map((id) => ({ project_id, emp_id: id }))
+  //   );
+  // }
 
   if (store_ids.length > 0) {
     await StoreProject.bulkCreate(

@@ -313,21 +313,13 @@ export const bulkUploadEmployees = async (req, res) => {
 // Get Employees by Role
 export const getEmployeesByRole = async (req, res) => {
   try {
-    const { role_name } = req.params;
+    const { id } = req.params;
 
-    // First get the role_id from the Role table
-    const role = await Role.findOne({
-      where: { name: role_name },
-      attributes: ['id']
-    });
 
-    if (!role) {
-      return res.status(404).json({ message: "Role not found" });
-    }
 
     // Then find all employees with this role_id
     const employees = await Employee.findAll({
-      where: { role_id: role.id },
+      where: { role_id: id },
       include: [
         {
           model: Role,
@@ -419,5 +411,67 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
   } catch (error) {
     console.error("Error fetching employees grouped by role:", error);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
+
+
+
+
+export const addEmployeesToProject = async (req, res) => {
+  try {
+    const { project_id, employee_ids } = req.body;
+
+    if (!project_id || !Array.isArray(employee_ids) || employee_ids.length === 0) {
+      return res.status(400).json({ message: "project_id and employee_ids are required." });
+    }
+
+    // Check if project exists
+    const projectExists = await Project_Master.findByPk(project_id);
+    if (!projectExists) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // Validate employee IDs
+    const foundEmployees = await Employee.findAll({
+      where: { id: employee_ids },
+    });
+
+    if (foundEmployees.length !== employee_ids.length) {
+      return res.status(400).json({ message: "Some employee IDs are invalid." });
+    }
+
+    // Find existing employee mappings for the project
+    const existingMappings = await ProjectEmployees.findAll({
+      where: {
+        project_id,
+        emp_id: employee_ids,
+      },
+    });
+
+    const alreadyAssignedEmpIds = new Set(existingMappings.map(e => e.emp_id));
+
+    // Filter out already assigned employees
+    const newEmployeeIds = employee_ids.filter(emp_id => !alreadyAssignedEmpIds.has(emp_id));
+
+    if (newEmployeeIds.length === 0) {
+      return res.status(200).json({ message: "All selected employees are already assigned to this project." });
+    }
+
+    const newMappings = newEmployeeIds.map(emp_id => ({
+      project_id,
+      emp_id,
+    }));
+
+    await ProjectEmployees.bulkCreate(newMappings);
+
+    return res.status(201).json({
+      message: `Successfully added ${newMappings.length} employee(s) to the project.`,
+    });
+  } catch (error) {
+    console.error("Error adding employees to project:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

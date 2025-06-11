@@ -9,6 +9,7 @@ import {
   getEmployeesByRole,
   getAllEmployeesGroupedByRole,
   getProjectsByEmployeeId,
+  addEmployeesToProject,
 } from "../../../controllers/employee/employee.controller.js";
 import upload from "../../../middleware/bulkUpload.js";
 
@@ -21,7 +22,9 @@ router.get("/get/projects/:id", getProjectsByEmployeeId);
 router.patch("/update/:id", updateEmployee);
 router.delete("/delete/:id", deleteEmployee);
 router.post("/bulk-upload", upload.single("file"), bulkUploadEmployees);
-router.get('/role/:role_name', getEmployeesByRole);
+router.get('/role/:id', getEmployeesByRole);
 router.get('/grouped-by-role', getAllEmployeesGroupedByRole);
+// POST /api/project-employees/add
+router.post("/add/employee/project", addEmployeesToProject);
 
 export default router;

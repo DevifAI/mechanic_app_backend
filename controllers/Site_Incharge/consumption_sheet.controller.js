@@ -66,7 +66,7 @@ export const getAllConsumptionSheets = async (req, res) => {
 };
 
 /**
- * Get pending MIC-approved consumption sheets
+ * Get pending Site Incharge-approved consumption sheets
  */
 export const getPendingConsumptionSheets = async (req, res) => {
     try {
@@ -122,7 +122,7 @@ export const getPendingConsumptionSheets = async (req, res) => {
 };
 
 /**
- * Get complete MIC-approved consumption sheets
+ * Get complete Site Incharge-approved consumption sheets
  */
 export const getCompleteConsumptionSheets = async (req, res) => {
     try {
@@ -178,7 +178,7 @@ export const getCompleteConsumptionSheets = async (req, res) => {
 };
 
 /**
- * Update MIC approval status for a consumption sheet
+ * Update Site Incharge approval status for a consumption sheet
  */
 export const updateConsumptionSheetSicApproval = async (req, res) => {
     try {
@@ -210,13 +210,13 @@ export const updateConsumptionSheetSicApproval = async (req, res) => {
         await sheet.save();
 
         return res.status(200).json({
-            message: "MIC approval status updated successfully.",
+            message: "Site Incharge approval status updated successfully.",
             sheet,
         });
     } catch (error) {
-        console.error("Error updating MIC approval:", error);
+        console.error("Error updating Site Incharge approval:", error);
         return res.status(500).json({
-            message: "Failed to update MIC approval status.",
+            message: "Failed to update Site Incharge approval status.",
             error: error.message,
         });
     }

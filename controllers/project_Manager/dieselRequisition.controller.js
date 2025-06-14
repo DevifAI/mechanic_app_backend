@@ -20,6 +20,9 @@ export const getAllDieselRequisitions = async (req, res) => {
                 is_approve_mic: {
                     [Op.in]: ["pending", "approved"], // Correct usage of IN operator
                 },
+                is_approve_sic: {
+                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
+                },
             },
             include: [
                 {
@@ -69,10 +72,13 @@ export const getPendingDieselRequisitions = async (req, res) => {
         const requisitions = await DieselRequisitions.findAll({
             where: {
                 project_id: projectId,
-                is_approve_sic: "pending",
-                 is_approve_mic: {
+                is_approve_sic: {
                     [Op.in]: ["pending", "approved"], // Correct usage of IN operator
                 },
+                is_approve_mic: {
+                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
+                },
+                is_approve_pm: "pending",
             },
             include: [
                 {
@@ -122,8 +128,9 @@ export const getCompleteDieselRequisitions = async (req, res) => {
             where: {
                 project_id: projectId,
                 is_approve_sic: "approved",
-                 is_approve_mic: {
-                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
+                is_approve_pm: "approved",
+                is_approve_mic: {
+                    [Op.in]: ["approved"], // Correct usage of IN operator
                 },
             },
             include: [
@@ -182,7 +189,7 @@ export const updateDieselRequisitionMicApproval = async (req, res) => {
             return res.status(404).json({ message: "Diesel requisition not found." });
         }
 
-        requisition.is_approve_sic = status;
+        requisition.is_approve_pm = status;
 
         if (status === "rejected") {
             if (!reason_reject || reason_reject.trim() === "") {
@@ -196,13 +203,13 @@ export const updateDieselRequisitionMicApproval = async (req, res) => {
         await requisition.save();
 
         return res.status(200).json({
-            message: "Site Incharge approval status updated successfully.",
+            message: "Project Manager approval status updated successfully.",
             requisition,
         });
     } catch (error) {
-        console.error("Error updating Site Incharge approval:", error);
+        console.error("Error updating Project Manager approval:", error);
         return res.status(500).json({
-            message: "Failed to update Site Incharge approval status.",
+            message: "Failed to update Project Manager approval status.",
             error: error.message,
         });
     }

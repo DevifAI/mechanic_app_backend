@@ -206,13 +206,13 @@ export const updateDieselReceiptMicApproval = async (req, res) => {
         await receipt.save();
 
         return res.status(200).json({
-            message: "MIC approval status updated successfully.",
+            message: "Site Incharge approval status updated successfully.",
             receipt,
         });
     } catch (error) {
-        console.error("Error updating MIC approval for diesel receipt:", error);
+        console.error("Error updating Site Incharge approval for diesel receipt:", error);
         return res.status(500).json({
-            message: "Failed to update MIC approval status.",
+            message: "Failed to update Site Incharge approval status.",
             error: error.message,
         });
     }

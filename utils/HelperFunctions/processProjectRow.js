@@ -18,9 +18,9 @@ export async function processProjectRow({
   customer, // partner_name
   orderNo,
   contractStartDate,
-  contractTenure,
+  // contractTenure,
   revenue_master_ids, // these are revenue_codes now
-  equipment_allocated_ids, // these are equipment_names
+  // equipment_allocated_ids, // these are equipment_names
   // staff_ids, // these are emp_names
   store_location_ids, // these are store_codes
 }) {
@@ -60,17 +60,17 @@ export async function processProjectRow({
   const revenue_ids = revenues.map((r) => r.id);
 
   // Find Equipment by equipment_name
-  const equipments = await Equipment.findAll({
-    where: { equipment_name: { [Op.in]: equipment_allocated_ids } },
-  });
-  if (equipments.length !== equipment_allocated_ids.length) {
-    return {
-      projectNo,
-      status: "failed",
-      message: "One or more equipment names are invalid.",
-    };
-  }
-  const equipment_ids = equipments.map((e) => e.id);
+  // const equipments = await Equipment.findAll({
+  //   where: { equipment_name: { [Op.in]: equipment_allocated_ids } },
+  // });
+  // if (equipments.length !== equipment_allocated_ids.length) {
+  //   return {
+  //     projectNo,
+  //     status: "failed",
+  //     message: "One or more equipment names are invalid.",
+  //   };
+  // }
+  // const equipment_ids = equipments.map((e) => e.id);
 
   // Find Employees by emp_name
   // const employees = await Employee.findAll({
@@ -104,17 +104,17 @@ export async function processProjectRow({
     customer_id,
     order_no: orderNo,
     contract_start_date: contractStartDate,
-    contract_tenure: contractTenure,
+    // contract_tenure: contractTenure,
   });
 
   const project_id = project.id;
 
   // Insert associated records
-  if (equipment_ids.length > 0) {
-    await EquipmentProject.bulkCreate(
-      equipment_ids.map((id) => ({ project_id, equipment_id: id }))
-    );
-  }
+  // if (equipment_ids.length > 0) {
+  //   await EquipmentProject.bulkCreate(
+  //     equipment_ids.map((id) => ({ project_id, equipment_id: id }))
+  //   );
+  // }
 
   if (revenue_ids.length > 0) {
     await ProjectRevenue.bulkCreate(

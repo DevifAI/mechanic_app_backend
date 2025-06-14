@@ -13,6 +13,9 @@ export default (sequelize) => {
       partner_address: { type: DataTypes.TEXT, allowNull: false },
       partner_gst: { type: DataTypes.STRING, allowNull: false },
       partner_geo_id: { type: DataTypes.BIGINT, allowNull: false },
+      state: { type: DataTypes.STRING, allowNull: false , defaultValue: "West Bengal" },
+      city: { type: DataTypes.STRING, allowNull: false , defaultValue: "Durgapur" },
+      pincode: { type: DataTypes.STRING, allowNull: false, defaultValue: "713212" },
       isCustomer: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     },
     {

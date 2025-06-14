@@ -1,5 +1,5 @@
-import { models } from "../../models/index.js"; // Correct import
-const { Partner } = models; // Extract Partner model
+import { models } from "../../models/index.js";
+const { Partner } = models;
 import XLSX from "xlsx";
 
 // Create Partner
@@ -7,29 +7,42 @@ export const createPartner = async (req, res) => {
   if (!req.body) {
     return res.status(400).json({ message: "Request body is missing" });
   }
-  // Check if the required fields are in the request body
+
   const {
     partner_name,
     partner_address,
     partner_gst,
     partner_geo_id,
+    isCustomer,
+    state,
+    city,
+    pincode,
   } = req.body;
 
   if (
-    partner_name === undefined ||
-    partner_address === undefined ||
-    partner_gst === undefined ||
-    partner_geo_id === undefined
+    !partner_name ||
+    !partner_address ||
+    !partner_gst ||
+    !partner_geo_id ||
+    !state ||
+    !city ||
+    !pincode
   ) {
-    console.log({ partner_address });
-    console.log({ partner_geo_id });
-    console.log({ partner_name, partner_gst });
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-
   try {
-    const partner = await Partner.create(req.body); // Create the partner instance
+    const partner = await Partner.create({
+      partner_name,
+      partner_address,
+      partner_gst,
+      partner_geo_id,
+      isCustomer,
+      state,
+      city,
+      pincode,
+    });
+
     return res.status(201).json(partner);
   } catch (error) {
     console.error("Error creating partner:", error);
@@ -37,10 +50,10 @@ export const createPartner = async (req, res) => {
   }
 };
 
-// Get all Partners
+// Get All Partners
 export const getPartners = async (req, res) => {
   try {
-    const partners = await Partner.findAll(); // Find all partners
+    const partners = await Partner.findAll();
     return res.status(200).json(partners);
   } catch (error) {
     console.error("Error fetching partners:", error);
@@ -48,6 +61,7 @@ export const getPartners = async (req, res) => {
   }
 };
 
+// Get Partner by ID
 export const getPartnerById = async (req, res) => {
   const { id } = req.params;
 
@@ -63,6 +77,7 @@ export const getPartnerById = async (req, res) => {
   }
 };
 
+// Update Partner
 export const updatePartner = async (req, res) => {
   const { id } = req.params;
   const {
@@ -71,6 +86,9 @@ export const updatePartner = async (req, res) => {
     partner_gst,
     partner_geo_id,
     isCustomer,
+    state,
+    city,
+    pincode,
   } = req.body;
 
   try {
@@ -85,6 +103,9 @@ export const updatePartner = async (req, res) => {
       partner_gst,
       partner_geo_id,
       isCustomer,
+      state,
+      city,
+      pincode,
     });
 
     return res.status(200).json(partner);
@@ -94,6 +115,7 @@ export const updatePartner = async (req, res) => {
   }
 };
 
+// Delete Partner
 export const deletePartner = async (req, res) => {
   const { id } = req.params;
 
@@ -104,7 +126,6 @@ export const deletePartner = async (req, res) => {
     }
 
     await partner.destroy();
-
     return res.status(200).json({ message: "Partner deleted successfully" });
   } catch (error) {
     console.error("Error deleting partner:", error);
@@ -112,61 +133,63 @@ export const deletePartner = async (req, res) => {
   }
 };
 
-
-
-
+// Bulk Upload Partners
 export const bulkUploadPartners = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Parse uploaded Excel file buffer
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
-    // Convert sheet to JSON with header row keys
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-    // defval: "" ensures missing cells become empty strings instead of undefined
 
     if (!rows.length) {
       return res.status(400).json({ message: "Excel sheet is empty" });
     }
 
     const results = [];
+
     for (const [index, row] of rows.entries()) {
       const {
         partner_name,
         partner_address,
         partner_gst,
         partner_geo_id,
+        isCustomer,
+        state,
+        city,
+        pincode,
       } = row;
 
-  // Validate required fields per row
       if (
-        partner_name === undefined ||
-        partner_address === undefined ||
-        partner_gst === undefined ||
-        partner_geo_id === undefined
+        !partner_name ||
+        !partner_address ||
+        !partner_gst ||
+        !partner_geo_id ||
+        !state ||
+        !city ||
+        !pincode
       ) {
         results.push({
-          row: index + 2, // +2 to account for header row and 0-based index
+          row: index + 2,
           status: "failed",
           message: "Missing required fields",
         });
-        continue; // skip this row
+        continue;
       }
-    
-
 
       try {
-        // Create partner record
         const partner = await Partner.create({
           partner_name,
           partner_address,
           partner_gst,
           partner_geo_id,
+          isCustomer: isCustomer ?? true,
+          state,
+          city,
+          pincode,
         });
 
         results.push({
@@ -192,4 +215,3 @@ export const bulkUploadPartners = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-

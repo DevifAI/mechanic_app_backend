@@ -28,16 +28,16 @@ export const createProject = async (req, res) => {
     contractTenure,
     contractEndDate, // ✅ New field
     revenueMaster = [],
-    equipments = [],
+    // equipments = [],
     // staff = [],
     storeLocations = [],
   } = req.body;
 
   try {
     // Validate required relationships
-    if (!equipments.length) {
-      return res.status(400).json({ message: "At least one equipment is required." });
-    }
+    // if (!equipments.length) {
+    //   return res.status(400).json({ message: "At least one equipment is required." });
+    // }
     // if (staff.length < 6) {
     //   return res.status(400).json({ message: "Minimum 6 staff members are required." });
     // }
@@ -101,10 +101,10 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: "Invalid revenue master ID(s)." });
     }
 
-    const validEquipmentCount = await Equipment.count({ where: { id: { [Op.in]: equipments } } });
-    if (validEquipmentCount !== equipments.length) {
-      return res.status(400).json({ message: "Invalid equipment ID(s)." });
-    }
+    // const validEquipmentCount = await Equipment.count({ where: { id: { [Op.in]: equipments } } });
+    // if (validEquipmentCount !== equipments.length) {
+    //   return res.status(400).json({ message: "Invalid equipment ID(s)." });
+    // }
 
     const validStoreCount = await Store.count({ where: { id: { [Op.in]: storeLocations } } });
     if (validStoreCount !== storeLocations.length) {
@@ -121,14 +121,14 @@ export const createProject = async (req, res) => {
       order_no: orderNo,
       contract_start_date: contractStartDate,
       contract_end_date: endDate, // ✅ Added here
-      contract_tenure: contractTenure,
+      // contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
-    await EquipmentProject.bulkCreate(
-      equipments.map((equipment_id) => ({ project_id, equipment_id }))
-    );
+    // await EquipmentProject.bulkCreate(
+    //   equipments.map((equipment_id) => ({ project_id, equipment_id }))
+    // );
 
     await ProjectRevenue.bulkCreate(
       revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
@@ -278,7 +278,7 @@ export const updateProject = async (req, res) => {
     contractEndDate, // ← added
     contractTenure,
     revenueMaster = [],
-    equipments = [],
+    // equipments = [],
     // staff = [],
     storeLocations = [],
   } = req.body;
@@ -290,9 +290,9 @@ export const updateProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found." });
     }
 
-    if (!equipments.length) {
-      return res.status(400).json({ message: "At least one equipment is required." });
-    }
+    // if (!equipments.length) {
+    //   return res.status(400).json({ message: "At least one equipment is required." });
+    // }
     // if (!staff.length) {
     //   return res.status(400).json({ message: "At least one staff member is required." });
     // }
@@ -319,7 +319,7 @@ export const updateProject = async (req, res) => {
 
     const [
       validRevenueCount,
-      validEquipmentCount,
+      // validEquipmentCount,
       // validStaffCount,
       validStoreCount,
     ] = await Promise.all([
@@ -332,9 +332,9 @@ export const updateProject = async (req, res) => {
     if (validRevenueCount !== revenueMaster.length) {
       return res.status(400).json({ message: "Invalid revenue master ID(s)." });
     }
-    if (validEquipmentCount !== equipments.length) {
-      return res.status(400).json({ message: "Invalid equipment ID(s)." });
-    }
+    // if (validEquipmentCount !== equipments.length) {
+    //   return res.status(400).json({ message: "Invalid equipment ID(s)." });
+    // }
     // if (validStaffCount !== staff.length) {
     //   return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
     // }
@@ -348,22 +348,22 @@ export const updateProject = async (req, res) => {
       order_no: orderNo,
       contract_start_date: contractStartDate,
       contract_end_date: contractEndDate, // ← update field
-      contract_tenure: contractTenure,
+      // contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
     await Promise.all([
-      EquipmentProject.destroy({ where: { project_id } }),
+      // EquipmentProject.destroy({ where: { project_id } }),
       ProjectRevenue.destroy({ where: { project_id } }),
       ProjectEmployees.destroy({ where: { project_id } }),
       StoreProject.destroy({ where: { project_id } }),
     ]);
 
     await Promise.all([
-      EquipmentProject.bulkCreate(
-        equipments.map((equipment_id) => ({ project_id, equipment_id }))
-      ),
+      // EquipmentProject.bulkCreate(
+      //   equipments.map((equipment_id) => ({ project_id, equipment_id }))
+      // ),
       ProjectRevenue.bulkCreate(
         revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
       ),
@@ -454,10 +454,10 @@ export const bulkUploadProjects = async (req, res) => {
         customer,
         orderNo,
         contractStartDate,
-        contractTenure,
+        // contractTenure,
         contractEndDate, // ✅ New field
         revenuemasterStr,
-        equipmentsStr,
+        // equipmentsStr,
         storelocationsStr,
       ] = row;
 
@@ -466,9 +466,9 @@ export const bulkUploadProjects = async (req, res) => {
       const revenue_master_ids = revenuemasterStr
         ? revenuemasterStr.split(",").map((r) => r.trim())
         : [];
-      const equipment_allocated_ids = equipmentsStr
-        ? equipmentsStr.split(",").map((e) => e.trim())
-        : [];
+      // const equipment_allocated_ids = equipmentsStr
+      //   ? equipmentsStr.split(",").map((e) => e.trim())
+      //   : [];
       // const staff_ids = staffStr
       //   ? staffStr.split(",").map((s) => s.trim())
       //   : [];
@@ -481,10 +481,10 @@ export const bulkUploadProjects = async (req, res) => {
         customer,
         orderNo,
         contractStartDate,
-        contractTenure,
+        // contractTenure,
         contractEndDate, // ✅ Pass to processor
         revenue_master_ids,
-        equipment_allocated_ids,
+        // equipment_allocated_ids,
         // staff_ids,
         store_location_ids,
       });

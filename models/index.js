@@ -133,7 +133,7 @@ const syncModels = async () => {
     // truncateAllModels(); // Call the truncate function to clear data
     // Truncate all data from tables but keep the structure
 
-    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
     // await sequelize.sync()
     // Fill in the default project_id for existing rows
     // Optional: use alter in dev

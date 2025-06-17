@@ -1,6 +1,6 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
-const { Equipment, EquipmentGroup, EquipmentProject } = models;
+const { Equipment, EquipmentGroup, EquipmentProject, OEM,  Project_Master } = models;
 
 
 // Create Equipment
@@ -37,6 +37,7 @@ export const createEquipment = async (req, res) => {
       return res.status(404).json({ message: "Equipment group not found" });
     }
 
+    // Create Equipment record
     const newEquipment = await Equipment.create({
       equipment_name,
       equipment_sr_no,
@@ -51,6 +52,30 @@ export const createEquipment = async (req, res) => {
       equipment_group_id,
     });
 
+    // Handle project_tag relation (for junction table)
+    let projectIds = [];
+
+    if (Array.isArray(project_tag)) {
+      projectIds = project_tag;
+    } else if (typeof project_tag === "string") {
+      // Try parsing comma-separated string or JSON string
+      try {
+        projectIds = JSON.parse(project_tag);
+      } catch {
+        projectIds = project_tag.split(",").map((id) => id.trim());
+      }
+    }
+
+    // Insert into EquipmentProject
+    if (projectIds.length > 0) {
+      const junctionEntries = projectIds.map((project_id) => ({
+        equipment_id: newEquipment.id,
+        project_id,
+      }));
+
+      await EquipmentProject.bulkCreate(junctionEntries);
+    }
+
     return res.status(201).json(newEquipment);
   } catch (error) {
     console.error("Error creating equipment:", error);
@@ -58,14 +83,47 @@ export const createEquipment = async (req, res) => {
   }
 };
 
+
 // Get All Equipment
 export const getAllEquipment = async (req, res) => {
   try {
-    // const equipments = await Equipment.findAll({
-    //   include: [{ model: EquipmentGroup, as: "equipment_group" }]
-    // });
     const equipments = await Equipment.findAll();
-    return res.status(200).json(equipments);
+
+    // Fetch related data
+    const [oems, projects, groups] = await Promise.all([
+      OEM.findAll(),
+      Project_Master.findAll(),
+      EquipmentGroup.findAll()
+    ]);
+
+    // Build maps
+    const oemMap = {};
+    oems.forEach(oem => {
+      oemMap[oem.id] = oem.oem_name;
+    });
+
+    const projectMap = {};
+    projects.forEach(project => {
+      projectMap[project.id] = project.project_no;
+    });
+
+    const groupMap = {};
+    groups.forEach(group => {
+      groupMap[group.id] = group.equip_grp_code;
+    });
+
+    // Format equipment list
+    const formatted = equipments.map(equipment => {
+      const eq = equipment.toJSON();
+      return {
+        ...eq,
+        oem: oemMap[eq.oem] || eq.oem,
+        project_tag: projectMap[eq.project_tag] || eq.project_tag,
+        equipment_group_id: groupMap[eq.equipment_group_id] || eq.equipment_group_id,
+      };
+    });
+
+    return res.status(200).json(formatted);
   } catch (error) {
     console.error("Error fetching equipment:", error);
     return res.status(500).json({ message: "Internal Server Error" });

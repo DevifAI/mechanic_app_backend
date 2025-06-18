@@ -25,12 +25,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // Fetch role and organisation separately
-    const role = await Role.findOne({
-      where: { id: employee.role_id },
-      attributes: ["id", "name"], // or "name" if that's the correct field
-    });
-
+    // Fetch organisation only (since we're using app_access_role from employee)
     const organisation = await Organisations.findOne({
       where: { id: employee.org_id },
       attributes: ["id", "org_name"],
@@ -42,10 +37,7 @@ export const login = async (req, res) => {
         id: employee.id,
         emp_id: employee.emp_id,
         emp_name: employee.emp_name,
-        role: {
-          id: role?.id,
-          name: role?.name, // or role?.name
-        },
+        role: employee.app_access_role, // Directly use app_access_role from employee
         organisation: {
           id: organisation?.id,
           name: organisation?.org_name,

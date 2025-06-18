@@ -14,9 +14,9 @@ export const createEmployee = async (req, res) => {
       is_active,
       shiftcode,
       role_id,
-      org_id, // ✅ Extract org_id from the request body
+      org_id,
+      app_access_role // Add app_access_role from request body
     } = req.body;
-
 
     // 1. Check if emp_id already exists
     const existingEmp = await Employee.findOne({ where: { emp_id } });
@@ -42,7 +42,19 @@ export const createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Invalid shiftcode" });
     }
 
-    // 5. Create employee with emp_id as password
+    // 5. Check if organisation exists
+    const orgExists = await Organisations.findByPk(org_id);
+    if (!orgExists) {
+      return res.status(400).json({ message: "Invalid organisation ID" });
+    }
+
+    // 6. Validate app_access_role
+    const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager', 'admin'];
+    if (!validRoles.includes(app_access_role)) {
+      return res.status(400).json({ message: "Invalid app_access_role" });
+    }
+
+    // 7. Create employee with all fields
     const newEmployee = await Employee.create({
       emp_id,
       emp_name,
@@ -53,17 +65,27 @@ export const createEmployee = async (req, res) => {
       is_active,
       shiftcode,
       role_id,
-      org_id, // ✅ Include org_id here
+      org_id,
+      app_access_role, // Include app_access_role
       password: emp_id, // This will be hashed in beforeCreate hook
     });
 
     return res.status(201).json({
       message: "Employee created successfully",
+      employee: {
+        id: newEmployee.id,
+        emp_id: newEmployee.emp_id,
+        emp_name: newEmployee.emp_name,
+        app_access_role: newEmployee.app_access_role
+      }
     });
   } catch (error) {
     console.error("Error creating employee:", error.message);
     if (error.name === "SequelizeValidationError") {
-      return res.status(400).json({ message: error.errors.map((e) => e.message) });
+      return res.status(400).json({
+        message: "Validation error",
+        errors: error.errors.map((e) => e.message)
+      });
     }
     return res.status(500).json({ message: "Internal Server Error" });
   }
@@ -98,6 +120,7 @@ export const getAllEmployees = async (req, res) => {
       shiftcode: emp.shiftcode,
       role: emp.role?.name || "N/A",
       active: emp.is_active ? "Yes" : "No",
+      app_access_role: emp.app_access_role || "N/A", // Include app_access_role
     }));
 
     return res.status(200).json(formattedEmployees);
@@ -162,18 +185,105 @@ export const getProjectsByEmployeeId = async (req, res) => {
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
+    const {
+      emp_id,
+      emp_name,
+      blood_group,
+      age,
+      adress,
+      position,
+      is_active,
+      shiftcode,
+      role_id,
+      org_id,
+      app_access_role,
+      password // Include password in case it needs to be updated
+    } = req.body;
 
+    // 1. Find the employee
     const employee = await Employee.findByPk(id);
-
-    console.log("Employee found:", req.body);
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    await employee.update(req.body);
-    return res.status(200).json(employee);
+    // 2. Validate role_id if it's being updated
+    if (role_id && role_id !== employee.role_id) {
+      const roleExists = await Role.findByPk(role_id);
+      if (!roleExists) {
+        return res.status(400).json({ message: "Invalid role_id" });
+      }
+    }
+
+    // 3. Validate position if it's being updated
+    if (position && position !== employee.position) {
+      const positionExists = await EmpPositionsModel.findByPk(position);
+      if (!positionExists) {
+        return res.status(400).json({ message: "Invalid position" });
+      }
+    }
+
+    // 4. Validate shiftcode if it's being updated
+    if (shiftcode && shiftcode !== employee.shiftcode) {
+      const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
+      if (!shiftExists) {
+        return res.status(400).json({ message: "Invalid shiftcode" });
+      }
+    }
+
+    // 5. Validate org_id if it's being updated
+    if (org_id && org_id !== employee.org_id) {
+      const orgExists = await Organisations.findByPk(org_id);
+      if (!orgExists) {
+        return res.status(400).json({ message: "Invalid organisation ID" });
+      }
+    }
+
+    // 6. Validate app_access_role if it's being updated
+    if (app_access_role && app_access_role !== employee.app_access_role) {
+      const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager'];
+      if (!validRoles.includes(app_access_role)) {
+        return res.status(400).json({ message: "Invalid app_access_role" });
+      }
+    }
+
+    // 7. Prepare update data (exclude createdAt, updatedAt, and other non-updatable fields)
+    const updateData = {
+      emp_id: emp_id || employee.emp_id,
+      emp_name: emp_name || employee.emp_name,
+      blood_group: blood_group || employee.blood_group,
+      age: age || employee.age,
+      adress: adress || employee.adress,
+      position: position || employee.position,
+      is_active: is_active !== undefined ? is_active : employee.is_active,
+      shiftcode: shiftcode || employee.shiftcode,
+      role_id: role_id || employee.role_id,
+      org_id: org_id || employee.org_id,
+      app_access_role: app_access_role || employee.app_access_role,
+      // Only update password if a new one is provided
+      password: password ? password : employee.password
+    };
+
+    // 8. Update the employee
+    await employee.update(updateData);
+
+    // 9. Return updated employee data (excluding sensitive information)
+    const updatedEmployee = await Employee.findByPk(id, {
+      attributes: { exclude: ['password'] } // Exclude password from response
+    });
+
+    return res.status(200).json({
+      message: "Employee updated successfully",
+      employee: updatedEmployee
+    });
+
   } catch (error) {
     console.error("Error updating employee:", error);
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({ 
+        message: "Validation error",
+        errors: error.errors.map((e) => e.message) 
+      });
+    }
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -190,7 +300,7 @@ export const deleteEmployee = async (req, res) => {
 
     // Delete associated records first
     await Promise.all([
-      ProjectEmployees.destroy({ where: { emp_id: employee.emp_id } }),
+      ProjectEmployees.destroy({ where: { emp_id: id } }), // Use employee's UUID id, not emp_id
       DieselRequisitions.destroy({ where: { createdBy: id } }),
       DieselReceipt.destroy({ where: { createdBy: id } }),
       ConsumptionSheet.destroy({ where: { createdBy: id } }),
@@ -204,10 +314,12 @@ export const deleteEmployee = async (req, res) => {
     return res.status(200).json({ message: "Employee and associations deleted successfully" });
   } catch (error) {
     console.error("Error deleting employee:", error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ 
+      message: "Internal Server Error",
+      error: error.message // Include error details for debugging
+    });
   }
 };
-
 
 export const bulkUploadEmployees = async (req, res) => {
   try {

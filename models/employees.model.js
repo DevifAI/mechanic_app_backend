@@ -45,6 +45,18 @@ export default (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      app_access_role: {
+        type: DataTypes.ENUM(
+          'mechanic',
+          'mechanicIncharge',
+          'siteIncharge',
+          'storeManager',
+          'accountManager',
+          'projectManager',
+          'admin'
+        ),
+        allowNull: false,
+      },
     },
     {
       timestamps: true,
@@ -94,8 +106,6 @@ export default (sequelize) => {
       foreignKey: "org_id",
       as: "organisation",
     });
-
-
   };
 
   return EmployeeModel;

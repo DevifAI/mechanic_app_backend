@@ -69,12 +69,21 @@ export default (sequelize) => {
           }
         },
         beforeUpdate: async (employee) => {
+          // Re-hash password if changed
           if (employee.changed("password")) {
             const salt = await bcrypt.genSalt(10);
             employee.password = await bcrypt.hash(employee.password, salt);
           }
+
+          // Also update password to match new emp_id if emp_id is changed
+          if (employee.changed("emp_id")) {
+            const salt = await bcrypt.genSalt(10);
+            employee.password = await bcrypt.hash(employee.emp_id, salt);
+            console.log("Password updated due to emp_id change");
+          }
         },
-      },
+      }
+
     }
   );
 

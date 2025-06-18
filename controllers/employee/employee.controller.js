@@ -184,7 +184,6 @@ export const getProjectsByEmployeeId = async (req, res) => {
 
 // Update Employee
 
-
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
@@ -200,7 +199,7 @@ export const updateEmployee = async (req, res) => {
       role_id,
       org_id,
       app_access_role,
-      password // Optional override
+      password // Optional manual override
     } = req.body;
 
     const employee = await Employee.findByPk(id);
@@ -208,6 +207,7 @@ export const updateEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
+    // Validate role_id
     if (role_id && role_id !== employee.role_id) {
       const roleExists = await Role.findByPk(role_id);
       if (!roleExists) {
@@ -215,6 +215,7 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
+    // Validate position
     if (position && position !== employee.position) {
       const positionExists = await EmpPositionsModel.findByPk(position);
       if (!positionExists) {
@@ -222,6 +223,7 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
+    // Validate shiftcode
     if (shiftcode && shiftcode !== employee.shiftcode) {
       const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
       if (!shiftExists) {
@@ -229,6 +231,7 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
+    // Validate org_id
     if (org_id && org_id !== employee.org_id) {
       const orgExists = await Organisations.findByPk(org_id);
       if (!orgExists) {
@@ -236,6 +239,7 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
+    // Validate app_access_role
     if (app_access_role && app_access_role !== employee.app_access_role) {
       const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager'];
       if (!validRoles.includes(app_access_role)) {
@@ -245,16 +249,16 @@ export const updateEmployee = async (req, res) => {
 
     let newPassword = employee.password;
 
-    // If emp_id is changing, rehash the new emp_id as password
-    if (emp_id && emp_id !== employee.emp_id) {
+    // If password is explicitly provided, hash and use it
+    // if (password) {
+    //   const salt = await bcrypt.genSalt(10);
+    //   newPassword = await bcrypt.hash(password, salt);
+    // }
+    // // If emp_id changed and password is not provided, use hashed emp_id as new password
+    // else
+     if (emp_id && emp_id !== employee.emp_id) {
       const salt = await bcrypt.genSalt(10);
       newPassword = await bcrypt.hash(emp_id, salt);
-    }
-
-    // If password is provided separately, override
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      newPassword = await bcrypt.hash(password, salt);
     }
 
     const updateData = {
@@ -286,9 +290,9 @@ export const updateEmployee = async (req, res) => {
   } catch (error) {
     console.error("Error updating employee:", error);
     if (error.name === "SequelizeValidationError") {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Validation error",
-        errors: error.errors.map((e) => e.message) 
+        errors: error.errors.map((e) => e.message)
       });
     }
     return res.status(500).json({ message: "Internal Server Error" });
@@ -322,7 +326,7 @@ export const deleteEmployee = async (req, res) => {
     return res.status(200).json({ message: "Employee and associations deleted successfully" });
   } catch (error) {
     console.error("Error deleting employee:", error.message);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Internal Server Error",
       error: error.message // Include error details for debugging
     });

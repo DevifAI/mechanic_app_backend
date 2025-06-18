@@ -4,6 +4,7 @@ import { models } from "../../models/index.js"; // Adjust path if needed
 const { Employee, Role, Organisations } = models;
 
 // ✅ LOGIN
+
 export const login = async (req, res) => {
   const { emp_id, password } = req.body;
 
@@ -17,15 +18,20 @@ export const login = async (req, res) => {
     const employee = await Employee.findOne({ where: { emp_id } });
 
     if (!employee) {
+      console.log("Employee not found for emp_id:", emp_id);
       return res.status(404).json({ message: "Employee not found" });
     }
 
+    console.log("Input password:", password);
+    console.log("Stored password hash:", employee.password);
+
     const isMatch = await bcrypt.compare(password, employee.password);
+    console.log("Password match result:", isMatch);
+
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // Fetch organisation only (since we're using app_access_role from employee)
     const organisation = await Organisations.findOne({
       where: { id: employee.org_id },
       attributes: ["id", "org_name"],
@@ -37,7 +43,7 @@ export const login = async (req, res) => {
         id: employee.id,
         emp_id: employee.emp_id,
         emp_name: employee.emp_name,
-        role: employee.app_access_role, // Directly use app_access_role from employee
+        role: employee.app_access_role,
         organisation: {
           id: organisation?.id,
           name: organisation?.org_name,
@@ -49,6 +55,7 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // ✅ CHANGE PASSWORD
 // ✅ CHANGE PASSWORD

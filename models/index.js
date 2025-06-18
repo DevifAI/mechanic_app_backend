@@ -30,6 +30,9 @@ import { DieselReceiptItemModel } from "./diesel_reciept_item.model.js";
 import { ConsumptionSheetItemModel } from "./consumption_sheet_item.model.js";
 import { MaintenanceSheetItemModel } from "./maintenanceSheetItem.model.js";
 import { EmployeeOrganisationsModel } from "./junctionTable/EmployeeOrganisations.js";
+import DailyProgressReportModel from "./daily_progress_report.js";
+import DailyProgressReportFormModel from "./daily_progress_report_form.model.js"; // <-- Add this
+
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -64,6 +67,10 @@ const ConsumptionSheetItem = ConsumptionSheetItemModel(sequelize)
 const MaintenanceSheet = MaintenanceSheetModel(sequelize)
 const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize)
 const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize)
+const DailyProgressReport = DailyProgressReportModel(sequelize);
+const DailyProgressReportForm = DailyProgressReportFormModel(sequelize); // <-- Add this
+
+
 
 const models = {
   sequelize,
@@ -97,7 +104,9 @@ const models = {
   MaintenanceSheet,
   ConsumptionSheetItem,
   MaintenanceSheetItem,
-  EmployeeOrganisations
+  EmployeeOrganisations,
+  DailyProgressReport,
+  DailyProgressReportForm
 };
 
 // Step 2: Call associations AFTER all models are initialized

@@ -1,5 +1,6 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
+import bcrypt from "bcrypt";
 const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees, DieselReceipt, DieselRequisitions, ConsumptionSheet, MaintenanceSheet } = models;
 
 export const createEmployee = async (req, res) => {
@@ -182,6 +183,8 @@ export const getProjectsByEmployeeId = async (req, res) => {
 };
 
 // Update Employee
+
+
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
@@ -197,16 +200,14 @@ export const updateEmployee = async (req, res) => {
       role_id,
       org_id,
       app_access_role,
-      password // Include password in case it needs to be updated
+      password // Optional override
     } = req.body;
 
-    // 1. Find the employee
     const employee = await Employee.findByPk(id);
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // 2. Validate role_id if it's being updated
     if (role_id && role_id !== employee.role_id) {
       const roleExists = await Role.findByPk(role_id);
       if (!roleExists) {
@@ -214,7 +215,6 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
-    // 3. Validate position if it's being updated
     if (position && position !== employee.position) {
       const positionExists = await EmpPositionsModel.findByPk(position);
       if (!positionExists) {
@@ -222,7 +222,6 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
-    // 4. Validate shiftcode if it's being updated
     if (shiftcode && shiftcode !== employee.shiftcode) {
       const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
       if (!shiftExists) {
@@ -230,7 +229,6 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
-    // 5. Validate org_id if it's being updated
     if (org_id && org_id !== employee.org_id) {
       const orgExists = await Organisations.findByPk(org_id);
       if (!orgExists) {
@@ -238,7 +236,6 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
-    // 6. Validate app_access_role if it's being updated
     if (app_access_role && app_access_role !== employee.app_access_role) {
       const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager'];
       if (!validRoles.includes(app_access_role)) {
@@ -246,7 +243,20 @@ export const updateEmployee = async (req, res) => {
       }
     }
 
-    // 7. Prepare update data (exclude createdAt, updatedAt, and other non-updatable fields)
+    let newPassword = employee.password;
+
+    // If emp_id is changing, rehash the new emp_id as password
+    if (emp_id && emp_id !== employee.emp_id) {
+      const salt = await bcrypt.genSalt(10);
+      newPassword = await bcrypt.hash(emp_id, salt);
+    }
+
+    // If password is provided separately, override
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      newPassword = await bcrypt.hash(password, salt);
+    }
+
     const updateData = {
       emp_id: emp_id || employee.emp_id,
       emp_name: emp_name || employee.emp_name,
@@ -259,16 +269,13 @@ export const updateEmployee = async (req, res) => {
       role_id: role_id || employee.role_id,
       org_id: org_id || employee.org_id,
       app_access_role: app_access_role || employee.app_access_role,
-      // Only update password if a new one is provided
-      password: password ? password : employee.password
+      password: newPassword
     };
 
-    // 8. Update the employee
     await employee.update(updateData);
 
-    // 9. Return updated employee data (excluding sensitive information)
     const updatedEmployee = await Employee.findByPk(id, {
-      attributes: { exclude: ['password'] } // Exclude password from response
+      attributes: { exclude: ['password'] }
     });
 
     return res.status(200).json({
@@ -287,6 +294,7 @@ export const updateEmployee = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Delete Employee
 export const deleteEmployee = async (req, res) => {

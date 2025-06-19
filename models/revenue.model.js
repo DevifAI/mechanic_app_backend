@@ -19,7 +19,7 @@ export default (sequelize) => {
         allowNull: false,
       },
       revenue_value: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.FLOAT,
         allowNull: true,
       },
     },

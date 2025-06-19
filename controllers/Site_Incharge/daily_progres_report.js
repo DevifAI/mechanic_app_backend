@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 
-const {DailyProgressReport, DailyProgressReportForm} = models
+const { DailyProgressReport, DailyProgressReportForm, Shift, Project_Master, Employee, RevenueMaster } = models
 
 export const createDailyProgressReport = async (req, res) => {
   try {
@@ -50,10 +50,39 @@ export const getAllDailyProgressReports = async (req, res) => {
     const reports = await DailyProgressReport.findAll({
       include: [
         {
+          model: Project_Master,
+          as: "project",
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+        {
+          model: Shift,
+          as: "shift",
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+        {
+          model: Employee,
+          as: "incharge",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: Employee,
+          as: "mechanic",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
           model: DailyProgressReportForm,
           as: "forms",
+          attributes: { exclude: ["id", "dpr_id", "createdAt", "updatedAt"] },
+          include: [
+            {
+              model: RevenueMaster,
+              as: "revenue",
+              attributes: ["id", "revenue_code", "revenue_description"],
+            },
+          ],
         },
       ],
+      attributes: { exclude: ["createdAt", "updatedAt"] },
       order: [["createdAt", "DESC"]],
     });
 
@@ -63,6 +92,7 @@ export const getAllDailyProgressReports = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch DPRs", error });
   }
 };
+
 
 // Get single DPR by ID
 export const getDailyProgressReportById = async (req, res) => {
@@ -133,19 +163,17 @@ export const updateDailyProgressReport = async (req, res) => {
 };
 
 // Delete DPR and its forms
-export const deleteDailyProgressReport = async (req, res) => {
+export const deleteAllDailyProgressReports = async (req, res) => {
   try {
-    const { id } = req.params;
+    // Step 1: Delete all associated forms
+    await DailyProgressReportForm.destroy({ where: {} });
 
-    const report = await DailyProgressReport.findByPk(id);
-    if (!report) return res.status(404).json({ message: "DPR not found" });
+    // Step 2: Delete all DPR records
+    await DailyProgressReport.destroy({ where: {} });
 
-    await DailyProgressReportForm.destroy({ where: { dpr_id: id } });
-    await report.destroy();
-
-    res.status(200).json({ message: "DPR deleted successfully" });
+    res.status(200).json({ message: "All DPRs and associated forms deleted successfully" });
   } catch (error) {
-    console.error("Delete DPR error:", error);
-    res.status(500).json({ message: "Failed to delete DPR", error });
+    console.error("Delete all DPRs error:", error);
+    res.status(500).json({ message: "Failed to delete all DPRs", error });
   }
 };

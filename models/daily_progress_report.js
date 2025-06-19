@@ -54,6 +54,10 @@ export default (sequelize) => {
                     key: "id",
                 },
             },
+            is_approve_pm: {
+                type: DataTypes.ENUM("pending", "approved", "rejected"),
+                defaultValue: "pending",
+            },
         },
         {
             timestamps: true,

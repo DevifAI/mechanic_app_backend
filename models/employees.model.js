@@ -15,14 +15,6 @@ export default (sequelize) => {
       blood_group: { type: DataTypes.STRING, allowNull: false },
       age: { type: DataTypes.INTEGER, allowNull: false },
       adress: { type: DataTypes.TEXT, allowNull: false },
-      position: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "emp_positions",
-          key: "id",
-        },
-      },
       is_active: { type: DataTypes.BOOLEAN, allowNull: false },
       shiftcode: { type: DataTypes.STRING, allowNull: false },
       role_id: {
@@ -105,12 +97,6 @@ export default (sequelize) => {
       targetKey: "shift_code",
       as: "shift",
     });
-
-    EmployeeModel.belongsTo(models.EmpPositionsModel, {
-      foreignKey: "position",
-      as: "employeePosition",
-    });
-
     EmployeeModel.belongsTo(models.Organisations, {
       foreignKey: "org_id",
       as: "organisation",

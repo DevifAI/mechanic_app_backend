@@ -10,6 +10,7 @@ import { getAllDieselRequisitions, getCompleteDieselRequisitions, getPendingDies
 import { getAllDieselReceipts, getCompleteDieselReceipts, getPendingDieselReceipts, updateDieselReceiptMicApproval } from "../../controllers/Site_Incharge/dieselReceipt.controller.js";
 import { getAllConsumptionSheets, getCompleteConsumptionSheets, getPendingConsumptionSheets, updateConsumptionSheetSicApproval } from "../../controllers/Site_Incharge/consumption_sheet.controller.js";
 import { getAllMaintenanceSheets, getApprovedMaintenanceSheets, getPendingMaintenanceSheets, updateMaintenanceSheetSicApproval } from "../../controllers/Site_Incharge/maintenance_sheet.controller.js";
+import { createDailyProgressReport } from "../../controllers/Site_Incharge/daily_progres_report.js";
 
 
 
@@ -58,5 +59,10 @@ router.post("/maintenance-sheets/all", getAllMaintenanceSheets);
 router.post("/maintenance-sheets/pending", getPendingMaintenanceSheets);
 router.post("/maintenance-sheets/approved", getApprovedMaintenanceSheets);
 router.post("/maintenance-sheets/update-sic-approval", updateMaintenanceSheetSicApproval);
+
+
+
+
+router.post("/create-dpr", createDailyProgressReport);
 
 export default router;

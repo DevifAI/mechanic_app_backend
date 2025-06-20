@@ -141,8 +141,10 @@ export const getAllEmployees = async (req, res) => {
 // Get Employee by ID
 export const getEmployeeById = async (req, res) => {
   try {
+    console.log("::::::::::::::::::::::", req.params)
     const { id } = req.params;
     const employee = await Employee.findByPk(id);
+
 
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
@@ -473,11 +475,11 @@ export const getEmployeesByRole = async (req, res) => {
           as: "role",
           attributes: ["name"],
         },
-        {
-          model: EmpPositionsModel,
-          as: "employeePosition",
-          attributes: ["designation"],
-        },
+        // {
+        //   model: EmpPositionsModel,
+        //   as: "employeePosition",
+        //   attributes: ["designation"],
+        // },
       ],
     });
 

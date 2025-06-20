@@ -17,6 +17,7 @@ export const createEquipment = async (req, res) => {
     other_log,
     project_tag,
     equipment_group_id,
+    hsn_number,
   } = req.body;
 
   try {
@@ -26,7 +27,8 @@ export const createEquipment = async (req, res) => {
       !equipment_sr_no ||
       !purchase_date ||
       !oem ||
-      !equipment_group_id
+      !equipment_group_id ||
+      !hsn_number
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -50,6 +52,7 @@ export const createEquipment = async (req, res) => {
       other_log,
       project_tag,
       equipment_group_id,
+      hsn_number,
     });
 
     // Handle project_tag relation (for junction table)

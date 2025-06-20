@@ -18,6 +18,11 @@ export default (sequelize) => {
       equipment_manual: { type: DataTypes.TEXT, allowNull: false },
       maintenance_log: { type: DataTypes.JSON, allowNull: false },
       other_log: { type: DataTypes.JSON, allowNull: false },
+      hsn_number: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
       project_tag: { type: DataTypes.JSON, allowNull: false },
       equipment_group_id: {
         type: DataTypes.UUID,

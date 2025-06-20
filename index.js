@@ -29,6 +29,7 @@ import authentcationRoutes from "./routes/authentications/auth.routes.js"; // Im
 import mechanicInchargeRoutes from "./routes/MechanicIncharge/mechanic_incharge.routes.js"; // Import authentication routes
 import siteInchargeRoutes from "./routes/SiteIncharge/site_incharge.routes.js"; // Import authentication routes
 import projectManagerRoutes from "./routes/project_manager/proect_manager.routes.js"; // Import authentication routes
+import storeManagerRoutes from "./routes/storeManager/store_manager.routes.js"; // Import authentication routes
 
 import { syncModels } from "./models/index.js";
 
@@ -65,6 +66,7 @@ app.use("/api/master/auth", authentcationRoutes);
 app.use("/api/master/mechanic_incharge", mechanicInchargeRoutes);
 app.use("/api/master/site_incharge", siteInchargeRoutes);
 app.use("/api/master/project_manager", projectManagerRoutes);
+app.use("/api/master/store_manager", storeManagerRoutes);
 
 // Initialize database connection
 connection();

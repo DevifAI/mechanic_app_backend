@@ -32,6 +32,10 @@ import { MaintenanceSheetItemModel } from "./maintenanceSheetItem.model.js";
 import { EmployeeOrganisationsModel } from "./junctionTable/EmployeeOrganisations.js";
 import DailyProgressReportModel from "./daily_progress_report.js";
 import DailyProgressReportFormModel from "./daily_progress_report_form.model.js"; // <-- Add this
+import MaterialTransactionModel from "./material_transactions.js"; // <-- Add this
+import MaterialTransactionsFormModel from "./material_transactions_form.model.js"; // <-- Add this
+import EquipmentTransacationModel from "./equipment_transaction.model.js"; // <-- Add this
+import EquipmentTransactionsFormModel from "./equipment_transactionForm.model.js"; // <-- Add this
 
 
 //Step 1: Initialize models
@@ -69,6 +73,10 @@ const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize)
 const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize)
 const DailyProgressReport = DailyProgressReportModel(sequelize);
 const DailyProgressReportForm = DailyProgressReportFormModel(sequelize); // <-- Add this
+const MaterialTransaction = MaterialTransactionModel(sequelize);
+const MaterialTransactionForm = MaterialTransactionsFormModel(sequelize);
+const EquipmentTransaction = EquipmentTransacationModel(sequelize);
+const EquipmentTransactionsForm = EquipmentTransactionsFormModel(sequelize);
 
 
 
@@ -106,7 +114,11 @@ const models = {
   MaintenanceSheetItem,
   EmployeeOrganisations,
   DailyProgressReport,
-  DailyProgressReportForm
+  DailyProgressReportForm,
+  MaterialTransaction,
+  MaterialTransactionForm,
+  EquipmentTransaction,
+  EquipmentTransactionsForm
 };
 
 // Step 2: Call associations AFTER all models are initialized

@@ -119,6 +119,7 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
+    // await models.Employee.destroy({ truncate: true, cascade: true, restartIdentity: true });
     // Truncate all data from tables but keep the structure
     // const truncateAllModels = async () => {
     //   try {

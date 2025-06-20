@@ -15,37 +15,40 @@ export default (sequelize) => {
       blood_group: { type: DataTypes.STRING, allowNull: false },
       age: { type: DataTypes.INTEGER, allowNull: false },
       adress: { type: DataTypes.TEXT, allowNull: false },
+
+      state:   { type: DataTypes.STRING, allowNull: false },
+      city:    { type: DataTypes.STRING, allowNull: false },
+      pincode: { type: DataTypes.STRING, allowNull: false },
+
+      acc_holder_name: { type: DataTypes.STRING, allowNull: true },
+      bank_name:       { type: DataTypes.STRING, allowNull: true },
+      acc_no:          { type: DataTypes.STRING, allowNull: true },
+      ifsc_code:       { type: DataTypes.STRING, allowNull: true },
+
       is_active: { type: DataTypes.BOOLEAN, allowNull: false },
       shiftcode: { type: DataTypes.STRING, allowNull: false },
+
       role_id: {
         type: DataTypes.UUID,
         allowNull: false,
-        references: {
-          model: "role",
-          key: "id",
-        },
+        references: { model: "role", key: "id" },
       },
       org_id: {
         type: DataTypes.UUID,
         allowNull: false,
-        references: {
-          model: "organisation",
-          key: "id",
-        },
+        references: { model: "organisation", key: "id" },
       },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
+      password: { type: DataTypes.STRING, allowNull: false },
+
       app_access_role: {
         type: DataTypes.ENUM(
-          'mechanic',
-          'mechanicIncharge',
-          'siteIncharge',
-          'storeManager',
-          'accountManager',
-          'projectManager',
-          'admin'
+          "mechanic",
+          "mechanicIncharge",
+          "siteIncharge",
+          "storeManager",
+          "accountManager",
+          "projectManager",
+          "admin"
         ),
         allowNull: false,
       },
@@ -61,37 +64,28 @@ export default (sequelize) => {
           }
         },
         beforeUpdate: async (employee) => {
-          // Re-hash password if changed
           if (employee.changed("password")) {
             const salt = await bcrypt.genSalt(10);
             employee.password = await bcrypt.hash(employee.password, salt);
           }
-
-          // Also update password to match new emp_id if emp_id is changed
           if (employee.changed("emp_id")) {
             const salt = await bcrypt.genSalt(10);
             employee.password = await bcrypt.hash(employee.emp_id, salt);
             console.log("Password updated due to emp_id change");
           }
         },
-      }
-
+      },
     }
   );
 
-  EmployeeModel.associate = function (models) {
-    EmployeeModel.belongsTo(models.Role, {
-      foreignKey: "role_id",
-      as: "role",
-    });
-
+  EmployeeModel.associate = (models) => {
+    EmployeeModel.belongsTo(models.Role, { foreignKey: "role_id", as: "role" });
     EmployeeModel.belongsToMany(models.Project_Master, {
       through: models.ProjectEmployees,
       foreignKey: "emp_id",
       otherKey: "project_id",
       as: "projects",
     });
-
     EmployeeModel.belongsTo(models.Shift, {
       foreignKey: "shiftcode",
       targetKey: "shift_code",

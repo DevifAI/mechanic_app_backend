@@ -18,12 +18,7 @@ export default (sequelize) => {
     }
   );
 
-  EmpPositionsModel.associate = function (models) {
-    EmpPositionsModel.hasMany(models.Employee, {
-      foreignKey: "position",
-      as: "employees",
-    });
-  };
+  
 
   return EmpPositionsModel;
 };

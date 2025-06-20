@@ -3,6 +3,7 @@ import { models } from "../../models/index.js";
 import bcrypt from "bcrypt";
 const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees, DieselReceipt, DieselRequisitions, ConsumptionSheet, MaintenanceSheet } = models;
 
+
 export const createEmployee = async (req, res) => {
   try {
     const {
@@ -11,64 +12,66 @@ export const createEmployee = async (req, res) => {
       blood_group,
       age,
       adress,
-      position,
+      state,
+      city,
+      pincode,
       is_active,
       shiftcode,
       role_id,
       org_id,
-      app_access_role // Add app_access_role from request body
+      app_access_role,
+      acc_holder_name,
+      bank_name,
+      acc_no,
+      ifsc_code,
     } = req.body;
 
-    // 1. Check if emp_id already exists
     const existingEmp = await Employee.findOne({ where: { emp_id } });
     if (existingEmp) {
       return res.status(400).json({ message: "Employee ID already exists" });
     }
 
-    // 2. Check if role_id exists
     const roleExists = await Role.findByPk(role_id);
-    if (!roleExists) {
-      return res.status(400).json({ message: "Invalid role_id" });
-    }
+    if (!roleExists) return res.status(400).json({ message: "Invalid role_id" });
 
-    // 3. Check if position exists
-    const positionExists = await EmpPositionsModel.findByPk(position);
-    if (!positionExists) {
-      return res.status(400).json({ message: "Invalid position" });
-    }
-
-    // 4. Check if shiftcode exists
     const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
-    if (!shiftExists) {
-      return res.status(400).json({ message: "Invalid shiftcode" });
-    }
+    if (!shiftExists) return res.status(400).json({ message: "Invalid shiftcode" });
 
-    // 5. Check if organisation exists
     const orgExists = await Organisations.findByPk(org_id);
-    if (!orgExists) {
-      return res.status(400).json({ message: "Invalid organisation ID" });
-    }
+    if (!orgExists) return res.status(400).json({ message: "Invalid organisation ID" });
 
-    // 6. Validate app_access_role
-    const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager', 'admin'];
+    const validRoles = [
+      'mechanic',
+      'mechanicIncharge',
+      'siteIncharge',
+      'storeManager',
+      'accountManager',
+      'projectManager',
+      'admin',
+    ];
     if (!validRoles.includes(app_access_role)) {
       return res.status(400).json({ message: "Invalid app_access_role" });
     }
 
-    // 7. Create employee with all fields
     const newEmployee = await Employee.create({
       emp_id,
       emp_name,
       blood_group,
       age,
       adress,
-      position,
+      state,
+      city,
+      pincode,
       is_active,
       shiftcode,
       role_id,
       org_id,
-      app_access_role, // Include app_access_role
-      password: emp_id, // This will be hashed in beforeCreate hook
+      app_access_role,
+      password: emp_id, // Password will be hashed in the model hook
+      acc_holder_name,
+      bank_name,
+      acc_no,
+      ifsc_code,
     });
 
     return res.status(201).json({
@@ -77,20 +80,22 @@ export const createEmployee = async (req, res) => {
         id: newEmployee.id,
         emp_id: newEmployee.emp_id,
         emp_name: newEmployee.emp_name,
-        app_access_role: newEmployee.app_access_role
-      }
+        app_access_role: newEmployee.app_access_role,
+        state: newEmployee.state,
+        city: newEmployee.city,
+        pincode: newEmployee.pincode,
+        acc_holder_name: newEmployee.acc_holder_name,
+        bank_name: newEmployee.bank_name,
+        acc_no: newEmployee.acc_no,
+        ifsc_code: newEmployee.ifsc_code,
+      },
     });
   } catch (error) {
     console.error("Error creating employee:", error.message);
-    if (error.name === "SequelizeValidationError") {
-      return res.status(400).json({
-        message: "Validation error",
-        errors: error.errors.map((e) => e.message)
-      });
-    }
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Get All Employees
 export const getAllEmployees = async (req, res) => {
@@ -101,11 +106,6 @@ export const getAllEmployees = async (req, res) => {
           model: Role,
           as: "role",
           attributes: ["name"], // Only include the name from Role
-        },
-        {
-          model: EmpPositionsModel,
-          as: "employeePosition",
-          attributes: ["designation"], // Only include the name from Position
         },
       ],
     });
@@ -122,6 +122,13 @@ export const getAllEmployees = async (req, res) => {
       role: emp.role?.name || "N/A",
       active: emp.is_active ? "Yes" : "No",
       app_access_role: emp.app_access_role || "N/A", // Include app_access_role
+      state: emp.state || "N/A", // Include app_access_role
+      city: emp.city || "N/A", // Include app_access_role
+      pincode: emp.pincode || "N/A", // Include app_access_role
+      bank_name: emp.bank_name || "N/A", // Include bank_name
+      acc_holder_name: emp.acc_holder_name || "N/A", // Include acc_holder_name
+      acc_no: emp.acc_no || "N/A", // Include acc_no
+      ifsc_code: emp.ifsc_code || "N/A", // Include ifsc_code
     }));
 
     return res.status(200).json(formattedEmployees);
@@ -183,23 +190,29 @@ export const getProjectsByEmployeeId = async (req, res) => {
 };
 
 // Update Employee
-
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       emp_id,
       emp_name,
       blood_group,
       age,
       adress,
-      position,
+      state,
+      city,
+      pincode,
       is_active,
       shiftcode,
       role_id,
       org_id,
       app_access_role,
-      password // Optional manual override
+      password,
+      acc_holder_name,
+      bank_name,
+      acc_no,
+      ifsc_code,
     } = req.body;
 
     const employee = await Employee.findByPk(id);
@@ -207,32 +220,32 @@ export const updateEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // Validate role_id
-    if (role_id && role_id !== employee.role_id) {
+    // Check for emp_id uniqueness if changed
+    if (emp_id && emp_id !== employee.emp_id) {
+      const existingEmp = await Employee.findOne({ where: { emp_id } });
+      if (existingEmp) {
+        return res.status(400).json({ message: "Employee ID already exists" });
+      }
+    }
+
+    // Validate role_id if provided
+    if (role_id) {
       const roleExists = await Role.findByPk(role_id);
       if (!roleExists) {
         return res.status(400).json({ message: "Invalid role_id" });
       }
     }
 
-    // Validate position
-    if (position && position !== employee.position) {
-      const positionExists = await EmpPositionsModel.findByPk(position);
-      if (!positionExists) {
-        return res.status(400).json({ message: "Invalid position" });
-      }
-    }
-
-    // Validate shiftcode
-    if (shiftcode && shiftcode !== employee.shiftcode) {
+    // Validate shiftcode if provided
+    if (shiftcode) {
       const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
       if (!shiftExists) {
         return res.status(400).json({ message: "Invalid shiftcode" });
       }
     }
 
-    // Validate org_id
-    if (org_id && org_id !== employee.org_id) {
+    // Validate organisation ID if provided
+    if (org_id) {
       const orgExists = await Organisations.findByPk(org_id);
       if (!orgExists) {
         return res.status(400).json({ message: "Invalid organisation ID" });
@@ -240,61 +253,71 @@ export const updateEmployee = async (req, res) => {
     }
 
     // Validate app_access_role
-    if (app_access_role && app_access_role !== employee.app_access_role) {
-      const validRoles = ['mechanic', 'mechanicIncharge', 'siteIncharge', 'storeManager', 'accountManager', 'projectManager'];
+    if (app_access_role) {
+      const validRoles = [
+        "mechanic",
+        "mechanicIncharge",
+        "siteIncharge",
+        "storeManager",
+        "accountManager",
+        "projectManager",
+        "admin",
+      ];
       if (!validRoles.includes(app_access_role)) {
         return res.status(400).json({ message: "Invalid app_access_role" });
       }
     }
 
+    // Handle password change
     let newPassword = employee.password;
-
-    // If password is explicitly provided, hash and use it
-    // if (password) {
-    //   const salt = await bcrypt.genSalt(10);
-    //   newPassword = await bcrypt.hash(password, salt);
-    // }
-    // // If emp_id changed and password is not provided, use hashed emp_id as new password
-    // else
-     if (emp_id && emp_id !== employee.emp_id) {
+    if (password && password !== employee.password) {
       const salt = await bcrypt.genSalt(10);
-      newPassword = await bcrypt.hash(emp_id, salt);
+      newPassword = await bcrypt.hash(password, salt);
     }
 
+    // Prepare update data
     const updateData = {
       emp_id: emp_id || employee.emp_id,
       emp_name: emp_name || employee.emp_name,
       blood_group: blood_group || employee.blood_group,
       age: age || employee.age,
       adress: adress || employee.adress,
-      position: position || employee.position,
+      state: state || employee.state,
+      city: city || employee.city,
+      pincode: pincode || employee.pincode,
       is_active: is_active !== undefined ? is_active : employee.is_active,
       shiftcode: shiftcode || employee.shiftcode,
       role_id: role_id || employee.role_id,
       org_id: org_id || employee.org_id,
       app_access_role: app_access_role || employee.app_access_role,
-      password: newPassword
+      password: newPassword,
+
+      acc_holder_name: acc_holder_name || employee.acc_holder_name,
+      bank_name: bank_name || employee.bank_name,
+      acc_no: acc_no || employee.acc_no,
+      ifsc_code: ifsc_code || employee.ifsc_code,
     };
 
     await employee.update(updateData);
 
-    const updatedEmployee = await Employee.findByPk(id, {
-      attributes: { exclude: ['password'] }
-    });
-
     return res.status(200).json({
       message: "Employee updated successfully",
-      employee: updatedEmployee
+      employee: {
+        id: employee.id,
+        emp_id: employee.emp_id,
+        emp_name: employee.emp_name,
+        app_access_role: employee.app_access_role,
+        state: employee.state,
+        city: employee.city,
+        pincode: employee.pincode,
+        acc_holder_name: employee.acc_holder_name,
+        bank_name: employee.bank_name,
+        acc_no: employee.acc_no,
+        ifsc_code: employee.ifsc_code,
+      },
     });
-
   } catch (error) {
-    console.error("Error updating employee:", error);
-    if (error.name === "SequelizeValidationError") {
-      return res.status(400).json({
-        message: "Validation error",
-        errors: error.errors.map((e) => e.message)
-      });
-    }
+    console.error("Error updating employee:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -466,7 +489,7 @@ export const getEmployeesByRole = async (req, res) => {
       blood_group: emp.blood_group,
       age: emp.age,
       address: emp.adress,
-      position: emp.employeePosition?.designation || "N/A",
+    
       shiftcode: emp.shiftcode,
       role: emp.role?.name || "N/A",
       active: emp.is_active ? "Yes" : "No",
@@ -525,7 +548,7 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
         blood_group: emp.blood_group,
         age: emp.age,
         address: emp.adress,
-        position: emp.employeePosition?.designation || "N/A",
+      
         shiftcode: emp.shiftcode,
         active: emp.is_active ? "Yes" : "No",
       });

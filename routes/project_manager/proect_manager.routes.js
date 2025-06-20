@@ -3,6 +3,11 @@ import { getAllDieselRequisitions, getCompleteDieselRequisitions, getPendingDies
 import { getAllConsumptionSheets, getCompleteConsumptionSheets, getPendingConsumptionSheets, updateConsumptionSheetSicApproval } from "../../controllers/project_Manager/consumptionSheet.controller.js";
 import { getAllDieselReceipts, getCompleteDieselReceipts, getPendingDieselReceipts, updateDieselReceiptMicApproval } from "../../controllers/project_Manager/dieselReceipt.controller.js";
 import { getAllMaintenanceSheets, getApprovedMaintenanceSheets, getPendingMaintenanceSheets, updateMaintenanceSheetSicApproval } from "../../controllers/project_Manager/maintenance_sheet.js";
+import {
+  approveOrRejectDPR,
+  getAllDPRs,
+  getDPRsByStatus,
+} from "../../controllers/project_Manager/dpr.controller.js";
 
 
 
@@ -57,5 +62,18 @@ router.post("/maintenance-sheets/all", getAllMaintenanceSheets);
 router.post("/maintenance-sheets/pending", getPendingMaintenanceSheets);
 router.post("/maintenance-sheets/approved", getApprovedMaintenanceSheets);
 router.post("/maintenance-sheets/update-sic-approval", updateMaintenanceSheetSicApproval);
+
+
+
+
+
+
+
+// Daily Progress Report Routes
+router.patch("/dpr/:dpr_id/approve-reject", approveOrRejectDPR); // Approve or Reject DPR
+
+router.post("/dpr/all", getAllDPRs); // Get all DPRs (optionally by project_id in body/query)
+router.post("/dpr/status/:status", getDPRsByStatus); // Get DPRs by status (approved/rejected/pending)
+
 
 export default router;

@@ -16,14 +16,14 @@ export default (sequelize) => {
       age: { type: DataTypes.INTEGER, allowNull: false },
       adress: { type: DataTypes.TEXT, allowNull: false },
 
-      state:   { type: DataTypes.STRING, allowNull: false },
-      city:    { type: DataTypes.STRING, allowNull: false },
+      state: { type: DataTypes.STRING, allowNull: false },
+      city: { type: DataTypes.STRING, allowNull: false },
       pincode: { type: DataTypes.STRING, allowNull: false },
 
       acc_holder_name: { type: DataTypes.STRING, allowNull: true },
-      bank_name:       { type: DataTypes.STRING, allowNull: true },
-      acc_no:          { type: DataTypes.STRING, allowNull: true },
-      ifsc_code:       { type: DataTypes.STRING, allowNull: true },
+      bank_name: { type: DataTypes.STRING, allowNull: true },
+      acc_no: { type: DataTypes.STRING, allowNull: true },
+      ifsc_code: { type: DataTypes.STRING, allowNull: true },
 
       is_active: { type: DataTypes.BOOLEAN, allowNull: false },
       shiftcode: { type: DataTypes.STRING, allowNull: false },
@@ -39,6 +39,8 @@ export default (sequelize) => {
         references: { model: "organisation", key: "id" },
       },
       password: { type: DataTypes.STRING, allowNull: false },
+      aadhar_number: { type: DataTypes.STRING, allowNull: false },
+      dob: { type: DataTypes.STRING, allowNull: false },
 
       app_access_role: {
         type: DataTypes.ENUM(

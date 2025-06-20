@@ -24,6 +24,8 @@ export const createEmployee = async (req, res) => {
       bank_name,
       acc_no,
       ifsc_code,
+      aadhar_number,
+      dob
     } = req.body;
 
     const existingEmp = await Employee.findOne({ where: { emp_id } });
@@ -72,6 +74,8 @@ export const createEmployee = async (req, res) => {
       bank_name,
       acc_no,
       ifsc_code,
+      aadhar_number,
+      dob
     });
 
     return res.status(201).json({
@@ -129,6 +133,8 @@ export const getAllEmployees = async (req, res) => {
       acc_holder_name: emp.acc_holder_name || "N/A", // Include acc_holder_name
       acc_no: emp.acc_no || "N/A", // Include acc_no
       ifsc_code: emp.ifsc_code || "N/A", // Include ifsc_code
+      aadhar_number: emp.aadhar_number || "N/A",
+      dob: emp.dob || "N/A", // Include ifsc_code
     }));
 
     return res.status(200).json(formattedEmployees);
@@ -213,6 +219,8 @@ export const updateEmployee = async (req, res) => {
       bank_name,
       acc_no,
       ifsc_code,
+      aadhar_number,
+      dob
     } = req.body;
 
     const employee = await Employee.findByPk(id);
@@ -291,11 +299,12 @@ export const updateEmployee = async (req, res) => {
       org_id: org_id || employee.org_id,
       app_access_role: app_access_role || employee.app_access_role,
       password: newPassword,
-
       acc_holder_name: acc_holder_name || employee.acc_holder_name,
       bank_name: bank_name || employee.bank_name,
       acc_no: acc_no || employee.acc_no,
       ifsc_code: ifsc_code || employee.ifsc_code,
+      aadhar_number: aadhar_number || employee.aadhar_number,
+      dob: dob || employee.dob
     };
 
     await employee.update(updateData);
@@ -356,6 +365,8 @@ export const deleteEmployee = async (req, res) => {
   }
 };
 
+
+
 export const bulkUploadEmployees = async (req, res) => {
   try {
     if (!req.file) {
@@ -382,80 +393,125 @@ export const bulkUploadEmployees = async (req, res) => {
         blood_group,
         age,
         adress,
-        position,       // designation string
         shiftcode,
         role_name,
-        organisation,   // org_name in Excel
+        organisations,
+        dob,
+        aadhar_number,
+        state,
+        city,
+        pincode,
+        bank_name,
+        acc_holder_name,
+        acc_no,
+        ifsc_code,
+        app_access_role
       } = row;
 
-      // Validate required fields
-      if (!emp_id || !emp_name || !position || !shiftcode || !role_name || !organisation) {
-        errors.push({ row: i + 2, message: "Missing required fields" });
+      const rowNumber = i + 2; // Excel row
+
+      // ✅ Required field validation
+      const missingFields = [];
+
+      if (!emp_id) missingFields.push("emp_id");
+      if (!emp_name) missingFields.push("emp_name");
+      if (!shiftcode) missingFields.push("shiftcode");
+      if (!role_name) missingFields.push("role_name");
+      if (!organisations) missingFields.push("organisations");
+
+      if (missingFields.length > 0) {
+        errors.push({
+          row: rowNumber,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
         continue;
       }
+
 
       const empIdStr = typeof emp_id === "string" ? emp_id.trim() : String(emp_id);
 
+      // ✅ Duplicate check
       const existingEmp = await Employee.findOne({ where: { emp_id: empIdStr } });
       if (existingEmp) {
-        errors.push({ row: i + 2, message: `Employee ID ${empIdStr} already exists` });
+        errors.push({ row: rowNumber, message: `Employee ID ${empIdStr} already exists` });
         continue;
       }
 
-      const role = await Role.findOne({ where: { name: role_name } });
+      // ✅ Role lookup
+      const role = await Role.findOne({ where: { name: role_name.trim() } });
       if (!role) {
-        errors.push({ row: i + 2, message: `Invalid role_name: ${role_name}` });
+        errors.push({ row: rowNumber, message: `Invalid role_name: ${role_name}` });
         continue;
       }
 
-      const positionRecord = await EmpPositionsModel.findOne({
-        where: { designation: position },
-      });
-      if (!positionRecord) {
-        errors.push({ row: i + 2, message: `Invalid position: ${position}` });
-        continue;
-      }
-
-      const shift = await Shift.findOne({ where: { shift_code: shiftcode } });
+      // ✅ Shift lookup
+      const shift = await Shift.findOne({ where: { shift_code: shiftcode.trim() } });
       if (!shift) {
-        errors.push({ row: i + 2, message: `Invalid shiftcode: ${shiftcode}` });
+        errors.push({ row: rowNumber, message: `Invalid shiftcode: ${shiftcode}` });
         continue;
       }
 
-      const org = await Organisations.findOne({ where: { org_name: organisation } });
+      // ✅ Organisation lookup
+      const org = await Organisations.findOne({ where: { org_name: organisations.trim() } });
       if (!org) {
-        errors.push({ row: i + 2, message: `Invalid organisation: ${organisation}` });
+        errors.push({ row: rowNumber, message: `Invalid organisation: ${organisations}` });
         continue;
       }
 
-      // Create employee
+      // ✅ Aadhar validation
+      const aadharStr = String(aadhar_number || "").trim();
+      if (!/^\d{12}$/.test(aadharStr)) {
+        errors.push({ row: rowNumber, message: "Aadhar number must be 12 digits" });
+        continue;
+      }
+
+      // ✅ DOB validation
+      if (!dob) {
+        errors.push({ row: rowNumber, message: "Invalid or missing date of birth" });
+        continue;
+      }
+
+      // ✅ Create employee
       const newEmployee = await Employee.create({
         emp_id: empIdStr,
-        emp_name,
-        blood_group,
-        age,
-        adress,
-        position: positionRecord.id,
-        shiftcode,
+        emp_name: emp_name.trim(),
+        blood_group: blood_group?.trim() || null,
+        age: parseInt(age),
+        adress: adress?.trim() || "",
+        shiftcode: shift.shift_code,
         role_id: role.id,
         is_active: true,
-        password: empIdStr, // will be hashed in beforeCreate
+        password: empIdStr, // will be hashed by model hook
         org_id: org.id,
+        dob: dob?.toString()?.trim() || "",
+        aadhar_number: aadharStr,
+        state: state?.trim() || "",
+        city: city?.trim() || "",
+        pincode: pincode?.trim() || "",
+        bank_name: bank_name?.trim() || "",
+        acc_holder_name: acc_holder_name?.trim() || "",
+        acc_no: acc_no?.trim() || "",
+        ifsc_code: ifsc_code?.trim() || "",
+        app_access_role: app_access_role?.trim() || "",
       });
 
-      createdEmployees.push(newEmployee);
-    }
+    createdEmployees.push(newEmployee);
+  }
 
     return res.status(201).json({
-      message: "Bulk upload finished",
-      createdCount: createdEmployees.length,
-      errors,
-    });
-  } catch (error) {
-    console.error("Bulk upload error:", error);
-    return res.status(500).json({ message: "Internal Server Error", error: error.message });
-  }
+    message: "Bulk upload finished",
+    createdCount: createdEmployees.length,
+    errors,
+  });
+} catch (error) {
+  console.error("Bulk upload error:", error);
+  return res.status(500).json({
+    message: "Internal Server Error",
+    error: error.message,
+  });
+}
 };
+
 
 // Get Employees by Role
 export const getEmployeesByRole = async (req, res) => {
@@ -489,7 +545,6 @@ export const getEmployeesByRole = async (req, res) => {
       blood_group: emp.blood_group,
       age: emp.age,
       address: emp.adress,
-    
       shiftcode: emp.shiftcode,
       role: emp.role?.name || "N/A",
       active: emp.is_active ? "Yes" : "No",
@@ -548,7 +603,7 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
         blood_group: emp.blood_group,
         age: emp.age,
         address: emp.adress,
-      
+
         shiftcode: emp.shiftcode,
         active: emp.is_active ? "Yes" : "No",
       });

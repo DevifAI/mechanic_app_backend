@@ -1,21 +1,33 @@
 import express from "express";
-import { getAllDieselRequisitions, getCompleteDieselRequisitions, getPendingDieselRequisitions, updateDieselRequisitionMicApproval } from "../../controllers/project_Manager/dieselRequisition.controller.js";
-import { getAllConsumptionSheets, getCompleteConsumptionSheets, getPendingConsumptionSheets, updateConsumptionSheetSicApproval } from "../../controllers/project_Manager/consumptionSheet.controller.js";
-import { getAllDieselReceipts, getCompleteDieselReceipts, getPendingDieselReceipts, updateDieselReceiptMicApproval } from "../../controllers/project_Manager/dieselReceipt.controller.js";
-import { getAllMaintenanceSheets, getApprovedMaintenanceSheets, getPendingMaintenanceSheets, updateMaintenanceSheetSicApproval } from "../../controllers/project_Manager/maintenance_sheet.js";
+import {
+  getAllDieselRequisitions,
+  getCompleteDieselRequisitions,
+  getPendingDieselRequisitions,
+  updateDieselRequisitionMicApproval,
+} from "../../controllers/project_Manager/dieselRequisition.controller.js";
+import {
+  getAllConsumptionSheets,
+  getCompleteConsumptionSheets,
+  getPendingConsumptionSheets,
+  updateConsumptionSheetSicApproval,
+} from "../../controllers/project_Manager/consumptionSheet.controller.js";
+import {
+  getAllDieselReceipts,
+  getCompleteDieselReceipts,
+  getPendingDieselReceipts,
+  updateDieselReceiptMicApproval,
+} from "../../controllers/project_Manager/dieselReceipt.controller.js";
+import {
+  getAllMaintenanceSheets,
+  getApprovedMaintenanceSheets,
+  getPendingMaintenanceSheets,
+  updateMaintenanceSheetSicApproval,
+} from "../../controllers/project_Manager/maintenance_sheet.js";
 import {
   approveOrRejectDPR,
   getAllDPRs,
   getDPRsByStatus,
 } from "../../controllers/project_Manager/dpr.controller.js";
-
-
-
-
-
-
-
-
 
 const router = express.Router();
 
@@ -29,8 +41,10 @@ router.post("/diesel-requisitions/pending", getPendingDieselRequisitions);
 router.post("/diesel-requisitions/complete", getCompleteDieselRequisitions);
 
 // Update MIC approval status for a diesel requisition
-router.post("/diesel-requisitions/update-sic-approval", updateDieselRequisitionMicApproval);
-
+router.post(
+  "/diesel-requisitions/update-sic-approval",
+  updateDieselRequisitionMicApproval
+);
 
 // _______________________________________________________________
 // _________________________________________________________________
@@ -38,8 +52,10 @@ router.post("/diesel-requisitions/update-sic-approval", updateDieselRequisitionM
 router.post("/diesel-receipts/all", getAllDieselReceipts);
 router.post("/diesel-receipts/pending", getPendingDieselReceipts);
 router.post("/diesel-receipts/complete", getCompleteDieselReceipts);
-router.post("/diesel-receipts/update-sic-approval", updateDieselReceiptMicApproval);
-
+router.post(
+  "/diesel-receipts/update-sic-approval",
+  updateDieselReceiptMicApproval
+);
 
 // ------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------
@@ -50,7 +66,10 @@ router.post("/diesel-receipts/update-sic-approval", updateDieselReceiptMicApprov
 router.post("/consumption-sheets/all", getAllConsumptionSheets);
 router.post("/consumption-sheets/pending", getPendingConsumptionSheets);
 router.post("/consumption-sheets/complete", getCompleteConsumptionSheets);
-router.post("/consumption-sheets/update-sic-approval", updateConsumptionSheetSicApproval);
+router.post(
+  "/consumption-sheets/update-sic-approval",
+  updateConsumptionSheetSicApproval
+);
 
 // _________________________________________________________________________________________
 // _________________________________________________________________________________________
@@ -61,19 +80,15 @@ router.post("/consumption-sheets/update-sic-approval", updateConsumptionSheetSic
 router.post("/maintenance-sheets/all", getAllMaintenanceSheets);
 router.post("/maintenance-sheets/pending", getPendingMaintenanceSheets);
 router.post("/maintenance-sheets/approved", getApprovedMaintenanceSheets);
-router.post("/maintenance-sheets/update-sic-approval", updateMaintenanceSheetSicApproval);
-
-
-
-
-
-
+router.post(
+  "/maintenance-sheets/update-sic-approval",
+  updateMaintenanceSheetSicApproval
+);
 
 // Daily Progress Report Routes
-router.patch("/dpr/:dpr_id/approve-reject", approveOrRejectDPR); // Approve or Reject DPR
+router.patch("/dpr/approve-reject/:dpr_id", approveOrRejectDPR); // Approve or Reject DPR
 
 router.post("/dpr/all", getAllDPRs); // Get all DPRs (optionally by project_id in body/query)
 router.post("/dpr/status/:status", getDPRsByStatus); // Get DPRs by status (approved/rejected/pending)
-
 
 export default router;

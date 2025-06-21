@@ -1,5 +1,5 @@
 import express from 'express';
-import { createMaterialTransaction, deleteMaterialTransaction, getAllMaterialTransactions, getMaterialTransactionById, updateMaterialTransaction } from '../../controllers/StoreManager/storeManager.material.controller.js';
+import { createMaterialTransaction, deleteAllMaterialTransactions, deleteMaterialTransaction, getAllMaterialTransactions, getMaterialTransactionById, updateMaterialTransaction } from '../../controllers/StoreManager/storeManager.material.controller.js';
 import { createEquipmentTransaction, deleteEquipmentTransaction, getAllEquipmentTransactions, getEquipmentTransactionById, updateEquipmentTransaction } from '../../controllers/StoreManager/storeManager.equipment.controller.js';
 
 
@@ -20,6 +20,7 @@ router.put('/:id', updateMaterialTransaction);
 
 // Delete a Material Transaction by ID
 router.delete('/:id', deleteMaterialTransaction);
+router.delete('/material-transaction', deleteAllMaterialTransactions);
 
 
 

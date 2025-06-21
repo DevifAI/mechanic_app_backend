@@ -1,6 +1,10 @@
 import { models } from "../../models/index.js";
 
-const { MaterialTransaction, MaterialTransactionForm, Partner } = models;
+const {
+  MaterialTransaction,
+  MaterialTransactionForm,
+  Partner
+} = models;
 // CREATE
 export const createMaterialTransaction = async (req, res) => {
   try {
@@ -43,30 +47,30 @@ export const createMaterialTransaction = async (req, res) => {
 // READ ALL
 export const getAllMaterialTransactions = async (req, res) => {
   try {
-    const { data_type } = req.body;
+    const { data_type, project_id } = req.body;
 
-    // Validate input (optional)
     if (!["material_in", "material_out"].includes(data_type)) {
       return res.status(400).json({ error: "Invalid data_type" });
     }
 
+    if (!project_id) {
+      return res.status(400).json({ error: "project_id is required" });
+    }
+
     const transactions = await MaterialTransaction.findAll({
-      where: { data_type },
+      where: {
+        data_type,
+        project_id, // added filter
+      },
       include: [
-        {
-          model: Partner,
-          as: "partnerDetails",
-        },
-        {
-          model: MaterialTransactionForm,
-          as: "formItems",
-        },
+        { model: Partner, as: "partnerDetails" },
+        { model: MaterialTransactionForm, as: "formItems" },
       ],
     });
 
     res.status(200).json(transactions);
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    console.error("Error fetching material transactions:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -133,6 +137,25 @@ export const deleteMaterialTransaction = async (req, res) => {
 
     res.status(200).json({ message: "Transaction deleted" });
   } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// DELETE ALL
+// DELETE ALL Material Transactions
+export const deleteAllMaterialTransactions = async (req, res) => {
+  try {
+    // Delete all form items first
+    await MaterialTransactionForm.destroy({ where: {} });
+
+    // Then delete all material transactions
+    await MaterialTransaction.destroy({ where: {} });
+
+    res
+      .status(200)
+      .json({ message: "All material transactions and forms deleted." });
+  } catch (error) {
+    console.error("Error deleting all:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

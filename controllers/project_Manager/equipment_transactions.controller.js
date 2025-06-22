@@ -78,12 +78,12 @@ export const getEquipmentTransactionsByStatus = async (req, res) => {
             {
               model: ConsumableItem,
               as: "consumableItem",
-              attributes: ["id", "name", "description"],
+             
             },
             {
               model: UOM,
               as: "unitOfMeasure",
-              attributes: ["id", "name", "symbol"],
+             
             },
           ],
         },

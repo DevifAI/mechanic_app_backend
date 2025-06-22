@@ -37,17 +37,17 @@ export async function processProjectRow({
   }
 
   // Find customer by partner_name
-  console.log({ customer });
+  console.log({ store_location_ids });
   const partner = await Partner.findOne({ where: { partner_name: customer } });
   if (!partner) {
     return { projectNo, status: "failed", message: "Invalid customer name" };
   }
 
   const customer_id = partner.id;
-  console.log({ revenue_master_ids })
+  console.log({ revenue_master_ids });
   // Find RevenueMaster by revenue_code
   const revenues = await RevenueMaster.findAll({
-    where: { revenue_code: { [Op.in]: revenue_master_ids } },
+    where: { id: { [Op.in]: revenue_master_ids } },
   });
   console.log({ revenues });
   if (revenues.length !== revenue_master_ids.length) {
@@ -87,7 +87,7 @@ export async function processProjectRow({
 
   // Find Stores by store_code
   const stores = await Store.findAll({
-    where: { store_code: { [Op.in]: store_location_ids } },
+    where: { id: { [Op.in]: store_location_ids } },
   });
   if (stores.length !== store_location_ids.length) {
     return {
@@ -97,7 +97,7 @@ export async function processProjectRow({
     };
   }
   const store_ids = stores.map((s) => s.id);
-
+  console.log({ store_ids });
   // Create project
   const project = await Project_Master.create({
     project_no: projectNo,

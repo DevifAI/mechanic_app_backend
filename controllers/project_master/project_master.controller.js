@@ -13,11 +13,10 @@ const {
   ProjectEmployees,
   ProjectRevenue,
   StoreProject,
-  Role
+  Role,
 } = models; // Extract Partner model
 
 // Create Project
-
 
 export const createProject = async (req, res) => {
   const {
@@ -42,10 +41,14 @@ export const createProject = async (req, res) => {
     //   return res.status(400).json({ message: "Minimum 6 staff members are required." });
     // }
     if (!storeLocations.length) {
-      return res.status(400).json({ message: "At least one store location is required." });
+      return res
+        .status(400)
+        .json({ message: "At least one store location is required." });
     }
     if (!revenueMaster.length) {
-      return res.status(400).json({ message: "At least one revenue master is required." });
+      return res
+        .status(400)
+        .json({ message: "At least one revenue master is required." });
     }
 
     // Check if project number already exists
@@ -54,7 +57,9 @@ export const createProject = async (req, res) => {
     });
 
     if (existingProject) {
-      return res.status(400).json({ message: "Project number already exists." });
+      return res
+        .status(400)
+        .json({ message: "Project number already exists." });
     }
 
     // Validate customer_id
@@ -96,7 +101,9 @@ export const createProject = async (req, res) => {
     // }
 
     // Validate related entities
-    const validRevenueCount = await RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } });
+    const validRevenueCount = await RevenueMaster.count({
+      where: { id: { [Op.in]: revenueMaster } },
+    });
     if (validRevenueCount !== revenueMaster.length) {
       return res.status(400).json({ message: "Invalid revenue master ID(s)." });
     }
@@ -106,7 +113,9 @@ export const createProject = async (req, res) => {
     //   return res.status(400).json({ message: "Invalid equipment ID(s)." });
     // }
 
-    const validStoreCount = await Store.count({ where: { id: { [Op.in]: storeLocations } } });
+    const validStoreCount = await Store.count({
+      where: { id: { [Op.in]: storeLocations } },
+    });
     if (validStoreCount !== storeLocations.length) {
       return res.status(400).json({ message: "Invalid store location ID(s)." });
     }
@@ -131,7 +140,10 @@ export const createProject = async (req, res) => {
     // );
 
     await ProjectRevenue.bulkCreate(
-      revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
+      revenueMaster.map((revenue_master_id) => ({
+        project_id,
+        revenue_master_id,
+      }))
     );
 
     // await ProjectEmployees.bulkCreate(
@@ -151,7 +163,6 @@ export const createProject = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 // Get all Projects with all associated data
 export const getProjects = async (req, res) => {
@@ -188,7 +199,9 @@ export const getProjects = async (req, res) => {
     const projectsWithDuration = projects.map((project) => {
       const start = new Date(project.contract_start_date);
       const end = new Date(project.contract_end_date);
-      const duration = `${Math.ceil((end - start) / (1000 * 60 * 60 * 24))} Days`; // in days
+      const duration = `${Math.ceil(
+        (end - start) / (1000 * 60 * 60 * 24)
+      )} Days`; // in days
 
       return {
         ...project.toJSON(),
@@ -266,8 +279,6 @@ export const getProjectById = async (req, res) => {
   }
 };
 
-
-
 // Update Project
 export const updateProject = async (req, res) => {
   const {
@@ -279,7 +290,7 @@ export const updateProject = async (req, res) => {
     contractTenure,
     revenueMaster = [],
     equipments = [],
-    staff = [],
+    // staff = [],
     storeLocations = [],
   } = req.body;
 
@@ -291,16 +302,22 @@ export const updateProject = async (req, res) => {
     }
 
     if (!equipments.length) {
-      return res.status(400).json({ message: "At least one equipment is required." });
+      return res
+        .status(400)
+        .json({ message: "At least one equipment is required." });
     }
-    if (!staff.length) {
-      return res.status(400).json({ message: "At least one staff member is required." });
-    }
+    // if (!staff.length) {
+    //   return res.status(400).json({ message: "At least one staff member is required." });
+    // }
     if (!storeLocations.length) {
-      return res.status(400).json({ message: "At least one store location is required." });
+      return res
+        .status(400)
+        .json({ message: "At least one store location is required." });
     }
     if (!revenueMaster.length) {
-      return res.status(400).json({ message: "At least one revenue master is required." });
+      return res
+        .status(400)
+        .json({ message: "At least one revenue master is required." });
     }
 
     if (project.project_no !== projectNo) {
@@ -308,7 +325,9 @@ export const updateProject = async (req, res) => {
         where: { project_no: projectNo },
       });
       if (existingProject) {
-        return res.status(400).json({ message: "Project number already exists." });
+        return res
+          .status(400)
+          .json({ message: "Project number already exists." });
       }
     }
 
@@ -320,12 +339,12 @@ export const updateProject = async (req, res) => {
     const [
       validRevenueCount,
       validEquipmentCount,
-      validStaffCount,
+      // validStaffCount,
       validStoreCount,
     ] = await Promise.all([
       RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } }),
       Equipment.count({ where: { id: { [Op.in]: equipments } } }),
-      Employee.count({ where: { id: { [Op.in]: staff } } }),
+      // Employee.count({ where: { id: { [Op.in]: staff } } }),
       Store.count({ where: { id: { [Op.in]: storeLocations } } }),
     ]);
 
@@ -335,9 +354,9 @@ export const updateProject = async (req, res) => {
     if (validEquipmentCount !== equipments.length) {
       return res.status(400).json({ message: "Invalid equipment ID(s)." });
     }
-    if (validStaffCount !== staff.length) {
-      return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
-    }
+    // if (validStaffCount !== staff.length) {
+    //   return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
+    // }
     if (validStoreCount !== storeLocations.length) {
       return res.status(400).json({ message: "Invalid store location ID(s)." });
     }
@@ -356,7 +375,7 @@ export const updateProject = async (req, res) => {
     await Promise.all([
       EquipmentProject.destroy({ where: { project_id } }),
       ProjectRevenue.destroy({ where: { project_id } }),
-      ProjectEmployees.destroy({ where: { project_id } }),
+      // ProjectEmployees.destroy({ where: { project_id } }),
       StoreProject.destroy({ where: { project_id } }),
     ]);
 
@@ -365,11 +384,14 @@ export const updateProject = async (req, res) => {
         equipments.map((equipment_id) => ({ project_id, equipment_id }))
       ),
       ProjectRevenue.bulkCreate(
-        revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
+        revenueMaster.map((revenue_master_id) => ({
+          project_id,
+          revenue_master_id,
+        }))
       ),
-      ProjectEmployees.bulkCreate(
-        staff.map((emp_id) => ({ project_id, emp_id }))
-      ),
+      // ProjectEmployees.bulkCreate(
+      //   staff.map((emp_id) => ({ project_id, emp_id }))
+      // ),
       StoreProject.bulkCreate(
         storeLocations.map((store_id) => ({ project_id, store_id }))
       ),
@@ -384,7 +406,6 @@ export const updateProject = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 // Delete Project
 export const deleteProject = async (req, res) => {
@@ -420,14 +441,12 @@ export const deleteProject = async (req, res) => {
     console.error("Error deleting project:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-
 //Bulk upload
-// Controller to handle upload and processing
 export const bulkUploadProjects = async (req, res) => {
   try {
     if (!req.file) {
@@ -443,49 +462,109 @@ export const bulkUploadProjects = async (req, res) => {
       return res.status(400).json({ message: "Excel sheet is empty" });
     }
 
-    // Skip the first row (header)
-    const dataRows = rows.slice(1);
+    // Get reference data once
+    const stores = await Store.findAll();
+    const storeMap = new Map(stores.map((s) => [s.store_code.trim(), s.id]));
 
+    const revenues = await RevenueMaster.findAll();
+    const revenueMap = new Map(
+      revenues.map((r) => [r.revenue_code.trim(), r.id])
+    );
+
+    const equipments = await Equipment.findAll();
+    const equipmentMap = new Map(
+      equipments.map((e) => [e.equipment_name.trim(), e.id])
+    );
+
+    const customers = await Partner.findAll();
+    const customerMap = new Map(
+      customers.map((c) => [c.partner_name.trim(), c.id])
+    );
+
+    const dataRows = rows.slice(1);
     const results = [];
 
     for (const row of dataRows) {
+      console.log({ row });
       const [
         projectNo,
-        customer,
+        customerName,
         orderNo,
         contractStartDate,
-        // contractTenure,
-        contractEndDate, // ✅ New field
+        contractEndDate,
         revenuemasterStr,
-        // equipmentsStr,
-        storelocationsStr,
+        equipmentStr,
+        storeStr,
       ] = row;
 
       if (!projectNo) continue;
 
+      // Convert codes to IDs
+      // const customerId = customerMap.get(customerName?.trim());
       const revenue_master_ids = revenuemasterStr
-        ? revenuemasterStr.split(",").map((r) => r.trim())
-        : [];
-      // const equipment_allocated_ids = equipmentsStr
-      //   ? equipmentsStr.split(",").map((e) => e.trim())
-      //   : [];
-      // const staff_ids = staffStr
-      //   ? staffStr.split(",").map((s) => s.trim())
-      //   : [];
-      const store_location_ids = storelocationsStr
-        ? storelocationsStr.split(",").map((s) => s.trim())
+        ? revenuemasterStr
+            .split(",")
+            .map((code) => revenueMap.get(code.trim()))
+            .filter(Boolean)
         : [];
 
+      const equipment_allocated_ids = equipmentStr
+        ? equipmentStr
+            .split(",")
+            .map((name) => equipmentMap.get(name.trim()))
+            .filter(Boolean)
+        : [];
+
+      const store_location_ids = storeStr
+        ? storeStr
+            .split(",")
+            .map((code) => storeMap.get(code.trim()))
+            .filter(Boolean)
+        : [];
+
+      // Validate required mappings
+      if (!customerName) {
+        results.push({
+          projectNo,
+          status: "failed",
+          message: "Invalid customer name.",
+        });
+        continue;
+      }
+      if (revenue_master_ids.length === 0) {
+        results.push({
+          projectNo,
+          status: "failed",
+          message: "Invalid or missing revenue code(s).",
+        });
+        continue;
+      }
+      if (equipment_allocated_ids.length === 0) {
+        results.push({
+          projectNo,
+          status: "failed",
+          message: "Invalid or missing equipment(s).",
+        });
+        continue;
+      }
+      if (store_location_ids.length === 0) {
+        results.push({
+          projectNo,
+          status: "failed",
+          message: "Invalid or missing store code(s).",
+        });
+        continue;
+      }
+
+      // Call your processor
       const result = await processProjectRow({
         projectNo,
-        customer,
+        customer: customerName,
         orderNo,
         contractStartDate,
-        // contractTenure,
-        contractEndDate, // ✅ Pass to processor
+        contractEndDate,
         revenue_master_ids,
-        // equipment_allocated_ids,
-        // staff_ids,
+        equipment_allocated_ids,
         store_location_ids,
       });
 
@@ -501,9 +580,3 @@ export const bulkUploadProjects = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-
-
-
-
-

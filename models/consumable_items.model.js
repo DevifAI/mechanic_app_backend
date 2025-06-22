@@ -46,6 +46,7 @@ export const ConsumableItemsModel = (sequelize) => {
       },
 
       item_qty_in_hand: { type: DataTypes.INTEGER, allowNull: false },
+      hsn_number: { type: DataTypes.STRING, allowNull: true },
 
       item_avg_cost: { type: DataTypes.FLOAT, allowNull: false },
 

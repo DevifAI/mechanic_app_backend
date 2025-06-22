@@ -1,8 +1,19 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
 import bcrypt from "bcrypt";
-const { Employee, Role, Shift, EmpPositionsModel, Organisations, Project_Master, ProjectEmployees, DieselReceipt, DieselRequisitions, ConsumptionSheet, MaintenanceSheet } = models;
-
+const {
+  Employee,
+  Role,
+  Shift,
+  EmpPositionsModel,
+  Organisations,
+  Project_Master,
+  ProjectEmployees,
+  DieselReceipt,
+  DieselRequisitions,
+  ConsumptionSheet,
+  MaintenanceSheet,
+} = models;
 
 export const createEmployee = async (req, res) => {
   try {
@@ -25,7 +36,7 @@ export const createEmployee = async (req, res) => {
       acc_no,
       ifsc_code,
       aadhar_number,
-      dob
+      dob,
     } = req.body;
 
     const existingEmp = await Employee.findOne({ where: { emp_id } });
@@ -34,23 +45,28 @@ export const createEmployee = async (req, res) => {
     }
 
     const roleExists = await Role.findByPk(role_id);
-    if (!roleExists) return res.status(400).json({ message: "Invalid role_id" });
+    if (!roleExists)
+      return res.status(400).json({ message: "Invalid role_id" });
 
-    const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
-    if (!shiftExists) return res.status(400).json({ message: "Invalid shiftcode" });
+    const shiftExists = await Shift.findOne({
+      where: { shift_code: shiftcode },
+    });
+    if (!shiftExists)
+      return res.status(400).json({ message: "Invalid shiftcode" });
 
     const orgExists = await Organisations.findByPk(org_id);
-    if (!orgExists) return res.status(400).json({ message: "Invalid organisation ID" });
+    if (!orgExists)
+      return res.status(400).json({ message: "Invalid organisation ID" });
 
     const validRoles = [
-      'mechanic',
-      'mechanicIncharge',
-      'siteIncharge',
-      'storeManager',
-      'accountManager',
-      'projectManager',
-      'admin',
-      'N/A'
+      "mechanic",
+      "mechanicIncharge",
+      "siteIncharge",
+      "storeManager",
+      "accountManager",
+      "projectManager",
+      "admin",
+      "N/A",
     ];
     if (!validRoles.includes(app_access_role)) {
       return res.status(400).json({ message: "Invalid app_access_role" });
@@ -76,7 +92,7 @@ export const createEmployee = async (req, res) => {
       acc_no,
       ifsc_code,
       aadhar_number,
-      dob
+      dob,
     });
 
     return res.status(201).json({
@@ -100,7 +116,6 @@ export const createEmployee = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 // Get All Employees
 export const getAllEmployees = async (req, res) => {
@@ -148,10 +163,9 @@ export const getAllEmployees = async (req, res) => {
 // Get Employee by ID
 export const getEmployeeById = async (req, res) => {
   try {
-    console.log("::::::::::::::::::::::", req.params)
+    console.log("::::::::::::::::::::::", req.params);
     const { id } = req.params;
     const employee = await Employee.findByPk(id);
-
 
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
@@ -164,9 +178,6 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-
-
-
 export const getProjectsByEmployeeId = async (req, res) => {
   try {
     const { id: emp_id } = req.params;
@@ -178,7 +189,9 @@ export const getProjectsByEmployeeId = async (req, res) => {
     });
 
     if (!projectLinks || projectLinks.length === 0) {
-      return res.status(404).json({ message: "No projects found for this employee" });
+      return res
+        .status(404)
+        .json({ message: "No projects found for this employee" });
     }
 
     // Step 2: Extract project IDs
@@ -223,7 +236,7 @@ export const updateEmployee = async (req, res) => {
       acc_no,
       ifsc_code,
       aadhar_number,
-      dob
+      dob,
     } = req.body;
 
     const employee = await Employee.findByPk(id);
@@ -249,7 +262,9 @@ export const updateEmployee = async (req, res) => {
 
     // Validate shiftcode if provided
     if (shiftcode) {
-      const shiftExists = await Shift.findOne({ where: { shift_code: shiftcode } });
+      const shiftExists = await Shift.findOne({
+        where: { shift_code: shiftcode },
+      });
       if (!shiftExists) {
         return res.status(400).json({ message: "Invalid shiftcode" });
       }
@@ -273,7 +288,7 @@ export const updateEmployee = async (req, res) => {
         "accountManager",
         "projectManager",
         "admin",
-        "N/A"
+        "N/A",
       ];
       if (!validRoles.includes(app_access_role)) {
         return res.status(400).json({ message: "Invalid app_access_role" });
@@ -301,9 +316,10 @@ export const updateEmployee = async (req, res) => {
       shiftcode: shiftcode || employee.shiftcode,
       role_id: role_id || employee.role_id,
       org_id: org_id || employee.org_id,
-      app_access_role: app_access_role === "N/A"
-        ? null
-        : (app_access_role || employee.app_access_role),
+      app_access_role:
+        app_access_role === "N/A"
+          ? null
+          : app_access_role || employee.app_access_role,
 
       password: newPassword,
       acc_holder_name: acc_holder_name || employee.acc_holder_name,
@@ -311,7 +327,7 @@ export const updateEmployee = async (req, res) => {
       acc_no: acc_no || employee.acc_no,
       ifsc_code: ifsc_code || employee.ifsc_code,
       aadhar_number: aadhar_number || employee.aadhar_number,
-      dob: dob || employee.dob
+      dob: dob || employee.dob,
     };
 
     await employee.update(updateData);
@@ -338,7 +354,6 @@ export const updateEmployee = async (req, res) => {
   }
 };
 
-
 // Delete Employee
 export const deleteEmployee = async (req, res) => {
   try {
@@ -362,17 +377,17 @@ export const deleteEmployee = async (req, res) => {
     // Delete the employee
     await employee.destroy();
 
-    return res.status(200).json({ message: "Employee and associations deleted successfully" });
+    return res
+      .status(200)
+      .json({ message: "Employee and associations deleted successfully" });
   } catch (error) {
     console.error("Error deleting employee:", error.message);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message // Include error details for debugging
+      error: error.message, // Include error details for debugging
     });
   }
 };
-
-
 
 export const bulkUploadEmployees = async (req, res) => {
   try {
@@ -412,7 +427,7 @@ export const bulkUploadEmployees = async (req, res) => {
         acc_holder_name,
         acc_no,
         ifsc_code,
-        app_access_role
+        app_access_role,
       } = row;
 
       const rowNumber = i + 2; // Excel row
@@ -434,47 +449,71 @@ export const bulkUploadEmployees = async (req, res) => {
         continue;
       }
 
-
-      const empIdStr = typeof emp_id === "string" ? emp_id.trim() : String(emp_id);
+      const empIdStr =
+        typeof emp_id === "string" ? emp_id.trim() : String(emp_id);
 
       // ✅ Duplicate check
-      const existingEmp = await Employee.findOne({ where: { emp_id: empIdStr } });
+      const existingEmp = await Employee.findOne({
+        where: { emp_id: empIdStr },
+      });
       if (existingEmp) {
-        errors.push({ row: rowNumber, message: `Employee ID ${empIdStr} already exists` });
+        errors.push({
+          row: rowNumber,
+          message: `Employee ID ${empIdStr} already exists`,
+        });
         continue;
       }
 
       // ✅ Role lookup
       const role = await Role.findOne({ where: { name: role_name.trim() } });
       if (!role) {
-        errors.push({ row: rowNumber, message: `Invalid role_name: ${role_name}` });
+        errors.push({
+          row: rowNumber,
+          message: `Invalid role_name: ${role_name}`,
+        });
         continue;
       }
 
       // ✅ Shift lookup
-      const shift = await Shift.findOne({ where: { shift_code: shiftcode.trim() } });
+      const shift = await Shift.findOne({
+        where: { shift_code: shiftcode.trim() },
+      });
       if (!shift) {
-        errors.push({ row: rowNumber, message: `Invalid shiftcode: ${shiftcode}` });
+        errors.push({
+          row: rowNumber,
+          message: `Invalid shiftcode: ${shiftcode}`,
+        });
         continue;
       }
 
       // ✅ Organisation lookup
-      const org = await Organisations.findOne({ where: { org_name: organisations.trim() } });
+      const org = await Organisations.findOne({
+        where: { org_name: organisations.trim() },
+      });
       if (!org) {
-        errors.push({ row: rowNumber, message: `Invalid organisation: ${organisations}` });
+        errors.push({
+          row: rowNumber,
+          message: `Invalid organisation: ${organisations}`,
+        });
         continue;
       }
 
       // ✅ Aadhar validation
       const aadharStr = String(aadhar_number || "").trim();
       if (!/^\d{12}$/.test(aadharStr)) {
-        errors.push({ row: rowNumber, message: "Aadhar number must be 12 digits" });
+        errors.push({
+          row: rowNumber,
+          message: "Aadhar number must be 12 digits",
+        });
         continue;
       }
 
       // ✅ DOB validation
       if (!dob) {
-        errors.push({ row: rowNumber, message: "Invalid or missing date of birth" });
+        errors.push({
+          row: rowNumber,
+          message: "Invalid or missing date of birth",
+        });
         continue;
       }
 
@@ -519,13 +558,10 @@ export const bulkUploadEmployees = async (req, res) => {
   }
 };
 
-
 // Get Employees by Role
 export const getEmployeesByRole = async (req, res) => {
   try {
     const { id } = req.params;
-
-
 
     // Then find all employees with this role_id
     const employees = await Employee.findAll({
@@ -569,7 +605,7 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
   try {
     // First get all roles
     const roles = await Role.findAll({
-      attributes: ['id', 'name'],
+      attributes: ["id", "name"],
     });
 
     // Then get all employees with their role information
@@ -592,13 +628,13 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
     const result = {};
 
     // Initialize empty arrays for each role
-    roles.forEach(role => {
+    roles.forEach((role) => {
       result[role.name] = [];
     });
 
     // Group employees by role
-    employees.forEach(emp => {
-      const roleName = emp.role?.name || 'Unknown';
+    employees.forEach((emp) => {
+      const roleName = emp.role?.name || "Unknown";
       if (!result[roleName]) {
         result[roleName] = [];
       }
@@ -623,18 +659,18 @@ export const getAllEmployeesGroupedByRole = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 export const addEmployeesToProject = async (req, res) => {
   try {
     const { project_id, employee_ids } = req.body;
 
-    if (!project_id || !Array.isArray(employee_ids) || employee_ids.length === 0) {
-      return res.status(400).json({ message: "project_id and employee_ids are required." });
+    if (
+      !project_id ||
+      !Array.isArray(employee_ids) ||
+      employee_ids.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "project_id and employee_ids are required." });
     }
 
     // Check if project exists
@@ -649,7 +685,9 @@ export const addEmployeesToProject = async (req, res) => {
     });
 
     if (foundEmployees.length !== employee_ids.length) {
-      return res.status(400).json({ message: "Some employee IDs are invalid." });
+      return res
+        .status(400)
+        .json({ message: "Some employee IDs are invalid." });
     }
 
     // Find existing employee mappings for the project
@@ -660,16 +698,25 @@ export const addEmployeesToProject = async (req, res) => {
       },
     });
 
-    const alreadyAssignedEmpIds = new Set(existingMappings.map(e => e.emp_id));
+    const alreadyAssignedEmpIds = new Set(
+      existingMappings.map((e) => e.emp_id)
+    );
 
     // Filter out already assigned employees
-    const newEmployeeIds = employee_ids.filter(emp_id => !alreadyAssignedEmpIds.has(emp_id));
+    const newEmployeeIds = employee_ids.filter(
+      (emp_id) => !alreadyAssignedEmpIds.has(emp_id)
+    );
 
     if (newEmployeeIds.length === 0) {
-      return res.status(200).json({ message: "All selected employees are already assigned to this project." });
+      return res
+        .status(200)
+        .json({
+          message:
+            "All selected employees are already assigned to this project.",
+        });
     }
 
-    const newMappings = newEmployeeIds.map(emp_id => ({
+    const newMappings = newEmployeeIds.map((emp_id) => ({
       project_id,
       emp_id,
     }));
@@ -685,8 +732,54 @@ export const addEmployeesToProject = async (req, res) => {
   }
 };
 
-;
+export const updateEmployeesForProject = async (req, res) => {
+  try {
+    const { project_id, employee_ids } = req.body;
 
+    if (!project_id || !Array.isArray(employee_ids)) {
+      return res
+        .status(400)
+        .json({ message: "project_id and employee_ids are required." });
+    }
+
+    // Check if project exists
+    const projectExists = await Project_Master.findByPk(project_id);
+    if (!projectExists) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // Validate employee IDs
+    const foundEmployees = await Employee.findAll({
+      where: { id: employee_ids },
+    });
+
+    if (foundEmployees.length !== employee_ids.length) {
+      return res
+        .status(400)
+        .json({ message: "Some employee IDs are invalid." });
+    }
+
+    // Delete existing mappings
+    await ProjectEmployees.destroy({
+      where: { project_id },
+    });
+
+    // Create new mappings
+    const newMappings = employee_ids.map((emp_id) => ({
+      project_id,
+      emp_id,
+    }));
+
+    await ProjectEmployees.bulkCreate(newMappings);
+
+    return res.status(200).json({
+      message: `Project employees updated successfully. ${newMappings.length} employee(s) assigned.`,
+    });
+  } catch (error) {
+    console.error("Error updating employees for project:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const getEmployeesByProject = async (req, res) => {
   try {
@@ -704,7 +797,13 @@ export const getEmployeesByProject = async (req, res) => {
         {
           model: Employee,
           as: "employeeDetails", // use alias from association
-          attributes: ["id", "emp_id", "emp_name", "app_access_role", "role_id"],
+          attributes: [
+            "id",
+            "emp_id",
+            "emp_name",
+            "app_access_role",
+            "role_id",
+          ],
           include: [
             {
               model: Role,
@@ -729,8 +828,6 @@ export const getEmployeesByProject = async (req, res) => {
   }
 };
 
-
-
 export const getEmployeesByProjectWithRoleType = async (req, res) => {
   try {
     const { project_id, role_name } = req.body;
@@ -747,7 +844,13 @@ export const getEmployeesByProjectWithRoleType = async (req, res) => {
         {
           model: Employee,
           as: "employeeDetails", // use alias from association
-          attributes: ["id", "emp_id", "emp_name", "app_access_role", "role_id"],
+          attributes: [
+            "id",
+            "emp_id",
+            "emp_name",
+            "app_access_role",
+            "role_id",
+          ],
           include: [
             {
               model: Role,
@@ -760,7 +863,9 @@ export const getEmployeesByProjectWithRoleType = async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
 
-    const filteredEmployess = assignedEmployees.filter((emp) => emp.employeeDetails.role.name === role_name)
+    const filteredEmployess = assignedEmployees.filter(
+      (emp) => emp.employeeDetails.role.name === role_name
+    );
 
     return res.status(200).json({
       message: `Found ${filteredEmployess} employees assigned to project`,

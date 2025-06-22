@@ -5,7 +5,7 @@ const {
   MaterialTransactionForm,
   Partner,
   ConsumableItem,
-  UOM
+  UOM,
 } = models;
 // CREATE
 export const createMaterialTransaction = async (req, res) => {
@@ -73,12 +73,10 @@ export const getAllMaterialTransactions = async (req, res) => {
             {
               model: ConsumableItem,
               as: "consumableItem", // From model alias
-
             },
             {
               model: UOM,
               as: "unitOfMeasure", // From model alias
-
             },
           ],
         },
@@ -92,6 +90,35 @@ export const getAllMaterialTransactions = async (req, res) => {
   }
 };
 
+//Read all with no check
+export const getAllMaterialTransactionsNoFilter = async (req, res) => {
+  try {
+    const transactions = await MaterialTransaction.findAll({
+      include: [
+        { model: Partner, as: "partnerDetails" },
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem", // From model alias
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure", // From model alias
+            },
+          ],
+        },
+      ],
+    });
+
+    return res.status(200).json(transactions);
+  } catch (error) {
+    console.error("Error fetching material transactions:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 // READ ONE
 export const getMaterialTransactionById = async (req, res) => {
@@ -106,12 +133,10 @@ export const getMaterialTransactionById = async (req, res) => {
             {
               model: ConsumableItem,
               as: "consumableItem", // From model alias
-
             },
             {
               model: UOM,
               as: "unitOfMeasure", // From model alias
-
             },
           ],
         },

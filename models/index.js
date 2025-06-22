@@ -37,7 +37,6 @@ import MaterialTransactionsFormModel from "./material_transactions_form.model.js
 import EquipmentTransacationModel from "./equipment_transaction.model.js"; // <-- Add this
 import EquipmentTransactionsFormModel from "./equipment_transactionForm.model.js"; // <-- Add this
 
-
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
 const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
@@ -55,30 +54,28 @@ const ProjectEmployees = EmpProjectModel(sequelize);
 const ProjectRevenue = ProjectRevenueModel(sequelize);
 const StoreProject = StoreProjectModel(sequelize);
 const Organisations = OrganisationModel(sequelize);
-const UOM = UOMModel(sequelize)
-const DieselRequisitions = DieselRequisitionModel(sequelize)
+const UOM = UOMModel(sequelize);
+const DieselRequisitions = DieselRequisitionModel(sequelize);
 const DieselRequisitionItems = DieselRequisitionItemModel(sequelize);
 
-const ConsumableItem = ConsumableItemsModel(sequelize)
-const ItemGroup = ItemGroupModel(sequelize)
-const OEM = OEMModel(sequelize)
-const AccountGroup = AccountGroupModel(sequelize)
-const Account = AccountModel(sequelize)
-const DieselReceipt = DieselReceiptModel(sequelize)
-const DieselReceiptItem = DieselReceiptItemModel(sequelize)
-const ConsumptionSheet = ConsumptionSheetModel(sequelize)
-const ConsumptionSheetItem = ConsumptionSheetItemModel(sequelize)
-const MaintenanceSheet = MaintenanceSheetModel(sequelize)
-const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize)
-const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize)
+const ConsumableItem = ConsumableItemsModel(sequelize);
+const ItemGroup = ItemGroupModel(sequelize);
+const OEM = OEMModel(sequelize);
+const AccountGroup = AccountGroupModel(sequelize);
+const Account = AccountModel(sequelize);
+const DieselReceipt = DieselReceiptModel(sequelize);
+const DieselReceiptItem = DieselReceiptItemModel(sequelize);
+const ConsumptionSheet = ConsumptionSheetModel(sequelize);
+const ConsumptionSheetItem = ConsumptionSheetItemModel(sequelize);
+const MaintenanceSheet = MaintenanceSheetModel(sequelize);
+const MaintenanceSheetItem = MaintenanceSheetItemModel(sequelize);
+const EmployeeOrganisations = EmployeeOrganisationsModel(sequelize);
 const DailyProgressReport = DailyProgressReportModel(sequelize);
 const DailyProgressReportForm = DailyProgressReportFormModel(sequelize); // <-- Add this
 const MaterialTransaction = MaterialTransactionModel(sequelize);
 const MaterialTransactionForm = MaterialTransactionsFormModel(sequelize);
 const EquipmentTransaction = EquipmentTransacationModel(sequelize);
 const EquipmentTransactionsForm = EquipmentTransactionsFormModel(sequelize);
-
-
 
 const models = {
   sequelize,
@@ -118,7 +115,7 @@ const models = {
   MaterialTransaction,
   MaterialTransactionForm,
   EquipmentTransaction,
-  EquipmentTransactionsForm
+  EquipmentTransactionsForm,
 };
 
 // Step 2: Call associations AFTER all models are initialized
@@ -159,8 +156,6 @@ const syncModels = async () => {
     // await sequelize.sync()
     // Fill in the default project_id for existing rows
     // Optional: use alter in dev
-
-
 
     console.log("✅ All models were synced.");
   } catch (err) {

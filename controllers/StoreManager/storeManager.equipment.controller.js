@@ -6,7 +6,7 @@ const {
   EquipmentTransactionsForm,
   Project_Master,
   ConsumableItem,
-  UOM
+  UOM,
 } = models;
 
 // CREATE
@@ -77,12 +77,10 @@ export const getAllEquipmentTransactions = async (req, res) => {
             {
               model: ConsumableItem,
               as: "consumableItem",
-             
             },
             {
               model: UOM,
               as: "unitOfMeasure",
-             
             },
           ],
         },
@@ -96,6 +94,35 @@ export const getAllEquipmentTransactions = async (req, res) => {
   }
 };
 
+export const getAllEquipmentTransactionsNoFilter = async (req, res) => {
+  try {
+    const transactions = await EquipmentTransaction.findAll({
+      include: [
+        { model: Partner, as: "partnerDetails" },
+        { model: Project_Master, as: "project" },
+        {
+          model: EquipmentTransactionsForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(transactions);
+  } catch (error) {
+    console.error("Fetch error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 // READ ONE
 export const getEquipmentTransactionById = async (req, res) => {
@@ -115,7 +142,6 @@ export const getEquipmentTransactionById = async (req, res) => {
             {
               model: UOM,
               as: "unitOfMeasure", // alias from association
-             
             },
           ],
         },
@@ -132,7 +158,6 @@ export const getEquipmentTransactionById = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 // UPDATE
 export const updateEquipmentTransaction = async (req, res) => {

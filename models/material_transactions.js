@@ -64,8 +64,8 @@ export default (sequelize) => {
           if (transaction.data_type === "material_out") {
             transaction.challan_no = null;
 
-            // Allow partner only if type is "Repair"
-            if (transaction.type !== "Repair") {
+            // Allow partner only if type is "Repair || Site Return || Rent"
+            if (!["Repair", "Site Return", "Rent"].includes(transaction.type)) {
               transaction.partner = null;
             }
           }

@@ -50,6 +50,7 @@ export const createEmployee = async (req, res) => {
       'accountManager',
       'projectManager',
       'admin',
+      'N/A'
     ];
     if (!validRoles.includes(app_access_role)) {
       return res.status(400).json({ message: "Invalid app_access_role" });
@@ -68,7 +69,7 @@ export const createEmployee = async (req, res) => {
       shiftcode,
       role_id,
       org_id,
-      app_access_role,
+      app_access_role: app_access_role === "N/A" ? null : app_access_role,
       password: emp_id, // Password will be hashed in the model hook
       acc_holder_name,
       bank_name,
@@ -272,6 +273,7 @@ export const updateEmployee = async (req, res) => {
         "accountManager",
         "projectManager",
         "admin",
+        "N/A"
       ];
       if (!validRoles.includes(app_access_role)) {
         return res.status(400).json({ message: "Invalid app_access_role" });
@@ -299,7 +301,10 @@ export const updateEmployee = async (req, res) => {
       shiftcode: shiftcode || employee.shiftcode,
       role_id: role_id || employee.role_id,
       org_id: org_id || employee.org_id,
-      app_access_role: app_access_role || employee.app_access_role,
+      app_access_role: app_access_role === "N/A"
+        ? null
+        : (app_access_role || employee.app_access_role),
+
       password: newPassword,
       acc_holder_name: acc_holder_name || employee.acc_holder_name,
       bank_name: bank_name || employee.bank_name,
@@ -497,21 +502,21 @@ export const bulkUploadEmployees = async (req, res) => {
         app_access_role: app_access_role?.trim() || "",
       });
 
-    createdEmployees.push(newEmployee);
-  }
+      createdEmployees.push(newEmployee);
+    }
 
     return res.status(201).json({
-    message: "Bulk upload finished",
-    createdCount: createdEmployees.length,
-    errors,
-  });
-} catch (error) {
-  console.error("Bulk upload error:", error);
-  return res.status(500).json({
-    message: "Internal Server Error",
-    error: error.message,
-  });
-}
+      message: "Bulk upload finished",
+      createdCount: createdEmployees.length,
+      errors,
+    });
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
 };
 
 

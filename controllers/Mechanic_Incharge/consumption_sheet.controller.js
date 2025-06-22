@@ -6,6 +6,7 @@ const {
   UOM,
   Employee,
   Organisations,
+  Equipment
 } = models;
 
 /**
@@ -31,6 +32,11 @@ export const getAllConsumptionSheets = async (req, res) => {
               model: UOM,
               as: "uomData",
               attributes: ["id", "unit_name", "unit_code"],
+            },
+             {
+              model: Equipment,
+              as: "equipmentData",
+              attributes: ["id", "equipment_name"],
             },
           ],
         },

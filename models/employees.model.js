@@ -52,7 +52,7 @@ export default (sequelize) => {
           "projectManager",
           "admin"
         ),
-        allowNull: false,
+        allowNull: true,
       },
     },
     {

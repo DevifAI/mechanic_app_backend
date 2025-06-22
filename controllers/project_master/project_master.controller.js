@@ -278,8 +278,8 @@ export const updateProject = async (req, res) => {
     contractEndDate, // ← added
     contractTenure,
     revenueMaster = [],
-    // equipments = [],
-    // staff = [],
+    equipments = [],
+    staff = [],
     storeLocations = [],
   } = req.body;
 
@@ -290,12 +290,12 @@ export const updateProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found." });
     }
 
-    // if (!equipments.length) {
-    //   return res.status(400).json({ message: "At least one equipment is required." });
-    // }
-    // if (!staff.length) {
-    //   return res.status(400).json({ message: "At least one staff member is required." });
-    // }
+    if (!equipments.length) {
+      return res.status(400).json({ message: "At least one equipment is required." });
+    }
+    if (!staff.length) {
+      return res.status(400).json({ message: "At least one staff member is required." });
+    }
     if (!storeLocations.length) {
       return res.status(400).json({ message: "At least one store location is required." });
     }
@@ -319,25 +319,25 @@ export const updateProject = async (req, res) => {
 
     const [
       validRevenueCount,
-      // validEquipmentCount,
-      // validStaffCount,
+      validEquipmentCount,
+      validStaffCount,
       validStoreCount,
     ] = await Promise.all([
       RevenueMaster.count({ where: { id: { [Op.in]: revenueMaster } } }),
       Equipment.count({ where: { id: { [Op.in]: equipments } } }),
-      // Employee.count({ where: { id: { [Op.in]: staff } } }),
+      Employee.count({ where: { id: { [Op.in]: staff } } }),
       Store.count({ where: { id: { [Op.in]: storeLocations } } }),
     ]);
 
     if (validRevenueCount !== revenueMaster.length) {
       return res.status(400).json({ message: "Invalid revenue master ID(s)." });
     }
-    // if (validEquipmentCount !== equipments.length) {
-    //   return res.status(400).json({ message: "Invalid equipment ID(s)." });
-    // }
-    // if (validStaffCount !== staff.length) {
-    //   return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
-    // }
+    if (validEquipmentCount !== equipments.length) {
+      return res.status(400).json({ message: "Invalid equipment ID(s)." });
+    }
+    if (validStaffCount !== staff.length) {
+      return res.status(400).json({ message: "Invalid employee/staff ID(s)." });
+    }
     if (validStoreCount !== storeLocations.length) {
       return res.status(400).json({ message: "Invalid store location ID(s)." });
     }
@@ -348,28 +348,28 @@ export const updateProject = async (req, res) => {
       order_no: orderNo,
       contract_start_date: contractStartDate,
       contract_end_date: contractEndDate, // ← update field
-      // contract_tenure: contractTenure,
+      contract_tenure: contractTenure,
     });
 
     const project_id = project.id;
 
     await Promise.all([
-      // EquipmentProject.destroy({ where: { project_id } }),
+      EquipmentProject.destroy({ where: { project_id } }),
       ProjectRevenue.destroy({ where: { project_id } }),
       ProjectEmployees.destroy({ where: { project_id } }),
       StoreProject.destroy({ where: { project_id } }),
     ]);
 
     await Promise.all([
-      // EquipmentProject.bulkCreate(
-      //   equipments.map((equipment_id) => ({ project_id, equipment_id }))
-      // ),
+      EquipmentProject.bulkCreate(
+        equipments.map((equipment_id) => ({ project_id, equipment_id }))
+      ),
       ProjectRevenue.bulkCreate(
         revenueMaster.map((revenue_master_id) => ({ project_id, revenue_master_id }))
       ),
-      // ProjectEmployees.bulkCreate(
-      //   staff.map((emp_id) => ({ project_id, emp_id }))
-      // ),
+      ProjectEmployees.bulkCreate(
+        staff.map((emp_id) => ({ project_id, emp_id }))
+      ),
       StoreProject.bulkCreate(
         storeLocations.map((store_id) => ({ project_id, store_id }))
       ),

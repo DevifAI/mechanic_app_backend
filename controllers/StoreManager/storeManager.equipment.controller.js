@@ -5,6 +5,8 @@ const {
   Partner,
   EquipmentTransactionsForm,
   Project_Master,
+  ConsumableItem,
+  UOM
 } = models;
 
 // CREATE

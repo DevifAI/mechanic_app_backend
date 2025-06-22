@@ -95,8 +95,8 @@ router.post("/dpr/status/:status", getDPRsByStatus); // Get DPRs by status (appr
 
 
 //Material In and Out
-router.put("/material-transaction/update-status", updateMaterialTransactionStatus);
-router.get("/material-transactions", getMaterialTransactionsByStatus);
+router.post("/material-transaction/update-status", updateMaterialTransactionStatus);
+router.post("/material-transactions", getMaterialTransactionsByStatus);
 
 
 //Equipment In and Equipment Out

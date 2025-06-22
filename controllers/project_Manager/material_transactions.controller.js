@@ -55,7 +55,7 @@ export const updateMaterialTransactionStatus = async (req, res) => {
 
 export const getMaterialTransactionsByStatus = async (req, res) => {
   try {
-    const { status, project_id } = req.body.payload;
+    const { status, project_id } = req.body;
 
     const validStatuses = ["pending", "approved", "rejected", "all"];
     if (!status || !validStatuses.includes(status)) {

@@ -101,7 +101,7 @@ router.get("/material-transactions", getMaterialTransactionsByStatus);
 
 //Equipment In and Equipment Out
 
-router.put("/equipment-transaction/update-status", updateEquipmentTransactionStatus);
-router.get("/equipment-transactions", getEquipmentTransactionsByStatus);
+router.post("/equipment-transaction/update-status", updateEquipmentTransactionStatus);
+router.post("/equipment-transactions", getEquipmentTransactionsByStatus);
 
 export default router;

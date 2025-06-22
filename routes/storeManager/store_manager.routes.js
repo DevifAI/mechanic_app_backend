@@ -31,4 +31,3 @@ router.put("/equipment/:id", updateEquipmentTransaction);
 router.delete("/equipment/:id", deleteEquipmentTransaction);
 
 export default router;
-

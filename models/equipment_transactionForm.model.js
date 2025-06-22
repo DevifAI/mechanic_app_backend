@@ -23,7 +23,7 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "equipment",
+          model: "consumable_items",
           key: "id",
         },
       },
@@ -60,9 +60,9 @@ export default (sequelize) => {
     });
 
     // 🛠 Changed alias from 'equipment' → 'equipmentDetails'
-    EquipmentTransactionsFormModel.belongsTo(models.Equipment, {
+    EquipmentTransactionsFormModel.belongsTo(models.ConsumableItem, {
       foreignKey: "equipment",
-      as: "equipmentDetails",
+      as: "consumableItem",
     });
 
     EquipmentTransactionsFormModel.belongsTo(models.UOM, {

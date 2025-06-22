@@ -1,5 +1,5 @@
 import { models } from "../../models/index.js";
-const { EquipmentTransaction } = models;
+const { EquipmentTransaction, EquipmentTransactionsForm } = models;
 
 export const updateEquipmentTransactionStatus = async (req, res) => {
   try {
@@ -71,7 +71,22 @@ export const getEquipmentTransactionsByStatus = async (req, res) => {
       include: [
         { model: Partner, as: "partnerDetails" },
         { model: Project_Master, as: "project" },
-        { model: EquipmentTransactionsForm, as: "formItems" },
+        {
+          model: EquipmentTransactionsForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "name", "description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "name", "symbol"],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });

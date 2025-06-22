@@ -80,7 +80,22 @@ export const getMaterialTransactionsByStatus = async (req, res) => {
       include: [
         { model: Partner, as: "partnerDetails" },
         { model: Project_Master, as: "project" },
-        { model: MaterialTransactionForm, as: "formItems" },
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "name", "description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "name", "symbol"],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });

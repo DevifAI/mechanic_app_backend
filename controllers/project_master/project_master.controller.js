@@ -14,6 +14,8 @@ const {
   ProjectRevenue,
   StoreProject,
   Role,
+  MaterialTransaction,
+  EquipmentTransaction,
 } = models; // Extract Partner model
 
 // Create Project
@@ -426,6 +428,14 @@ export const deleteProject = async (req, res) => {
         ProjectRevenue.destroy({ where: { project_id: id }, transaction }),
         ProjectEmployees.destroy({ where: { project_id: id }, transaction }),
         StoreProject.destroy({ where: { project_id: id }, transaction }),
+        MaterialTransaction.destroy({
+          where: { project_id: id },
+          transaction,
+        }),
+        EquipmentTransaction.destroy({
+          where: { project_id: id },
+          transaction,
+        }),
       ]);
 
       // Then delete the project itself

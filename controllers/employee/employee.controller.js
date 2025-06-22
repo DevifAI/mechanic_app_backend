@@ -1,6 +1,7 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 const {
   Employee,
   Role,
@@ -708,12 +709,9 @@ export const addEmployeesToProject = async (req, res) => {
     );
 
     if (newEmployeeIds.length === 0) {
-      return res
-        .status(200)
-        .json({
-          message:
-            "All selected employees are already assigned to this project.",
-        });
+      return res.status(200).json({
+        message: "All selected employees are already assigned to this project.",
+      });
     }
 
     const newMappings = newEmployeeIds.map((emp_id) => ({
@@ -747,11 +745,17 @@ export const updateEmployeesForProject = async (req, res) => {
     if (!projectExists) {
       return res.status(404).json({ message: "Project not found." });
     }
-
+    console.log({ employee_ids });
     // Validate employee IDs
     const foundEmployees = await Employee.findAll({
-      where: { id: employee_ids },
+      where: {
+        id: {
+          [Op.in]: employee_ids,
+        },
+      },
     });
+
+    console.log({ foundEmployees });
 
     if (foundEmployees.length !== employee_ids.length) {
       return res
@@ -770,6 +774,8 @@ export const updateEmployeesForProject = async (req, res) => {
       emp_id,
     }));
 
+    console.log({ newMappings });
+
     await ProjectEmployees.bulkCreate(newMappings);
 
     return res.status(200).json({
@@ -784,7 +790,7 @@ export const updateEmployeesForProject = async (req, res) => {
 export const getEmployeesByProject = async (req, res) => {
   try {
     const { project_id } = req.body;
-
+    console.log({ project_id });
     if (!project_id) {
       return res.status(400).json({
         message: "project_id is required in body",
@@ -815,6 +821,8 @@ export const getEmployeesByProject = async (req, res) => {
       ],
       order: [["createdAt", "ASC"]],
     });
+
+    console.log({ assignedEmployees });
 
     return res.status(200).json({
       message: `Found ${assignedEmployees.length} employees assigned to project`,

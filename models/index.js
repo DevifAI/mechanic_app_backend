@@ -128,36 +128,8 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    // await models.Employee.destroy({ truncate: true, cascade: true, restartIdentity: true });
-    // Truncate all data from tables but keep the structure
-    // const truncateAllModels = async () => {
-    //   try {
-    //     // Filter out sequelize instance itself
-    //     const modelKeys = Object.keys(models).filter((key) => key !== "sequelize");
-
-    //     for (const key of modelKeys) {
-    //       const model = models[key];
-    //       if (model?.truncate) {
-    //         await model.truncate({ cascade: true, restartIdentity: true });
-    //         console.log(`🧹 Truncated: ${key}`);
-    //       }
-    //     }
-
-    //     console.log("✅ All model data truncated.");
-    //   } catch (error) {
-    //     console.error("❌ Error truncating data:", error);
-    //   }
-    // };
-
-    // truncateAllModels(); // Call the truncate function to clear data
-    // Truncate all data from tables but keep the structure
-
-    // await sequelize.sync({ force: true }); // { force: true } for development for any update on table
-    // await sequelize.sync()
-    // Fill in the default project_id for existing rows
-    // Optional: use alter in dev
-
-    // console.log("✅ All models were synced.");
+    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    await sequelize.sync();
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

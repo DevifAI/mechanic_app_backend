@@ -157,7 +157,7 @@ const syncModels = async () => {
     // Fill in the default project_id for existing rows
     // Optional: use alter in dev
 
-    console.log("✅ All models were synced.");
+    // console.log("✅ All models were synced.");
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

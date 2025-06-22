@@ -3,7 +3,9 @@ import { models } from "../../models/index.js";
 const {
   MaterialTransaction,
   MaterialTransactionForm,
-  Partner
+  Partner,
+  ConsumableItem,
+  UOM
 } = models;
 // CREATE
 export const createMaterialTransaction = async (req, res) => {
@@ -60,28 +62,59 @@ export const getAllMaterialTransactions = async (req, res) => {
     const transactions = await MaterialTransaction.findAll({
       where: {
         data_type,
-        project_id, // added filter
+        project_id,
       },
       include: [
         { model: Partner, as: "partnerDetails" },
-        { model: MaterialTransactionForm, as: "formItems" },
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem", // From model alias
+
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure", // From model alias
+
+            },
+          ],
+        },
       ],
     });
 
-    res.status(200).json(transactions);
+    return res.status(200).json(transactions);
   } catch (error) {
     console.error("Error fetching material transactions:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 // READ ONE
 export const getMaterialTransactionById = async (req, res) => {
   try {
     const transaction = await MaterialTransaction.findByPk(req.params.id, {
       include: [
-        { model: db.Partner, as: "partnerDetails" },
-        { model: db.MaterialTransactionsForm, as: "formItems" },
+        { model: Partner, as: "partnerDetails" },
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem", // From model alias
+
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure", // From model alias
+
+            },
+          ],
+        },
       ],
     });
 

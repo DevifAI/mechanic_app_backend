@@ -7,6 +7,7 @@ const {
     UOM,
     Employee,
     Organisations,
+    Equipment
 } = models;
 
 /**
@@ -41,6 +42,11 @@ export const getAllConsumptionSheets = async (req, res) => {
                             model: UOM,
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
+                        },
+                        {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
                         },
                     ],
                 },
@@ -81,7 +87,7 @@ export const getPendingConsumptionSheets = async (req, res) => {
                 is_approved_mic: {
                     [Op.in]: ["pending", "approved"], // Correct usage of IN operator
                 },
-                 is_approved_sic: {
+                is_approved_sic: {
                     [Op.in]: ["pending", "approved"], // Correct usage of IN operator
                 },
                 is_approved_pm: "pending",
@@ -100,6 +106,11 @@ export const getPendingConsumptionSheets = async (req, res) => {
                             model: UOM,
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
+                        },
+                         {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
                         },
                     ],
                 },
@@ -137,12 +148,12 @@ export const getCompleteConsumptionSheets = async (req, res) => {
         const sheets = await ConsumptionSheet.findAll({
             where: {
                 project_id: projectId,
-                 is_approved_mic: {
-                                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
-                                },
-                                is_approved_sic: {
-                                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
-                                },
+                is_approved_mic: {
+                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
+                },
+                is_approved_sic: {
+                    [Op.in]: ["pending", "approved"], // Correct usage of IN operator
+                },
                 is_approved_pm: "approved",
             },
             include: [
@@ -159,6 +170,11 @@ export const getCompleteConsumptionSheets = async (req, res) => {
                             model: UOM,
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
+                        },
+                         {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
                         },
                     ],
                 },

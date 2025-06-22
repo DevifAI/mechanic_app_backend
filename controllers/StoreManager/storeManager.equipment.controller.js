@@ -63,12 +63,27 @@ export const getAllEquipmentTransactions = async (req, res) => {
     const transactions = await EquipmentTransaction.findAll({
       where: {
         data_type,
-        project_id, // added filter
+        project_id,
       },
       include: [
         { model: Partner, as: "partnerDetails" },
         { model: Project_Master, as: "project" },
-        { model: EquipmentTransactionsForm, as: "formItems" },
+        {
+          model: EquipmentTransactionsForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "name", "description"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "name", "symbol"],
+            },
+          ],
+        },
       ],
     });
 
@@ -79,6 +94,7 @@ export const getAllEquipmentTransactions = async (req, res) => {
   }
 };
 
+
 // READ ONE
 export const getEquipmentTransactionById = async (req, res) => {
   try {
@@ -86,7 +102,21 @@ export const getEquipmentTransactionById = async (req, res) => {
       include: [
         { model: Partner, as: "partnerDetails" },
         { model: Project_Master, as: "project" },
-        { model: EquipmentTransactionsForm, as: "formItems" },
+        {
+          model: EquipmentTransactionsForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem", // alias from association
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure", // alias from association
+             
+            },
+          ],
+        },
       ],
     });
 
@@ -96,9 +126,11 @@ export const getEquipmentTransactionById = async (req, res) => {
 
     res.status(200).json(transaction);
   } catch (error) {
+    console.error("Error fetching equipment transaction by ID:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 // UPDATE
 export const updateEquipmentTransaction = async (req, res) => {

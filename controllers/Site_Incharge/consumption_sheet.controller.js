@@ -39,6 +39,11 @@ export const getAllConsumptionSheets = async (req, res) => {
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
                         },
+                         {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
+                        },
                     ],
                 },
                 {
@@ -95,6 +100,11 @@ export const getPendingConsumptionSheets = async (req, res) => {
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
                         },
+                         {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
+                        },
                     ],
                 },
                 {
@@ -150,6 +160,11 @@ export const getCompleteConsumptionSheets = async (req, res) => {
                             model: UOM,
                             as: "uomData",
                             attributes: ["id", "unit_name", "unit_code"],
+                        },
+                         {
+                            model: Equipment,
+                            as: "equipmentData",
+                            attributes: ["id", "equipment_name"],
                         },
                     ],
                 },

@@ -2,7 +2,7 @@
 import { models } from "../../models/index.js";
 
 
-const { MaterialTransaction, Partner, Project_Master, MaterialTransactionForm } = models;
+const { MaterialTransaction, Partner, Project_Master, MaterialTransactionForm , ConsumableItem, UOM} = models;
 
 export const updateMaterialTransactionStatus = async (req, res) => {
   try {

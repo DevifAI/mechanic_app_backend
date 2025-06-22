@@ -1,5 +1,5 @@
 import { models } from "../../models/index.js";
-const { EquipmentTransaction, EquipmentTransactionsForm } = models;
+const { EquipmentTransaction, EquipmentTransactionsForm, ConsumableItem, UOM } = models;
 
 export const updateEquipmentTransactionStatus = async (req, res) => {
   try {

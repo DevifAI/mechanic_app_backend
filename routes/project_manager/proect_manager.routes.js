@@ -28,6 +28,8 @@ import {
   getAllDPRs,
   getDPRsByStatus,
 } from "../../controllers/project_Manager/dpr.controller.js";
+import { getMaterialTransactionsByStatus, updateMaterialTransactionStatus } from "../../controllers/project_Manager/material_transactions.controller.js";
+import { getEquipmentTransactionsByStatus, updateEquipmentTransactionStatus } from "../../controllers/project_Manager/equipment_transactions.controller.js";
 
 const router = express.Router();
 
@@ -90,5 +92,16 @@ router.patch("/dpr/approve-reject/:dpr_id", approveOrRejectDPR); // Approve or R
 
 router.post("/dpr/all", getAllDPRs); // Get all DPRs (optionally by project_id in body/query)
 router.post("/dpr/status/:status", getDPRsByStatus); // Get DPRs by status (approved/rejected/pending)
+
+
+//Material In and Out
+router.put("/material-transaction/update-status", updateMaterialTransactionStatus);
+router.get("/material-transactions", getMaterialTransactionsByStatus);
+
+
+//Equipment In and Equipment Out
+
+router.put("/equipment-transaction/update-status", updateEquipmentTransactionStatus);
+router.get("/equipment-transactions", getEquipmentTransactionsByStatus);
 
 export default router;

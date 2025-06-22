@@ -10,6 +10,8 @@ import {
   getAllEmployeesGroupedByRole,
   getProjectsByEmployeeId,
   addEmployeesToProject,
+  getEmployeesByProject,
+  getEmployeesByProjectWithRoleType,
 } from "../../../controllers/employee/employee.controller.js";
 import upload from "../../../middleware/bulkUpload.js";
 
@@ -26,5 +28,6 @@ router.get('/role/:id', getEmployeesByRole);
 router.get('/grouped-by-role', getAllEmployeesGroupedByRole);
 // POST /api/project-employees/add
 router.post("/add/employee/project", addEmployeesToProject);
-
+router.post("/get/employee/project", getEmployeesByProject);
+router.post("/get/employee/project/roleType", getEmployeesByProjectWithRoleType);
 export default router;

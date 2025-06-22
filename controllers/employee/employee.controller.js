@@ -684,3 +684,92 @@ export const addEmployeesToProject = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+;
+
+
+export const getEmployeesByProject = async (req, res) => {
+  try {
+    const { project_id } = req.body;
+
+    if (!project_id) {
+      return res.status(400).json({
+        message: "project_id is required in body",
+      });
+    }
+
+    const assignedEmployees = await ProjectEmployees.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: Employee,
+          as: "employeeDetails", // use alias from association
+          attributes: ["id", "emp_id", "emp_name", "app_access_role", "role_id"],
+          include: [
+            {
+              model: Role,
+              as: "role", // ✅ Use the alias as defined in your model association
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.status(200).json({
+      message: `Found ${assignedEmployees.length} employees assigned to project`,
+      data: assignedEmployees,
+    });
+  } catch (error) {
+    console.error("Error fetching project employees:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+export const getEmployeesByProjectWithRoleType = async (req, res) => {
+  try {
+    const { project_id, role_name } = req.body;
+
+    if (!project_id) {
+      return res.status(400).json({
+        message: "project_id is required in body",
+      });
+    }
+
+    const assignedEmployees = await ProjectEmployees.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: Employee,
+          as: "employeeDetails", // use alias from association
+          attributes: ["id", "emp_id", "emp_name", "app_access_role", "role_id"],
+          include: [
+            {
+              model: Role,
+              as: "role", // ✅ Use the alias as defined in your model association
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    const filteredEmployess = assignedEmployees.filter((emp) => emp.employeeDetails.role.name === role_name)
+
+    return res.status(200).json({
+      message: `Found ${filteredEmployess} employees assigned to project`,
+      data: filteredEmployess,
+    });
+  } catch (error) {
+    console.error("Error fetching project employees:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};

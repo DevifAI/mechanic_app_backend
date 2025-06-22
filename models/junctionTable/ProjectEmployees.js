@@ -15,9 +15,9 @@ export default (sequelize) => {
         references: { model: "project_master", key: "id" },
       },
       emp_id: {
-        type: DataTypes.UUID, // Changed from STRING to UUID
+        type: DataTypes.UUID,
         allowNull: false,
-        references: { model: "employee", key: "id" }, // Reference employee's id, not emp_id
+        references: { model: "employee", key: "id" },
       },
     },
     {
@@ -25,6 +25,19 @@ export default (sequelize) => {
       freezeTableName: true,
     }
   );
+
+  // ✅ Define associations here
+  ProjectEmployees.associate = (models) => {
+    ProjectEmployees.belongsTo(models.Employee, {
+      foreignKey: "emp_id",
+      as: "employeeDetails", // Alias used in your include query
+    });
+
+    ProjectEmployees.belongsTo(models.Project_Master, {
+      foreignKey: "project_id",
+      as: "project",
+    });
+  };
 
   return ProjectEmployees;
 };

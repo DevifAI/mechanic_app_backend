@@ -1,5 +1,12 @@
 import { models } from "../../models/index.js";
-const { EquipmentTransaction, EquipmentTransactionsForm, ConsumableItem, UOM } = models;
+const {
+  EquipmentTransaction,
+  EquipmentTransactionsForm,
+  ConsumableItem,
+  UOM,
+  Partner,
+  Project_Master,
+} = models;
 
 export const updateEquipmentTransactionStatus = async (req, res) => {
   try {
@@ -7,7 +14,8 @@ export const updateEquipmentTransactionStatus = async (req, res) => {
 
     if (!project_id || !equipment_transaction_id || !status) {
       return res.status(400).json({
-        message: "project_id, equipment_transaction_id, and status are required",
+        message:
+          "project_id, equipment_transaction_id, and status are required",
       });
     }
 
@@ -30,7 +38,8 @@ export const updateEquipmentTransactionStatus = async (req, res) => {
 
     if (updatedRowsCount === 0) {
       return res.status(404).json({
-        message: "No matching equipment transaction found with given ID and project",
+        message:
+          "No matching equipment transaction found with given ID and project",
       });
     }
 
@@ -46,15 +55,16 @@ export const updateEquipmentTransactionStatus = async (req, res) => {
   }
 };
 
-
 export const getEquipmentTransactionsByStatus = async (req, res) => {
   try {
-    const { status, project_id } = req.query;
+    const { status, project_id, data_type } = req.query;
 
     const validStatuses = ["pending", "approved", "rejected", "all"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
-        message: `Invalid or missing status. Must be one of: ${validStatuses.join(", ")}`,
+        message: `Invalid or missing status. Must be one of: ${validStatuses.join(
+          ", "
+        )}`,
       });
     }
 
@@ -65,11 +75,14 @@ export const getEquipmentTransactionsByStatus = async (req, res) => {
     if (project_id) {
       whereCondition.project_id = project_id;
     }
+    if (data_type) {
+      whereCondition.data_type = data_type;
+    }
 
     const transactions = await EquipmentTransaction.findAll({
       where: whereCondition,
       include: [
-        { model: Partner, as: "partnerDetails" },
+        { model: Partner, as: "partnerDetails", required: false },
         { model: Project_Master, as: "project" },
         {
           model: EquipmentTransactionsForm,
@@ -78,12 +91,10 @@ export const getEquipmentTransactionsByStatus = async (req, res) => {
             {
               model: ConsumableItem,
               as: "consumableItem",
-             
             },
             {
               model: UOM,
               as: "unitOfMeasure",
-             
             },
           ],
         },

@@ -1,7 +1,7 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
 import bcrypt from "bcrypt";
-import { Op } from "sequelize";
+import { where, fn, col, Op } from "sequelize";
 const {
   Employee,
   Role,
@@ -467,9 +467,12 @@ export const bulkUploadEmployees = async (req, res) => {
 
       // ✅ Role lookup
       const roleNameNormalized = (role_name || "").trim().toLowerCase();
-
+      console.log({ roleNameNormalized });
       const role = await Role.findOne({
-        where: where(fn("LOWER", col("name")), roleNameNormalized),
+        where: where(
+          fn("LOWER", fn("TRIM", col("name"))),
+          roleNameNormalized.trim().toLowerCase()
+        ),
       });
       if (!role) {
         errors.push({

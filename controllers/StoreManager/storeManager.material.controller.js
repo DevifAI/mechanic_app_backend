@@ -61,12 +61,15 @@ export const getAllMaterialTransactions = async (req, res) => {
       return res.status(400).json({ error: "project_id is required" });
     }
 
+    // Build dynamic where clause it is Admin -- get all data with data_type and Project_id only
+    const whereClause = {
+      data_type,
+      project_id,
+      ...(createdBy && { createdBy }),
+    };
+
     const transactions = await MaterialTransaction.findAll({
-      where: {
-        data_type,
-        project_id,
-        createdBy,
-      },
+      where: whereClause,
       include: [
         { model: Partner, as: "partnerDetails" },
         {

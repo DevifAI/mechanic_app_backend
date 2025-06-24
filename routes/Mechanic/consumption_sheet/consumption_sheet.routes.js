@@ -12,6 +12,7 @@ const router = express.Router();
 
 router.post('/', createConsumptionSheet);
 router.get('/', getAllConsumptionSheets);
+router.post('/admin', getAllConsumptionSheets);
 router.get('/:id', getConsumptionSheetById);
 router.put('/:id', updateConsumptionSheet);
 router.delete('/:id', deleteConsumptionSheet);

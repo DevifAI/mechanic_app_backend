@@ -13,6 +13,7 @@ const router = express.Router();
 
 router.post("/", createMaintenanceSheet);
 router.get("/", getAllMaintenanceSheets);
+router.post("/admin", getAllMaintenanceSheets);
 router.get("/:id", getMaintenanceSheetById);
 router.put("/:id", updateMaintenanceSheet);
 router.delete("/:id", deleteMaintenanceSheet);

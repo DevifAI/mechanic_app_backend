@@ -66,6 +66,7 @@ router.post("/maintenance-sheets/update-sic-approval", updateMaintenanceSheetSic
 router.post("/create-dpr", createDailyProgressReport);
 router.post("/get-dpr/creator", getAllDailyProgressReportsByCreator);
 router.get("/get-all-dpr", getAllDailyProgressReports);
+router.get("/get-all-dpr/admin", getAllDailyProgressReports);
 router.delete("/delete-all-dpr", deleteAllDailyProgressReports);
 
 export default router;

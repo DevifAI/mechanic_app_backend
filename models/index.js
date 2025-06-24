@@ -143,9 +143,6 @@ const syncModels = async () => {
   try {
     // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
     // await sequelize.sync();
-    // await MaterialBillTransactionForm.sync({ force: true });
-    // await MaterialBillTransaction.sync({ force: true });
-    console.log("✅ models synced successfully.");
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

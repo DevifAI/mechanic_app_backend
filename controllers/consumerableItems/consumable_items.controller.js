@@ -1,6 +1,7 @@
 import { models } from "../../models/index.js";
 const { ConsumableItem, ItemGroup, OEM, UOM, Account, RevenueMaster } = models;
 import XLSX from "xlsx";
+import { where, fn, col } from "sequelize";
 
 // Create Consumable Item
 export const createConsumableItem = async (req, res) => {
@@ -115,10 +116,18 @@ export const bulkUploadConsumableItems = async (req, res) => {
           where: { unit_name: row.unit_of_measurement_name },
         });
         const inventoryAccount = await Account.findOne({
-          where: { account_name: row.inventory_account_code_name },
+          where: where(
+            fn("LOWER", fn("TRIM", col("account_name"))),
+            row.inventory_account_code_name.trim().toLowerCase()
+          ),
         });
+
+        // For expense account
         const expenseAccount = await Account.findOne({
-          where: { account_name: row.expense_account_code_name },
+          where: where(
+            fn("LOWER", fn("TRIM", col("account_name"))),
+            row.expense_account_code_name.trim().toLowerCase()
+          ),
         });
         const revenueAccount = await RevenueMaster.findOne({
           where: { revenue_code: row.revenue_account_code_name },

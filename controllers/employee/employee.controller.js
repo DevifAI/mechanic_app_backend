@@ -466,7 +466,11 @@ export const bulkUploadEmployees = async (req, res) => {
       }
 
       // ✅ Role lookup
-      const role = await Role.findOne({ where: { name: role_name.trim() } });
+      const roleNameNormalized = (role_name || "").trim().toLowerCase();
+
+      const role = await Role.findOne({
+        where: where(fn("LOWER", col("name")), roleNameNormalized),
+      });
       if (!role) {
         errors.push({
           row: rowNumber,

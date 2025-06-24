@@ -1,6 +1,7 @@
 import { models } from "../../models/index.js";
 const { ConsumableItem, ItemGroup, OEM, UOM, Account, RevenueMaster } = models;
 import XLSX from "xlsx";
+import { where, fn, col } from "sequelize";
 
 // Create Consumable Item
 export const createConsumableItem = async (req, res) => {
@@ -85,8 +86,6 @@ export const deleteConsumableItem = async (req, res) => {
   }
 };
 
-
-
 export const bulkUploadConsumableItems = async (req, res) => {
   try {
     if (!req.file) {
@@ -106,15 +105,42 @@ export const bulkUploadConsumableItems = async (req, res) => {
 
     for (const [index, row] of rows.entries()) {
       try {
-        // Lookup related IDs based on names provided in the Excel row
-        const itemGroup = await ItemGroup.findOne({ where: { group_name: row.item_group_name } });
-        const oem = await OEM.findOne({ where: { oem_name: row.item_make_name } });
-        const uom = await UOM.findOne({ where: { unit_name: row.unit_of_measurement_name } });
-        const inventoryAccount = await Account.findOne({ where: { account_name: row.inventory_account_code_name } });
-        const expenseAccount = await Account.findOne({ where: { account_name: row.expense_account_code_name } });
-        const revenueAccount = await RevenueMaster.findOne({ where: { revenue_code: row.revenue_account_code_name } });
+        // Lookup IDs from names
+        const itemGroup = await ItemGroup.findOne({
+          where: { group_name: row.item_group_name },
+        });
+        const oem = await OEM.findOne({
+          where: { oem_name: row.item_make_name },
+        });
+        const uom = await UOM.findOne({
+          where: { unit_name: row.unit_of_measurement_name },
+        });
+        const inventoryAccount = await Account.findOne({
+          where: where(
+            fn("LOWER", fn("TRIM", col("account_name"))),
+            row.inventory_account_code_name.trim().toLowerCase()
+          ),
+        });
 
-        if (!itemGroup || !oem || !uom || !inventoryAccount || !expenseAccount || !revenueAccount) {
+        // For expense account
+        const expenseAccount = await Account.findOne({
+          where: where(
+            fn("LOWER", fn("TRIM", col("account_name"))),
+            row.expense_account_code_name.trim().toLowerCase()
+          ),
+        });
+        const revenueAccount = await RevenueMaster.findOne({
+          where: { revenue_code: row.revenue_account_code_name },
+        });
+
+        if (
+          !itemGroup ||
+          !oem ||
+          !uom ||
+          !inventoryAccount ||
+          !expenseAccount ||
+          !revenueAccount
+        ) {
           results.push({
             row: index + 2,
             status: "failed",
@@ -131,8 +157,9 @@ export const bulkUploadConsumableItems = async (req, res) => {
           item_group_id: itemGroup.id,
           item_make: oem.id,
           unit_of_measurement: uom.id,
-          item_qty_in_hand: parseInt(row.item_qty_in_hand),
-          item_avg_cost: parseFloat(row.item_avg_cost),
+          item_qty_in_hand: parseInt(row.item_qty_in_hand) || 0,
+          item_avg_cost: parseFloat(row.item_avg_cost) || 0,
+          hsn_number: row.hsn_number || "",
           inventory_account_code: inventoryAccount.id,
           expense_account_code: expenseAccount.id,
           revenue_account_code: revenueAccount.id,

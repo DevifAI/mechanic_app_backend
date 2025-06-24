@@ -1,8 +1,9 @@
 import XLSX from "xlsx";
 import { models } from "../../models/index.js";
-const { Equipment, EquipmentGroup, EquipmentProject, OEM,  Project_Master } = models;
+const { Equipment, EquipmentGroup, EquipmentProject, OEM, Project_Master } =
+  models;
 
-
+// Create Equipment
 // Create Equipment
 export const createEquipment = async (req, res) => {
   const {
@@ -15,13 +16,12 @@ export const createEquipment = async (req, res) => {
     equipment_manual,
     maintenance_log,
     other_log,
-    project_tag,
+    project_tag, // Array or comma-separated string
     equipment_group_id,
     hsn_number,
   } = req.body;
 
   try {
-    // Validate required fields
     if (
       !equipment_name ||
       !equipment_sr_no ||
@@ -33,13 +33,11 @@ export const createEquipment = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Check if the equipment_group_id exists
     const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
     if (!groupExists) {
       return res.status(404).json({ message: "Equipment group not found" });
     }
 
-    // Create Equipment record
     const newEquipment = await Equipment.create({
       equipment_name,
       equipment_sr_no,
@@ -50,18 +48,15 @@ export const createEquipment = async (req, res) => {
       equipment_manual,
       maintenance_log,
       other_log,
-      project_tag,
       equipment_group_id,
       hsn_number,
     });
 
-    // Handle project_tag relation (for junction table)
+    // Handle many-to-many project relation
     let projectIds = [];
-
     if (Array.isArray(project_tag)) {
       projectIds = project_tag;
     } else if (typeof project_tag === "string") {
-      // Try parsing comma-separated string or JSON string
       try {
         projectIds = JSON.parse(project_tag);
       } catch {
@@ -69,14 +64,13 @@ export const createEquipment = async (req, res) => {
       }
     }
 
-    // Insert into EquipmentProject
-    if (projectIds.length > 0) {
-      const junctionEntries = projectIds.map((project_id) => ({
-        equipment_id: newEquipment.id,
-        project_id,
-      }));
-
-      await EquipmentProject.bulkCreate(junctionEntries);
+    if (projectIds.length) {
+      await EquipmentProject.bulkCreate(
+        projectIds.map((project_id) => ({
+          equipment_id: newEquipment.id,
+          project_id,
+        }))
+      );
     }
 
     return res.status(201).json(newEquipment);
@@ -86,47 +80,24 @@ export const createEquipment = async (req, res) => {
   }
 };
 
-
 // Get All Equipment
 export const getAllEquipment = async (req, res) => {
   try {
-    const equipments = await Equipment.findAll();
-
-    // Fetch related data
-    const [oems, projects, groups] = await Promise.all([
-      OEM.findAll(),
-      Project_Master.findAll(),
-      EquipmentGroup.findAll()
-    ]);
-
-    // Build maps
-    const oemMap = {};
-    oems.forEach(oem => {
-      oemMap[oem.id] = oem.oem_name;
+    const equipments = await Equipment.findAll({
+      include: [
+        {
+          model: EquipmentGroup,
+          as: "equipmentGroup",
+        },
+        {
+          model: Project_Master,
+          as: "projects",
+          through: { attributes: [] },
+        },
+      ],
     });
 
-    const projectMap = {};
-    projects.forEach(project => {
-      projectMap[project.id] = project.project_no;
-    });
-
-    const groupMap = {};
-    groups.forEach(group => {
-      groupMap[group.id] = group.equip_grp_code;
-    });
-
-    // Format equipment list
-    const formatted = equipments.map(equipment => {
-      const eq = equipment.toJSON();
-      return {
-        ...eq,
-        oem: oemMap[eq.oem] || eq.oem,
-        project_tag: projectMap[eq.project_tag] || eq.project_tag,
-        equipment_group_id: groupMap[eq.equipment_group_id] || eq.equipment_group_id,
-      };
-    });
-
-    return res.status(200).json(formatted);
+    return res.status(200).json(equipments);
   } catch (error) {
     console.error("Error fetching equipment:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -138,10 +109,12 @@ export const getEquipmentById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // const equipment = await Equipment.findByPk(id, {
-    //   include: [{ model: EquipmentGroup, as: "equipment_group" }]
-    // });
-    const equipment = await Equipment.findByPk(id);
+    const equipment = await Equipment.findByPk(id, {
+      include: [
+        { model: EquipmentGroup, as: "equipmentGroup" },
+        { model: Project_Master, as: "projects", through: { attributes: [] } },
+      ],
+    });
 
     if (!equipment) {
       return res.status(404).json({ message: "Equipment not found" });
@@ -177,7 +150,6 @@ export const updateEquipment = async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" });
     }
 
-    // If updating group, check existence
     if (equipment_group_id) {
       const groupExists = await EquipmentGroup.findByPk(equipment_group_id);
       if (!groupExists) {
@@ -195,9 +167,34 @@ export const updateEquipment = async (req, res) => {
       equipment_manual,
       maintenance_log,
       other_log,
-      project_tag,
       equipment_group_id,
     });
+
+    if (project_tag) {
+      let projectIds = [];
+      if (Array.isArray(project_tag)) {
+        projectIds = project_tag;
+      } else {
+        try {
+          projectIds = JSON.parse(project_tag);
+        } catch {
+          projectIds = project_tag.split(",").map((id) => id.trim());
+        }
+      }
+
+      // Remove old relations
+      await EquipmentProject.destroy({ where: { equipment_id: id } });
+
+      // Create new relations
+      if (projectIds.length) {
+        await EquipmentProject.bulkCreate(
+          projectIds.map((project_id) => ({
+            equipment_id: id,
+            project_id,
+          }))
+        );
+      }
+    }
 
     return res.status(200).json(equipment);
   } catch (error) {
@@ -226,7 +223,6 @@ export const deleteEquipment = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 export const bulkUploadEquipment = async (req, res) => {
   try {
@@ -259,7 +255,6 @@ export const bulkUploadEquipment = async (req, res) => {
         equipment_manual,
         maintenance_log,
         other_log,
-        project_tag,
         equipment_group, // <-- string name coming from Excel
       } = row;
 
@@ -304,7 +299,6 @@ export const bulkUploadEquipment = async (req, res) => {
           equipment_manual,
           maintenance_log,
           other_log,
-          project_tag,
           equipment_group_id: group.id, // ← use ID from DB
         });
 

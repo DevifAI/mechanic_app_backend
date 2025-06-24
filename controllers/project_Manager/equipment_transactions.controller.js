@@ -57,8 +57,8 @@ export const updateEquipmentTransactionStatus = async (req, res) => {
 
 export const getEquipmentTransactionsByStatus = async (req, res) => {
   try {
-    const { status, project_id, data_type } = req.query;
-
+    const { status, project_id, data_type } = req.body;
+    console.log({ status, project_id, data_type });
     const validStatuses = ["pending", "approved", "rejected", "all"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({

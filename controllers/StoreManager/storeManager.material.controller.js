@@ -18,6 +18,7 @@ export const createMaterialTransaction = async (req, res) => {
       challan_no,
       formItems,
       project_id,
+      createdBy,
     } = req.body;
 
     const transaction = await MaterialTransaction.create({
@@ -27,6 +28,7 @@ export const createMaterialTransaction = async (req, res) => {
       partner,
       challan_no,
       project_id,
+      createdBy,
     });
 
     if (Array.isArray(formItems) && formItems.length > 0) {
@@ -49,7 +51,7 @@ export const createMaterialTransaction = async (req, res) => {
 // READ ALL
 export const getAllMaterialTransactions = async (req, res) => {
   try {
-    const { data_type, project_id } = req.body;
+    const { data_type, project_id, createdBy } = req.body;
 
     if (!["material_in", "material_out"].includes(data_type)) {
       return res.status(400).json({ error: "Invalid data_type" });
@@ -63,6 +65,7 @@ export const getAllMaterialTransactions = async (req, res) => {
       where: {
         data_type,
         project_id,
+        createdBy,
       },
       include: [
         { model: Partner, as: "partnerDetails" },

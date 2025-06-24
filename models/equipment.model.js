@@ -23,7 +23,6 @@ export default (sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
-      project_tag: { type: DataTypes.JSON, allowNull: false },
       equipment_group_id: {
         type: DataTypes.UUID,
         allowNull: true,

@@ -1,7 +1,14 @@
 import { Op } from "sequelize";
 import { models } from "../../models/index.js";
 
-const { DailyProgressReport, DailyProgressReportForm, Shift, Project_Master, Employee, RevenueMaster } = models
+const {
+  DailyProgressReport,
+  DailyProgressReportForm,
+  Shift,
+  Project_Master,
+  Employee,
+  RevenueMaster,
+} = models;
 
 export const createDailyProgressReport = async (req, res) => {
   try {
@@ -13,6 +20,7 @@ export const createDailyProgressReport = async (req, res) => {
       shift_code,
       shift_incharge,
       shift_mechanic,
+      createdBy,
       forms = [],
     } = req.body;
 
@@ -24,6 +32,7 @@ export const createDailyProgressReport = async (req, res) => {
       shift_code,
       shift_incharge,
       shift_mechanic,
+      createdBy,
     });
 
     if (forms.length > 0) {
@@ -93,6 +102,62 @@ export const getAllDailyProgressReports = async (req, res) => {
   }
 };
 
+//get all dpr by createDailyProgressReport
+export const getAllDailyProgressReportsByCreator = async (req, res) => {
+  try {
+    const { project_id, createdBy } = req.body;
+
+    const whereClause = {};
+
+    if (project_id) whereClause.project_id = project_id;
+    if (createdBy) whereClause.createdBy = createdBy;
+
+    const reports = await DailyProgressReport.findAll({
+      where: whereClause, // ✅ Apply filter here
+      include: [
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+        {
+          model: Shift,
+          as: "shift",
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+        {
+          model: Employee,
+          as: "incharge",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: Employee,
+          as: "mechanic",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: DailyProgressReportForm,
+          as: "forms",
+          attributes: { exclude: ["id", "dpr_id", "createdAt", "updatedAt"] },
+          include: [
+            {
+              model: RevenueMaster,
+              as: "revenue",
+              attributes: ["id", "revenue_code", "revenue_description"],
+            },
+          ],
+        },
+      ],
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error("Get all DPRs error:", error);
+    res.status(500).json({ message: "Failed to fetch DPRs", error });
+  }
+};
 
 // Get single DPR by ID
 export const getDailyProgressReportById = async (req, res) => {
@@ -171,7 +236,9 @@ export const deleteAllDailyProgressReports = async (req, res) => {
     // Step 2: Delete all DPR records
     await DailyProgressReport.destroy({ where: {} });
 
-    res.status(200).json({ message: "All DPRs and associated forms deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "All DPRs and associated forms deleted successfully" });
   } catch (error) {
     console.error("Delete all DPRs error:", error);
     res.status(500).json({ message: "Failed to delete all DPRs", error });

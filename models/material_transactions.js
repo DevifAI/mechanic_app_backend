@@ -21,7 +21,10 @@ export default (sequelize) => {
         type: DataTypes.DATEONLY,
         allowNull: false,
       },
-
+      createdBy: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
       data_type: {
         type: DataTypes.ENUM("material_in", "material_out"),
         allowNull: false,
@@ -84,6 +87,10 @@ export default (sequelize) => {
     MaterialTransactionModel.hasMany(models.MaterialTransactionForm, {
       foreignKey: "material_transaction_id",
       as: "formItems",
+    });
+    MaterialTransactionModel.hasMany(models.Employee, {
+      foreignKey: "createdBy",
+      as: "createdByUser",
     });
 
     MaterialTransactionModel.belongsTo(models.Project_Master, {

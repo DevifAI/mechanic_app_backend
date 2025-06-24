@@ -12,7 +12,8 @@ const {
 // CREATE
 export const createEquipmentTransaction = async (req, res) => {
   try {
-    const { project_id, date, data_type, type, partner, formItems } = req.body;
+    const { project_id, date, data_type, type, partner, formItems, createdBy } =
+      req.body;
 
     const transaction = await EquipmentTransaction.create({
       project_id,
@@ -20,6 +21,7 @@ export const createEquipmentTransaction = async (req, res) => {
       data_type,
       type,
       partner,
+      createdBy,
     });
 
     if (Array.isArray(formItems) && formItems.length > 0) {
@@ -52,7 +54,7 @@ export const createEquipmentTransaction = async (req, res) => {
 // READ ALL
 export const getAllEquipmentTransactions = async (req, res) => {
   try {
-    const { data_type, project_id } = req.body;
+    const { data_type, project_id, createdBy } = req.body;
 
     if (!["equipment_in", "equipment_out"].includes(data_type)) {
       return res.status(400).json({ error: "Invalid or missing data_type" });
@@ -66,6 +68,7 @@ export const getAllEquipmentTransactions = async (req, res) => {
       where: {
         data_type,
         project_id,
+        createdBy,
       },
       include: [
         { model: Partner, as: "partnerDetails" },

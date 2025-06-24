@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
-  const EquipmentTransactionModel = sequelize.define(
-    "equipment_transaction",
+  const MaterialBillTransactionModel = sequelize.define(
+    "material_bill_transaction",
     {
       id: {
         type: DataTypes.UUID,
@@ -25,26 +25,27 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      data_type: {
-        type: DataTypes.ENUM("equipment_in", "equipment_out"),
-        allowNull: false,
-      },
-
-      type: {
-        type: DataTypes.ENUM(
-          "New",
-          "Transfer",
-          "Repair",
-          "Site Return",
-          "Rent"
-        ),
-        allowNull: false,
-      },
-
       partner: {
         type: DataTypes.UUID,
         allowNull: true,
         references: { model: "partner", key: "id" },
+      },
+
+      partner_inv_no: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      inv_basic_value: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      inv_tax: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      total_invoice_value: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       is_approve_pm: {
         type: DataTypes.ENUM("pending", "approved", "rejected"),
@@ -54,38 +55,28 @@ export default (sequelize) => {
     {
       timestamps: true,
       freezeTableName: true,
-
-      hooks: {
-        beforeCreate: async (transaction) => {
-          // If type is not Repair or Site Return, partner should be null
-          if (!["Repair", "Site Return", "Rent"].includes(transaction.type)) {
-            transaction.partner = null;
-          }
-        },
-      },
     }
   );
 
-  EquipmentTransactionModel.associate = (models) => {
-    EquipmentTransactionModel.belongsTo(models.Partner, {
+  MaterialBillTransactionModel.associate = (models) => {
+    MaterialBillTransactionModel.belongsTo(models.Partner, {
       foreignKey: "partner",
       as: "partnerDetails",
     });
-    EquipmentTransactionModel.hasMany(models.EquipmentTransactionsForm, {
-      foreignKey: "equipment_transaction_id",
+    MaterialBillTransactionModel.hasMany(models.MaterialBillTransactionForm, {
+      foreignKey: "material_transaction_id",
       as: "formItems",
     });
-
-    EquipmentTransactionModel.hasMany(models.Employee, {
+    MaterialBillTransactionModel.hasMany(models.Employee, {
       foreignKey: "createdBy",
       as: "createdByUser",
     });
 
-    EquipmentTransactionModel.belongsTo(models.Project_Master, {
+    MaterialBillTransactionModel.belongsTo(models.Project_Master, {
       foreignKey: "project_id",
       as: "project",
     });
   };
 
-  return EquipmentTransactionModel;
+  return MaterialBillTransactionModel;
 };

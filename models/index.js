@@ -36,6 +36,10 @@ import MaterialTransactionModel from "./material_transactions.js"; // <-- Add th
 import MaterialTransactionsFormModel from "./material_transactions_form.model.js"; // <-- Add this
 import EquipmentTransacationModel from "./equipment_transaction.model.js"; // <-- Add this
 import EquipmentTransactionsFormModel from "./equipment_transactionForm.model.js"; // <-- Add this
+import MaterialBillTransactionModel from "./material_bill.model.js"; // <-- Add this
+import MaterialBillTransactionsFormModel from "./material_bill.form.model.js"; // <-- Add this
+import ExpenseInputModel from "./expenseInput.model.js"; // <-- Add this
+import RevenuenputModel from "./revenueInput.model.js"; // <-- Add this
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -76,6 +80,11 @@ const MaterialTransaction = MaterialTransactionModel(sequelize);
 const MaterialTransactionForm = MaterialTransactionsFormModel(sequelize);
 const EquipmentTransaction = EquipmentTransacationModel(sequelize);
 const EquipmentTransactionsForm = EquipmentTransactionsFormModel(sequelize);
+const MaterialBillTransaction = MaterialBillTransactionModel(sequelize);
+const ExpenseInput = ExpenseInputModel(sequelize);
+const RevenueInput = RevenuenputModel(sequelize);
+const MaterialBillTransactionForm =
+  MaterialBillTransactionsFormModel(sequelize);
 
 const models = {
   sequelize,
@@ -116,6 +125,10 @@ const models = {
   MaterialTransactionForm,
   EquipmentTransaction,
   EquipmentTransactionsForm,
+  MaterialBillTransaction,
+  MaterialBillTransactionForm,
+  ExpenseInput,
+  RevenueInput,
 };
 
 // Step 2: Call associations AFTER all models are initialized
@@ -128,8 +141,11 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
-    await sequelize.sync();
+    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
+    // await sequelize.sync();
+    // await MaterialBillTransactionForm.sync({ force: true });
+    // await MaterialBillTransaction.sync({ force: true });
+    console.log("✅ models synced successfully.");
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

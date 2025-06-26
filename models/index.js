@@ -148,9 +148,9 @@ Object.values(models).forEach((model) => {
 const syncModels = async () => {
   try {
     // Now safely sync your models
-    await sequelize.sync({ alter: true });
+    // await sequelize.sync({ alter: true });
 
-    console.log("✅ Sync successful for equipment_transaction");
+    console.log("✅ Sync successful");
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

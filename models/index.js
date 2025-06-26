@@ -40,7 +40,7 @@ import MaterialBillTransactionModel from "./material_bill.model.js"; // <-- Add 
 import MaterialBillTransactionsFormModel from "./material_bill.form.model.js"; // <-- Add this
 import ExpenseInputModel from "./expenseInput.model.js"; // <-- Add this
 import RevenuenputModel from "./revenueInput.model.js"; // <-- Add this
-import DieselInvoiceModel from "./dieselInvoices.model.js";
+import DieselInvoiceModel from "./DieselInvoices.js";
 import DieselInvoiceForm from "./DieselInvoiceSubform.model.js";
 
 //Step 1: Initialize models
@@ -147,7 +147,6 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-   
     // Now safely sync your models
     await sequelize.sync({ alter: true });
 

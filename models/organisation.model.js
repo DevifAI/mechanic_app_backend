@@ -19,12 +19,6 @@ export const OrganisationModel = (sequelize) => {
         allowNull: false,
         unique: true,
       },
-      org_image: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue:
-          'https://bcassetcdn.com/public/blog/wp-content/uploads/2022/09/01203355/blue-building-circle-by-simplepixelsl-brandcrowd.png',
-      },
     },
     {
       timestamps: true,

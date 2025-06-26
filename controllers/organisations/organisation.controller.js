@@ -120,7 +120,7 @@ export const bulkUploadOrganisations = async (req, res) => {
     const results = [];
 
     for (const [index, row] of rows.entries()) {
-      const { org_name, org_code, org_image } = row;
+      const { org_name, org_code } = row;
 
       // Validate required fields
       if (!org_name || !org_code) {
@@ -148,9 +148,6 @@ export const bulkUploadOrganisations = async (req, res) => {
         const organisation = await Organisations.create({
           org_name,
           org_code,
-          org_image:
-            org_image ||
-            "https://bcassetcdn.com/public/blog/wp-content/uploads/2022/09/01203355/blue-building-circle-by-simplepixelsl-brandcrowd.png",
         });
 
         results.push({

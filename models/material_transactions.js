@@ -51,10 +51,15 @@ export default (sequelize) => {
       challan_no: {
         type: DataTypes.STRING,
         allowNull: true,
+        unique: true,
       },
       is_approve_pm: {
         type: DataTypes.ENUM("pending", "approved", "rejected"),
         defaultValue: "pending",
+      },
+      is_invoiced: {
+        type: DataTypes.ENUM("draft", "invoiced", "rejected"),
+        defaultValue: "draft",
       },
     },
     {

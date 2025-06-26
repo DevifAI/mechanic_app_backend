@@ -154,26 +154,27 @@ export const bulkUploadPartners = async (req, res) => {
     for (const [index, row] of rows.entries()) {
       const {
         partner_name,
-        partner_address,
         partner_gst,
         partner_geo_id,
-        isCustomer,
+        partner_address,
         state,
         city,
         pincode,
+        isCustomer,
       } = row;
 
+      // Validate required fields
       if (
         !partner_name ||
-        !partner_address ||
         !partner_gst ||
         !partner_geo_id ||
+        !partner_address ||
         !state ||
         !city ||
         !pincode
       ) {
         results.push({
-          row: index + 2,
+          row: index + 2, // Excel rows are 1-indexed, +1 for header
           status: "failed",
           message: "Missing required fields",
         });
@@ -182,14 +183,17 @@ export const bulkUploadPartners = async (req, res) => {
 
       try {
         const partner = await Partner.create({
-          partner_name,
-          partner_address,
-          partner_gst,
-          partner_geo_id,
-          isCustomer: isCustomer ?? true,
-          state,
-          city,
-          pincode,
+          partner_name: partner_name.trim(),
+          partner_gst: partner_gst.trim(),
+          partner_geo_id: parseInt(partner_geo_id, 10),
+          partner_address: partner_address.trim(),
+          state: state.trim(),
+          city: city.trim(),
+          pincode: pincode.trim(),
+          isCustomer:
+            typeof isCustomer === "string"
+              ? isCustomer.toLowerCase() === "true"
+              : Boolean(isCustomer),
         });
 
         results.push({
@@ -201,13 +205,13 @@ export const bulkUploadPartners = async (req, res) => {
         results.push({
           row: index + 2,
           status: "failed",
-          message: error.message,
+          message: error?.message || "Unknown error",
         });
       }
     }
 
     return res.status(201).json({
-      message: "Bulk upload completed",
+      message: "Bulk partner upload completed",
       results,
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { models } from "../../models/index.js";
 const { RevenueMaster } = models;
 import XLSX from "xlsx";
 // Create RevenueMaster
+
 export const createRevenue = async (req, res) => {
   const { revenue_code, revenue_description, revenue_value } = req.body;
 
@@ -88,18 +89,17 @@ export const deleteRevenue = async (req, res) => {
   }
 };
 
+
 export const bulkUploadRevenues = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Parse Excel buffer
+    // Read and parse Excel file buffer
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
-    // Convert sheet to JSON with header keys
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
     if (!rows.length) {
@@ -109,41 +109,48 @@ export const bulkUploadRevenues = async (req, res) => {
     const results = [];
 
     for (const [index, row] of rows.entries()) {
-      const { revenue_code, revenue_description, revenue_value } = row;
+      const revenueCode = row.revenueCode?.trim();
+      const revenueDescription = row.description?.trim() || "";
+      const revenueValue = parseFloat(row.revenueValue);
 
-      // Optional: validate required fields, e.g. revenue_code & revenue_value
-      if (!revenue_code || revenue_value === undefined || revenue_value === "") {
+      if (!revenueCode || isNaN(revenueValue)) {
         results.push({
           row: index + 2,
           status: "failed",
-          message: "Missing required fields (revenue_code or revenue_value)",
+          revenueCode: revenueCode || "",
+          message: "Missing or invalid revenueCode or revenueValue",
         });
         continue;
       }
 
       try {
         const newRevenue = await RevenueMaster.create({
-          revenue_code,
-          revenue_description,
-          revenue_value,
+          revenue_code: revenueCode,
+          revenue_description: revenueDescription,
+          revenue_value: revenueValue,
         });
 
         results.push({
           row: index + 2,
           status: "success",
+          revenueCode,
           revenueId: newRevenue.id,
         });
       } catch (error) {
         results.push({
           row: index + 2,
           status: "failed",
-          message: error.message,
+          revenueCode,
+          message: error.message || "Database error",
         });
       }
     }
 
     return res.status(201).json({
       message: "Bulk upload completed",
+      total: rows.length,
+      successCount: results.filter((r) => r.status === "success").length,
+      failureCount: results.filter((r) => r.status === "failed").length,
       results,
     });
   } catch (error) {

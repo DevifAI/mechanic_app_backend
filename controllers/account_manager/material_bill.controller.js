@@ -6,6 +6,12 @@ const {
   RevenueInput,
   Employee,
   Project_Master,
+  MaterialTransaction,
+  MaterialTransactionForm,
+  ConsumableItem,
+  UOM,
+  DieselInvoice,
+  DieselInvoiceForm,
 } = models;
 
 // ✅ Create Material Bill
@@ -20,9 +26,11 @@ export const createMaterialBill = async (req, res) => {
       inv_basic_value,
       inv_tax,
       total_invoice_value,
+      materialTransactionId,
       forms,
     } = req.body;
 
+    // ✅ Step 1: Create Material Bill
     const bill = await MaterialBillTransaction.create({
       project_id,
       date,
@@ -32,8 +40,10 @@ export const createMaterialBill = async (req, res) => {
       inv_basic_value,
       inv_tax,
       total_invoice_value,
+      materialTransactionId,
     });
 
+    // ✅ Step 2: Insert subform items
     if (Array.isArray(forms) && forms.length > 0) {
       const formData = forms.map((item) => ({
         material_transaction_id: bill.id,
@@ -44,6 +54,14 @@ export const createMaterialBill = async (req, res) => {
       }));
 
       await MaterialBillTransactionForm.bulkCreate(formData);
+    }
+
+    // ✅ Step 3: Update MaterialTransaction is_invoiced to "invoiced"
+    if (materialTransactionId) {
+      await MaterialTransaction.update(
+        { is_invoiced: "invoiced" },
+        { where: { id: materialTransactionId } }
+      );
     }
 
     return res.status(201).json({ message: "Material bill created", bill });
@@ -71,6 +89,11 @@ export const getAllMaterialBills = async (req, res) => {
           model: models.Employee,
           as: "createdByUser",
           attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: models.MaterialTransaction,
+          as: "material",
+          attributes: ["id", "challan_no", "type", "data_type", "date"],
         },
         {
           model: models.MaterialBillTransactionForm,
@@ -122,6 +145,11 @@ export const getBillsByProjectAndUser = async (req, res) => {
             },
           ],
         },
+        {
+          model: models.MaterialTransaction,
+          as: "material",
+          attributes: ["id", "challan_no", "type"],
+        },
       ],
     });
 
@@ -144,6 +172,7 @@ export const updateMaterialBill = async (req, res) => {
       inv_basic_value,
       inv_tax,
       total_invoice_value,
+      materialTransactionId,
       forms,
     } = req.body;
 
@@ -159,15 +188,14 @@ export const updateMaterialBill = async (req, res) => {
       inv_basic_value,
       inv_tax,
       total_invoice_value,
+      materialTransactionId,
     });
 
     if (Array.isArray(forms)) {
-      // Delete old items
       await MaterialBillTransactionForm.destroy({
         where: { material_transaction_id: id },
       });
 
-      // Insert new form items
       const formData = forms.map((item) => ({
         material_transaction_id: id,
         item: item.item,
@@ -193,12 +221,10 @@ export const deleteMaterialBill = async (req, res) => {
     const bill = await MaterialBillTransaction.findByPk(id);
     if (!bill) return res.status(404).json({ message: "Bill not found" });
 
-    // Delete form items first
     await MaterialBillTransactionForm.destroy({
       where: { material_transaction_id: id },
     });
 
-    // Delete the bill
     await bill.destroy();
 
     return res.status(200).json({ message: "Bill deleted successfully" });
@@ -381,12 +407,10 @@ export const getHOInvoicesByProjectAndUser = async (req, res) => {
         {
           model: Employee,
           as: "creator",
-       
         },
         {
           model: Project_Master,
           as: "project",
-     
         },
       ],
       order: [["date", "DESC"]],
@@ -396,5 +420,232 @@ export const getHOInvoicesByProjectAndUser = async (req, res) => {
   } catch (error) {
     console.error("Filter HO Invoices Error:", error);
     res.status(500).json({ message: "Failed to filter HO invoices" });
+  }
+};
+
+// ----------------------- After 2nd feedback --------------------------
+
+export const getDraft = async (req, res) => {
+  const { project_id } = req.body;
+
+  try {
+    const data = await MaterialTransaction.findAll({
+      where: {
+        is_approve_pm: "approved",
+        is_invoiced: "draft",
+        project_id,
+      },
+      include: [
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch approved & draft transactions",
+      error: err.message,
+    });
+  }
+};
+
+export const getInvoiced = async (req, res) => {
+  const { project_id } = req.body;
+
+  try {
+    const data = await MaterialTransaction.findAll({
+      where: {
+        is_approve_pm: "approved",
+        is_invoiced: "invoiced",
+        project_id,
+      },
+      include: [
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch approved & invoiced transactions",
+      error: err.message,
+    });
+  }
+};
+
+export const getRejected = async (req, res) => {
+  const { project_id } = req.body;
+
+  try {
+    const data = await MaterialTransaction.findAll({
+      where: {
+        is_approve_pm: "approved",
+        is_invoiced: "rejected",
+        project_id,
+      },
+      include: [
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch approved & rejected transactions",
+      error: err.message,
+    });
+  }
+};
+
+// ----------------------diesel invoices --------------------------
+
+export const createDieselInvoice = async (req, res) => {
+  try {
+    const { project_id, dieselInvoiceId, date, formItems } = req.body;
+
+    const invoice = await DieselInvoice.create({
+      project_id,
+      dieselInvoiceId,
+      date,
+      is_invoiced: "draft",
+    });
+
+    if (Array.isArray(formItems)) {
+      const mapped = formItems.map((item) => ({
+        diesel_invoice_id: invoice.id,
+        item: item.item,
+        qty: item.qty,
+        uom: item.uom,
+        unit_rate: item.unit_rate,
+        total_value: item.qty * item.unit_rate,
+        notes: item.notes || null,
+      }));
+      await DieselInvoiceForm.bulkCreate(mapped);
+    }
+
+    res.status(201).json({ message: "Invoice created", invoice });
+  } catch (error) {
+    console.error("Create Invoice Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ✅ GET BY STATUS (draft, invoiced, rejected)
+export const getInvoicesByStatus = async (req, res) => {
+  const { status } = req.params; // draft | invoiced | rejected
+  try {
+    const invoices = await DieselInvoice.findAll({
+      where: { is_invoiced: status },
+      include: [
+        {
+          model: DieselInvoiceForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(invoices);
+  } catch (error) {
+    res.status(500).json({ message: "Fetch failed", error: error.message });
+  }
+};
+
+// ✅ UPDATE
+export const updateDieselInvoice = async (req, res) => {
+  const { id } = req.params;
+  const { project_id, dieselInvoiceId, date, is_invoiced, formItems } =
+    req.body;
+
+  try {
+    const invoice = await DieselInvoice.findByPk(id);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
+    await invoice.update({ project_id, dieselInvoiceId, date, is_invoiced });
+
+    await DieselInvoiceForm.destroy({ where: { diesel_invoice_id: id } });
+
+    const updatedItems = formItems.map((item) => ({
+      diesel_invoice_id: id,
+      item: item.item,
+      qty: item.qty,
+      uom: item.uom,
+      unit_rate: item.unit_rate,
+      total_value: item.qty * item.unit_rate,
+      notes: item.notes || null,
+    }));
+
+    await DieselInvoiceForm.bulkCreate(updatedItems);
+
+    res.status(200).json({ message: "Invoice updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};
+
+// ✅ DELETE
+export const deleteDieselInvoice = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const invoice = await DieselInvoice.findByPk(id);
+    if (!invoice) return res.status(404).json({ message: "Not found" });
+
+    await DieselInvoiceForm.destroy({ where: { diesel_invoice_id: id } });
+    await invoice.destroy();
+
+    res.status(200).json({ message: "Invoice deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Deletion failed", error: error.message });
   }
 };

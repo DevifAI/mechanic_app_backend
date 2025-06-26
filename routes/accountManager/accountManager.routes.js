@@ -2,12 +2,19 @@ import express from "express";
 
 import {
   createDailyExpense,
+  createDieselInvoice,
   createMaterialBill,
   createRevenueInput,
+  deleteDieselInvoice,
   getAllRevenueInputInvoices,
   getBillsByProjectAndUser,
+  getDraft,
   getExpensesByCreator,
   getHOInvoicesByProjectAndUser,
+  getInvoiced,
+  getInvoicesByStatus,
+  getRejected,
+  updateDieselInvoice,
 } from "../../controllers/account_manager/material_bill.controller.js";
 
 const router = express.Router();
@@ -19,5 +26,12 @@ router.post("/get/expense/input/creator", getExpensesByCreator);
 router.post("/create/revenue/input", createRevenueInput);
 router.post("/get/revenue/input", getAllRevenueInputInvoices);
 router.post("/get/revenue/input/creator", getHOInvoicesByProjectAndUser);
+router.post("/diesel-invoice", createDieselInvoice);
+router.get("/diesel-invoice/status/:status", getInvoicesByStatus);
+router.put("/diesel-invoice/:id", updateDieselInvoice);
+router.delete("/diesel-invoice/:id", deleteDieselInvoice);
+router.delete("/material-bill/draft", getDraft);
+router.delete("/material-bill/invoiced", getInvoiced);
+router.delete("/material-bill/rejected", getRejected);
 
 export default router;

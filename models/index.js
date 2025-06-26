@@ -40,6 +40,8 @@ import MaterialBillTransactionModel from "./material_bill.model.js"; // <-- Add 
 import MaterialBillTransactionsFormModel from "./material_bill.form.model.js"; // <-- Add this
 import ExpenseInputModel from "./expenseInput.model.js"; // <-- Add this
 import RevenuenputModel from "./revenueInput.model.js"; // <-- Add this
+import DieselInvoiceModel from "./dieselInvoices.model.js";
+import DieselInvoiceForm from "./DieselInvoiceSubform.model.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -83,6 +85,8 @@ const EquipmentTransactionsForm = EquipmentTransactionsFormModel(sequelize);
 const MaterialBillTransaction = MaterialBillTransactionModel(sequelize);
 const ExpenseInput = ExpenseInputModel(sequelize);
 const RevenueInput = RevenuenputModel(sequelize);
+const DieselInvoiceSubform = DieselInvoiceForm(sequelize);
+const DieselInvoice = DieselInvoiceModel(sequelize);
 const MaterialBillTransactionForm =
   MaterialBillTransactionsFormModel(sequelize);
 
@@ -129,6 +133,8 @@ const models = {
   MaterialBillTransactionForm,
   ExpenseInput,
   RevenueInput,
+  DieselInvoiceSubform,
+  DieselInvoice,
 };
 
 // Step 2: Call associations AFTER all models are initialized
@@ -141,8 +147,11 @@ Object.values(models).forEach((model) => {
 // Sync the models
 const syncModels = async () => {
   try {
-    // await sequelize.sync({ alter: true }); // { force: true } for development for any update on table
-    // await sequelize.sync();
+   
+    // Now safely sync your models
+    await sequelize.sync({ alter: true });
+
+    console.log("✅ Sync successful for equipment_transaction");
   } catch (err) {
     console.error("❌ Sync failed:", err);
   }

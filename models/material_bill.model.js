@@ -9,6 +9,15 @@ export default (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+      materialTransactionId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "material_transaction", // ✅ correct snake_case table name
+          key: "id",
+        },
+      },
+
       project_id: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -63,10 +72,6 @@ export default (sequelize) => {
       foreignKey: "partner",
       as: "partnerDetails",
     });
-    MaterialBillTransactionModel.hasMany(models.MaterialBillTransactionForm, {
-      foreignKey: "material_transaction_id",
-      as: "formItems",
-    });
     MaterialBillTransactionModel.hasMany(models.Employee, {
       foreignKey: "createdBy",
       as: "createdByUser",
@@ -75,6 +80,10 @@ export default (sequelize) => {
     MaterialBillTransactionModel.belongsTo(models.Project_Master, {
       foreignKey: "project_id",
       as: "project",
+    });
+    MaterialBillTransactionModel.belongsTo(models.MaterialTransaction, {
+      foreignKey: "materialTransactionId",
+      as: "material",
     });
   };
 

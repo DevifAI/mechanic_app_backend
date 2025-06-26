@@ -50,6 +50,10 @@ export default (sequelize) => {
         type: DataTypes.ENUM("pending", "approved", "rejected"),
         defaultValue: "pending",
       },
+      is_invoiced: {
+        type: DataTypes.ENUM("draft", "invoiced", "rejected"),
+        defaultValue: "draft",
+      },
     },
     {
       timestamps: true,

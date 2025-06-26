@@ -472,7 +472,7 @@ export const bulkUploadProjects = async (req, res) => {
       return res.status(400).json({ message: "Excel sheet is empty" });
     }
 
-    // Get reference data once
+    // Fetch reference data and map for lookup
     const stores = await Store.findAll();
     const storeMap = new Map(stores.map((s) => [s.store_code.trim(), s.id]));
 
@@ -496,6 +496,7 @@ export const bulkUploadProjects = async (req, res) => {
 
     for (const row of dataRows) {
       console.log({ row });
+
       const [
         projectNo,
         customerName,
@@ -503,25 +504,16 @@ export const bulkUploadProjects = async (req, res) => {
         contractStartDate,
         contractEndDate,
         revenuemasterStr,
-        equipmentStr,
         storeStr,
       ] = row;
 
       if (!projectNo) continue;
 
-      // Convert codes to IDs
-      // const customerId = customerMap.get(customerName?.trim());
+      // Convert revenue/store strings to IDs
       const revenue_master_ids = revenuemasterStr
         ? revenuemasterStr
             .split(",")
             .map((code) => revenueMap.get(code.trim()))
-            .filter(Boolean)
-        : [];
-
-      const equipment_allocated_ids = equipmentStr
-        ? equipmentStr
-            .split(",")
-            .map((name) => equipmentMap.get(name.trim()))
             .filter(Boolean)
         : [];
 
@@ -532,15 +524,16 @@ export const bulkUploadProjects = async (req, res) => {
             .filter(Boolean)
         : [];
 
-      // Validate required mappings
-      if (!customerName) {
+      // Validations
+      if (!customerName || !customerMap.has(customerName.trim())) {
         results.push({
           projectNo,
           status: "failed",
-          message: "Invalid customer name.",
+          message: "Invalid or missing customer name.",
         });
         continue;
       }
+
       if (revenue_master_ids.length === 0) {
         results.push({
           projectNo,
@@ -549,14 +542,7 @@ export const bulkUploadProjects = async (req, res) => {
         });
         continue;
       }
-      if (equipment_allocated_ids.length === 0) {
-        results.push({
-          projectNo,
-          status: "failed",
-          message: "Invalid or missing equipment(s).",
-        });
-        continue;
-      }
+
       if (store_location_ids.length === 0) {
         results.push({
           projectNo,
@@ -566,15 +552,26 @@ export const bulkUploadProjects = async (req, res) => {
         continue;
       }
 
-      // Call your processor
+      const contract_start_date = contractStartDate;
+      const contract_end_date = contractEndDate;
+
+      if (!contract_start_date || !contract_end_date) {
+        results.push({
+          projectNo,
+          status: "failed",
+          message: "Invalid date format. Use dd-mm-yyyy only.",
+        });
+        continue;
+      }
+
+      // Process and save the project
       const result = await processProjectRow({
         projectNo,
         customer: customerName,
         orderNo,
-        contractStartDate,
-        contractEndDate,
+        contract_start_date,
+        contract_end_date,
         revenue_master_ids,
-        equipment_allocated_ids,
         store_location_ids,
       });
 
@@ -590,3 +587,5 @@ export const bulkUploadProjects = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+// ✅ Handles both string dd-mm-yyyy and Excel serial number

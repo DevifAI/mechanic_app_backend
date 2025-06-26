@@ -17,13 +17,48 @@ export async function processProjectRow({
   projectNo,
   customer, // partner_name
   orderNo,
-  contractStartDate,
+  contract_start_date,
+  contract_end_date,
   // contractTenure,
   revenue_master_ids, // these are revenue_codes now
   // equipment_allocated_ids, // these are equipment_names
   // staff_ids, // these are emp_names
   store_location_ids, // these are store_codes
 }) {
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+
+    // Handle different date formats
+    if (dateString.includes("-")) {
+      const [day, month, year] = dateString.split("-");
+      return new Date(`${year}-${month}-${day}`);
+    } else if (dateString.includes("/")) {
+      const [day, month, year] = dateString.split("/");
+      return new Date(`${year}-${month}-${day}`);
+    }
+    return null;
+  };
+
+  // Parse and validate dates
+  const startDate = parseDate(contract_start_date);
+  const endDate = parseDate(contract_end_date);
+
+  if (!startDate || isNaN(startDate.getTime())) {
+    return {
+      projectNo,
+      status: "failed",
+      message: `Invalid contract start date: ${contract_start_date}. Expected DD-MM-YYYY`,
+    };
+  }
+
+  if (contract_end_date && (!endDate || isNaN(endDate.getTime()))) {
+    return {
+      projectNo,
+      status: "failed",
+      message: `Invalid contract end date: ${contract_end_date}. Expected DD-MM-YYYY`,
+    };
+  }
+
   // Check duplicate project no
   const existingProject = await Project_Master.findOne({
     where: { project_no: projectNo },
@@ -103,8 +138,8 @@ export async function processProjectRow({
     project_no: projectNo,
     customer_id,
     order_no: orderNo,
-    contract_start_date: contractStartDate,
-    // contract_tenure: contractTenure,
+    contract_start_date: startDate,
+    contract_end_date: endDate,
   });
 
   const project_id = project.id;

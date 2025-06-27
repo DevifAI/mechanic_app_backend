@@ -1,12 +1,15 @@
 import bcrypt from "bcrypt";
 import { models } from "../../models/index.js"; // Adjust path if needed
-
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 const { Employee, Role, Organisations } = models;
 
 // ✅ LOGIN
 
+dotenv.config();
+
 export const login = async (req, res) => {
-  const { emp_id, password } = req.body;
+  const { emp_id, password, forceLogoutAll = false } = req.body;
 
   if (!emp_id || !password) {
     return res
@@ -22,16 +25,39 @@ export const login = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    console.log("Input password:", password);
-    console.log("Stored password hash:", employee.password);
-
     const isMatch = await bcrypt.compare(password, employee.password);
-    console.log("Password match result:", isMatch);
-
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
+    // Check for existing session
+    if (
+      employee.app_access_role === "admin" && // 👈 adjust this condition as per your role logic
+      employee.active_jwt_token &&
+      !forceLogoutAll
+    ) {
+      return res.status(403).json({
+        message: "User already logged in on another device. Force logout?",
+        promptForceLogout: true,
+      });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      {
+        id: employee.id,
+        emp_id: employee.emp_id,
+        role: employee.app_access_role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Save active token
+    employee.active_jwt_token = token;
+    await employee.save();
+
+    // Fetch organisation info
     const organisation = await Organisations.findOne({
       where: { id: employee.org_id },
       attributes: ["id", "org_name"],
@@ -39,6 +65,7 @@ export const login = async (req, res) => {
 
     return res.status(200).json({
       message: "Login successful",
+      token,
       employee: {
         id: employee.id,
         emp_id: employee.emp_id,
@@ -56,14 +83,15 @@ export const login = async (req, res) => {
   }
 };
 
-
 // ✅ CHANGE PASSWORD
 // ✅ CHANGE PASSWORD
 export const changePassword = async (req, res) => {
   const { emp_id, oldPassword, newPassword } = req.body;
 
   if (!emp_id || !oldPassword || !newPassword) {
-    return res.status(400).json({ message: "emp_id, oldPassword, and newPassword are required" });
+    return res
+      .status(400)
+      .json({ message: "emp_id, oldPassword, and newPassword are required" });
   }
 
   try {
@@ -84,9 +112,28 @@ export const changePassword = async (req, res) => {
     await employee.save();
 
     return res.status(200).json({ message: "Password changed successfully" });
-
   } catch (error) {
     console.error("Change password error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "Invalid user session" });
+    }
+
+    await Employee.update(
+      { active_jwt_token: null },
+      { where: { id: userId } }
+    );
+
+    return res.status(200).json({ message: "Logout successful" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };

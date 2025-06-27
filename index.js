@@ -33,6 +33,7 @@ import storeManagerRoutes from "./routes/storeManager/store_manager.routes.js"; 
 import AccountManagerRoutes from "./routes/accountManager/accountManager.routes.js"; // Import authentication routes
 
 import { syncModels } from "./models/index.js";
+import jwtMiddleware from "./middleware/jwtMiddleware.js";
 
 dotenv.config();
 
@@ -40,6 +41,9 @@ const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS for all routes
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
+
+app.use(jwtMiddleware);
+
 // Use partner routes
 app.use("/api/master/super/admin/project", projectsRoutes);
 app.use("/api/master/super/admin/partner", partnerRoutes);

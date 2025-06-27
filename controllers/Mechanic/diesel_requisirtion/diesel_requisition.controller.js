@@ -20,7 +20,7 @@ export const createDieselRequisition = async (req, res) => {
       is_approve_sic = "pending",
       is_approve_pm = "pending",
       org_id,
-      project_id
+      project_id,
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -34,7 +34,7 @@ export const createDieselRequisition = async (req, res) => {
       is_approve_sic,
       is_approve_pm,
       org_id,
-      project_id
+      project_id,
     });
 
     const createdItems = await Promise.all(
@@ -116,7 +116,7 @@ export const getAllDieselRequisitions = async (req, res) => {
 
 export const getAllDieselRequisitionsByCreator = async (req, res) => {
   try {
-    const { org_id, createdBy,project_id } = req.body; // or req.query depending on your frontend
+    const { org_id, createdBy, project_id } = req.body; // or req.query depending on your frontend
 
     // Defensive checks
     if (!org_id) {
@@ -133,7 +133,7 @@ export const getAllDieselRequisitionsByCreator = async (req, res) => {
       where: {
         org_id,
         createdBy,
-        project_id
+        project_id,
       },
       include: [
         {

@@ -60,7 +60,7 @@ app.use(
   jwtMiddleware,
   empPositionRoutes
 );
-app.use("/api/master/super/admin/employee", jwtMiddleware, employeeRoutes);
+app.use("/api/master/super/admin/employee",  employeeRoutes);
 app.use("/api/master/super/admin/store", jwtMiddleware, storeRoutes);
 app.use("/api/master/super/admin/organisations", jwtMiddleware, orgRoutes);
 app.use("/api/master/super/admin/uom", jwtMiddleware, UOMRoutes);

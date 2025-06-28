@@ -49,7 +49,7 @@ export const login = async (req, res) => {
         role: employee.app_access_role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "30d" }
     );
 
     // Save active token

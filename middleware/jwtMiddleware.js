@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import { models } from "../models/index.js"; // Adjust path if needed
+import { models } from "../models/index.js";
 const { Employee } = models;
+
 const jwtMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -13,36 +14,37 @@ const jwtMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    // Decode the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Extract emp_id
     const { emp_id } = decoded;
-
+    console.log({ emp_id });
     if (!emp_id) {
       return res
         .status(401)
         .json({ message: "Unauthorized - Invalid token payload" });
     }
 
-    // Find employee by emp_id
-    const employee = await Employee.findOne({ emp_id });
+    const employee = await Employee.findOne({ where: { emp_id } });
 
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
+    console.log({ employee });
+    console.log(employee.active_jwt_token);
+    console.log(token);
 
-    // Compare stored active_jwt_token with the current token
     if (employee.active_jwt_token !== token) {
-      return res.status(401).json({ message: "Unauthorized - Token mismatch" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - Token mismatch" });
     }
 
-    // Attach user to request
+    // Token is valid and matches DB
     req.user = decoded;
     next();
   } catch (err) {
     console.error("JWT Middleware Error:", err);
-    return res.status(401).json({ message: "Unauthorized - Invalid token" });
+    return res.status(401).json({ message: "Unauthorized - Invalid token0" });
   }
 };
 

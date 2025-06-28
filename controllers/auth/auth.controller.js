@@ -32,7 +32,6 @@ export const login = async (req, res) => {
 
     // Check for existing session
     if (
-      employee.app_access_role === "admin" && // 👈 adjust this condition as per your role logic
       employee.active_jwt_token &&
       !forceLogoutAll
     ) {

@@ -7,6 +7,7 @@ const {
   OEM,
   Employee,
   Organisations,
+  ProjectEmployees
 } = models;
 
 // Create a new diesel requisition
@@ -27,6 +28,7 @@ export const createDieselRequisition = async (req, res) => {
       return res.status(400).json({ message: "Items array is required." });
     }
 
+    // ✅ Step 1: Create requisition
     const requisition = await DieselRequisitions.create({
       date,
       createdBy,
@@ -37,6 +39,7 @@ export const createDieselRequisition = async (req, res) => {
       project_id,
     });
 
+    // ✅ Step 2: Create items
     const createdItems = await Promise.all(
       items.map((item) =>
         DieselRequisitionItems.create({
@@ -49,12 +52,43 @@ export const createDieselRequisition = async (req, res) => {
       )
     );
 
+    // ✅ Step 3: Find all employees linked to the project
+    const projectEmployees = await ProjectEmployees.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: Employee,
+          as: "employeeDetails",
+          attributes: ["id", "emp_name", "player_id"],
+        },
+      ],
+    });
+
+    // ✅ Step 4: Send notifications to each player_id
+    await Promise.all(
+      projectEmployees.map(async (pe) => {
+        const empName = pe.employeeDetails?.emp_name;
+        const playerId = pe.employeeDetails?.player_id;
+
+        if (playerId) {
+          await sendLoginNotification(
+            empName || "User",
+            "Diesel Module", // deviceName (optional)
+            playerId,
+            "A new diesel requisition has been created for your project"
+          );
+        }
+      })
+    );
+
     return res.status(201).json({
-      message: "Diesel requisition created successfully",
+      message: "Diesel requisition created and notifications sent successfully",
       requisition,
       items: createdItems,
     });
   } catch (error) {
+    console.error("Error in createDieselRequisition:", error);
+
     if (error.name === "SequelizeForeignKeyConstraintError") {
       return res.status(400).json({
         message: "Foreign key constraint error",
@@ -68,7 +102,6 @@ export const createDieselRequisition = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
-
 // Get all diesel requisitions
 export const getAllDieselRequisitions = async (req, res) => {
   try {

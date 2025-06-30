@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 import { connection } from "./config/postgres.js"; // Import syncModels
+import adminRoutes from "./routes/admin/admin.routes.js"; // Import admin routes
 import projectsRoutes from "./routes/super_admin/project_master/project.routes.js";
 import partnerRoutes from "./routes/super_admin/partner/index.js";
 import job_masterRoutes from "./routes/super_admin/job_master/job_master.routes.js";
@@ -41,6 +42,12 @@ const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS for all routes
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
+
+app.use("/api/master/super/admin", adminRoutes);
+app.use("/api/master/super/admin", adminRoutes);
+app.use("/api/master/auth", authentcationRoutes);
+
+app.use(jwtMiddleware); // Apply JWT middleware globally
 
 // Use partner routes
 app.use("/api/master/super/admin/project", projectsRoutes);
@@ -97,7 +104,7 @@ app.use(
 
   maintenanceSheetRoutes
 );
-app.use("/api/master/auth", authentcationRoutes);
+// app.use("/api/master/auth", authentcationRoutes);
 app.use("/api/master/mechanic_incharge", mechanicInchargeRoutes);
 app.use("/api/master/site_incharge", siteInchargeRoutes);
 app.use("/api/master/project_manager", projectManagerRoutes);

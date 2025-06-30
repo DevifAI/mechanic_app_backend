@@ -105,7 +105,7 @@ export const login = async (req, res) => {
   }
 };
 
-// ✅ CHANGE PASSWORD
+
 // ✅ CHANGE PASSWORD
 export const changePassword = async (req, res) => {
   const { emp_id, oldPassword, newPassword } = req.body;

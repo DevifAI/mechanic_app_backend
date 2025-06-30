@@ -43,11 +43,13 @@ import RevenuenputModel from "./revenueInput.model.js"; // <-- Add this
 import DieselInvoiceModel from "./DieselInvoices.js";
 import DieselInvoiceForm from "./DieselInvoiceSubform.model.js";
 import EmployeeLoginLogModel from "../models/junctionTable/EmployeeLoginLog.js";
+import AdminModel from "../models/admin.model.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
 const Partner = PartnerModel(sequelize); // Pass the sequelize instance to the model
 const RevenueMaster = RevenueMasterModel(sequelize);
+const Admin = AdminModel(sequelize);
 const JobMaster = JobMasterModel(sequelize);
 const Shift = ShiftModel(sequelize);
 const Store = StoreModel(sequelize);
@@ -94,6 +96,7 @@ const MaterialBillTransactionForm =
 
 const models = {
   sequelize,
+  Admin,
   Partner,
   Project_Master,
   RevenueMaster,

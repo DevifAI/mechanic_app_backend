@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { models } from "../../models/index.js"; // Adjust path if needed
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { sendLoginNotification } from "../../utils/pushNotifications/pushNotifications.js";
 const { Employee, Role, Organisations, EmployeeLoginLog } = models;
 
 // ✅ LOGIN
@@ -57,7 +58,7 @@ export const login = async (req, res) => {
 
     // Update token and player_id
     employee.active_jwt_token = token;
-    if (player_id) employee.player_id = player_id; // 👈 update player_id
+    if (player_id) employee.player_id = player_id;
     await employee.save();
 
     // Save login log
@@ -73,6 +74,16 @@ export const login = async (req, res) => {
       where: { id: employee.org_id },
       attributes: ["id", "org_name"],
     });
+
+    // ✅ Send notification on successful login
+    if (player_id) {
+      await sendLoginNotification(
+        employee.emp_name,
+        device_name,
+        player_id,
+        "Login successful from " + device_name
+      );
+    }
 
     return res.status(200).json({
       message: "Login successful",

@@ -43,66 +43,66 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
 // Use partner routes
-app.use("/api/master/super/admin/project", jwtMiddleware, projectsRoutes);
-app.use("/api/master/super/admin/partner", jwtMiddleware, partnerRoutes);
-app.use("/api/master/super/admin/job_master", jwtMiddleware, job_masterRoutes);
-app.use("/api/master/super/admin/revenue_master", jwtMiddleware, revenueRoutes);
+app.use("/api/master/super/admin/project", projectsRoutes);
+app.use("/api/master/super/admin/partner", partnerRoutes);
+app.use("/api/master/super/admin/job_master", job_masterRoutes);
+app.use("/api/master/super/admin/revenue_master", revenueRoutes);
 app.use(
   "/api/master/super/admin/equipmentGroup",
-  jwtMiddleware,
+
   equipmentGroupRoutes
 );
-app.use("/api/master/super/admin/equipment", jwtMiddleware, equipmentRoutes);
-app.use("/api/master/super/admin/role", jwtMiddleware, roleRoutes);
-app.use("/api/master/super/admin/shift", jwtMiddleware, shiftRoutes);
+app.use("/api/master/super/admin/equipment", equipmentRoutes);
+app.use("/api/master/super/admin/role", roleRoutes);
+app.use("/api/master/super/admin/shift", shiftRoutes);
 app.use(
   "/api/master/super/admin/empPosition",
-  jwtMiddleware,
+
   empPositionRoutes
 );
-app.use("/api/master/super/admin/employee",  employeeRoutes);
-app.use("/api/master/super/admin/store", jwtMiddleware, storeRoutes);
-app.use("/api/master/super/admin/organisations", jwtMiddleware, orgRoutes);
-app.use("/api/master/super/admin/uom", jwtMiddleware, UOMRoutes);
-app.use("/api/master/super/admin/itemgroup", jwtMiddleware, ItemGroupRoutes);
-app.use("/api/master/super/admin/oem", jwtMiddleware, OEMRoutes);
+app.use("/api/master/super/admin/employee", employeeRoutes);
+app.use("/api/master/super/admin/store", storeRoutes);
+app.use("/api/master/super/admin/organisations", orgRoutes);
+app.use("/api/master/super/admin/uom", UOMRoutes);
+app.use("/api/master/super/admin/itemgroup", ItemGroupRoutes);
+app.use("/api/master/super/admin/oem", OEMRoutes);
 app.use(
   "/api/master/super/admin/accountgroup",
-  jwtMiddleware,
+
   AccountGroupRoutes
 );
 app.use(
   "/api/master/super/admin/consumableitems",
-  jwtMiddleware,
+
   ConsumableItemsRoutes
 );
-app.use("/api/master/super/admin/account", jwtMiddleware, AccountRoutes);
+app.use("/api/master/super/admin/account", AccountRoutes);
 app.use(
   "/api/master/mechanic/diselrequisition",
-  jwtMiddleware,
+
   diselRequisitionRoutes
 );
 app.use(
   "/api/master/mechanic/diselreciept",
-  jwtMiddleware,
+
   dieselReceiptRoutes
 );
 app.use(
   "/api/master/mechanic/consumptionsheet",
-  jwtMiddleware,
+
   consumptionSheetRoutes
 );
 app.use(
   "/api/master/mechanic/maintenanceSheet",
-  jwtMiddleware,
+
   maintenanceSheetRoutes
 );
 app.use("/api/master/auth", authentcationRoutes);
-app.use("/api/master/mechanic_incharge", jwtMiddleware, mechanicInchargeRoutes);
-app.use("/api/master/site_incharge", jwtMiddleware, siteInchargeRoutes);
-app.use("/api/master/project_manager", jwtMiddleware, projectManagerRoutes);
-app.use("/api/master/store_manager", jwtMiddleware, storeManagerRoutes);
-app.use("/api/master/account_manager", jwtMiddleware, AccountManagerRoutes);
+app.use("/api/master/mechanic_incharge", mechanicInchargeRoutes);
+app.use("/api/master/site_incharge", siteInchargeRoutes);
+app.use("/api/master/project_manager", projectManagerRoutes);
+app.use("/api/master/store_manager", storeManagerRoutes);
+app.use("/api/master/account_manager", AccountManagerRoutes);
 
 // Initialize database connection
 connection();

@@ -19,27 +19,27 @@ import jwtMiddleware from "../../../middleware/jwtMiddleware.js";
 
 const router = express.Router();
 
-router.post("/create", jwtMiddleware, createEmployee);
-router.get("/getAll", jwtMiddleware, getAllEmployees);
-router.get("/get/:id", jwtMiddleware, getEmployeeById);
+router.post("/create", createEmployee);
+router.get("/getAll", getAllEmployees);
+router.get("/get/:id", getEmployeeById);
 router.get("/get/projects/:id", getProjectsByEmployeeId);
-router.patch("/update/:id", jwtMiddleware, updateEmployee);
-router.delete("/delete/:id", jwtMiddleware, deleteEmployee);
+router.patch("/update/:id", updateEmployee);
+router.delete("/delete/:id", deleteEmployee);
 router.post(
   "/bulk-upload",
   upload.single("file"),
-  jwtMiddleware,
+
   bulkUploadEmployees
 );
-router.get("/role/:id", jwtMiddleware, getEmployeesByRole);
-router.get("/grouped-by-role", jwtMiddleware, getAllEmployeesGroupedByRole);
+router.get("/role/:id", getEmployeesByRole);
+router.get("/grouped-by-role", getAllEmployeesGroupedByRole);
 // POST /api/project-employees/add
-router.post("/add/employee/project", jwtMiddleware, addEmployeesToProject);
-router.post("/edit/employee/project", jwtMiddleware, updateEmployeesForProject);
-router.post("/get/employee/project", jwtMiddleware, getEmployeesByProject);
+router.post("/add/employee/project", addEmployeesToProject);
+router.post("/edit/employee/project", updateEmployeesForProject);
+router.post("/get/employee/project", getEmployeesByProject);
 router.post(
   "/get/employee/project/roleType",
-  jwtMiddleware,
+
   getEmployeesByProjectWithRoleType
 );
 export default router;

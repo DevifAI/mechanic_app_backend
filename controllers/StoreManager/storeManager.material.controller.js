@@ -21,6 +21,16 @@ export const createMaterialTransaction = async (req, res) => {
       createdBy,
     } = req.body;
 
+    console.log({
+      date,
+      data_type,
+      type,
+      partner,
+      challan_no,
+      formItems,
+      project_id,
+      createdBy,
+    });
     const transaction = await MaterialTransaction.create({
       date,
       data_type,

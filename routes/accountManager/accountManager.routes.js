@@ -7,6 +7,7 @@ import {
   createRevenueInput,
   deleteDieselInvoice,
   getAllRevenueInputInvoices,
+  getBillsByProject,
   getBillsByProjectAndUser,
   getDraft,
   getExpensesByCreator,
@@ -21,6 +22,7 @@ const router = express.Router();
 
 router.post("/create/material/bill", createMaterialBill);
 router.post("/get/material/bill/creator", getBillsByProjectAndUser);
+router.post("/get/material/bill/by/project", getBillsByProject);
 router.post("/create/expense/input", createDailyExpense);
 router.post("/get/expense/input/creator", getExpensesByCreator);
 router.post("/create/revenue/input", createRevenueInput);

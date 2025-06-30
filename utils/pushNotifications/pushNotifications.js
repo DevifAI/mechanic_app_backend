@@ -1,0 +1,31 @@
+import axios from "axios";
+
+export const sendLoginNotification = async (
+  empName,
+  deviceName,
+  playerId,
+  content
+) => {
+  try {
+    await axios.post(
+      "https://onesignal.com/api/v1/notifications",
+      {
+        app_id: process.env.ONESIGNAL_APP_ID,
+        include_player_ids: [playerId],
+        headings: { en: "New Notifications" },
+        contents: { en: content || `${empName} you have a new notifications` },
+      },
+      {
+        headers: {
+          Authorization: `Basic ${process.env.ONESIGNAL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (err) {
+    console.error(
+      "Push notification error:",
+      err.response?.data || err.message
+    );
+  }
+};

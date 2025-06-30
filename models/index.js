@@ -42,6 +42,7 @@ import ExpenseInputModel from "./expenseInput.model.js"; // <-- Add this
 import RevenuenputModel from "./revenueInput.model.js"; // <-- Add this
 import DieselInvoiceModel from "./DieselInvoices.js";
 import DieselInvoiceForm from "./DieselInvoiceSubform.model.js";
+import EmployeeLoginLogModel from "../models/junctionTable/EmployeeLoginLog.js";
 
 //Step 1: Initialize models
 const Project_Master = ProjectMasterModel(sequelize); // Pass the sequelize instance to the model
@@ -87,6 +88,7 @@ const ExpenseInput = ExpenseInputModel(sequelize);
 const RevenueInput = RevenuenputModel(sequelize);
 const DieselInvoiceSubform = DieselInvoiceForm(sequelize);
 const DieselInvoice = DieselInvoiceModel(sequelize);
+const EmployeeLoginLog = EmployeeLoginLogModel(sequelize);
 const MaterialBillTransactionForm =
   MaterialBillTransactionsFormModel(sequelize);
 
@@ -135,6 +137,7 @@ const models = {
   RevenueInput,
   DieselInvoiceSubform,
   DieselInvoice,
+  EmployeeLoginLog
 };
 
 // Step 2: Call associations AFTER all models are initialized

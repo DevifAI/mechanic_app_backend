@@ -34,6 +34,7 @@ export default (sequelize) => {
         allowNull: false,
         references: { model: "role", key: "id" },
       },
+      player_id: { type: DataTypes.STRING, allowNull: true },
       org_id: {
         type: DataTypes.UUID,
         allowNull: false,

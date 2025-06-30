@@ -160,6 +160,44 @@ export const getBillsByProjectAndUser = async (req, res) => {
   }
 };
 
+export const getBillsByProject = async (req, res) => {
+  try {
+    const { project_id } = req.body;
+
+    const bills = await MaterialBillTransaction.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: models.MaterialBillTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: models.ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: models.UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name"],
+            },
+          ],
+        },
+        {
+          model: models.MaterialTransaction,
+          as: "material",
+          attributes: ["id", "challan_no", "type"],
+        },
+      ],
+    });
+
+    return res.status(200).json(bills);
+  } catch (error) {
+    console.error("Filter Bills Error:", error);
+    return res.status(500).json({ message: "Failed to filter material bills" });
+  }
+};
+
 export const updateMaterialBill = async (req, res) => {
   try {
     const { id } = req.params;

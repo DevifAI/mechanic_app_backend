@@ -140,7 +140,7 @@ const models = {
   RevenueInput,
   DieselInvoiceSubform,
   DieselInvoice,
-  EmployeeLoginLog
+  EmployeeLoginLog,
 };
 
 // Step 2: Call associations AFTER all models are initialized
@@ -155,7 +155,6 @@ const syncModels = async () => {
   try {
     // Now safely sync your models
     // await sequelize.sync({ alter: true });
-
     console.log("✅ Sync successful");
   } catch (err) {
     console.error("❌ Sync failed:", err);

@@ -11,7 +11,7 @@ const {
   ConsumableItem,
   UOM,
   DieselInvoice,
-  DieselInvoiceForm,
+  DieselInvoiceSubform,
 } = models;
 
 // ✅ Create Material Bill
@@ -168,26 +168,26 @@ export const getBillsByProject = async (req, res) => {
       where: { project_id },
       include: [
         {
-          model: models.MaterialBillTransactionForm,
+          model: MaterialBillTransactionForm,
           as: "formItems",
           include: [
             {
-              model: models.ConsumableItem,
+              model: ConsumableItem,
               as: "consumableItem",
               attributes: ["id", "item_name"],
             },
             {
-              model: models.UOM,
+              model: UOM,
               as: "unitOfMeasure",
               attributes: ["id", "unit_name"],
             },
           ],
         },
-        {
-          model: models.MaterialTransaction,
-          as: "material",
-          attributes: ["id", "challan_no", "type"],
-        },
+        // {
+        //   model: MaterialTransaction,
+        //   as: "material",
+        //   attributes: ["id", "challan_no", "type"],
+        // },
       ],
     });
 
@@ -597,7 +597,7 @@ export const createDieselInvoice = async (req, res) => {
         total_value: item.qty * item.unit_rate,
         notes: item.notes || null,
       }));
-      await DieselInvoiceForm.bulkCreate(mapped);
+      await DieselInvoiceSubform.bulkCreate(mapped);
     }
 
     res.status(201).json({ message: "Invoice created", invoice });
@@ -610,12 +610,15 @@ export const createDieselInvoice = async (req, res) => {
 // ✅ GET BY STATUS (draft, invoiced, rejected)
 export const getInvoicesByStatus = async (req, res) => {
   const { status } = req.params; // draft | invoiced | rejected
+  console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  console.log({ status });
+  console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
   try {
     const invoices = await DieselInvoice.findAll({
       where: { is_invoiced: status },
       include: [
         {
-          model: DieselInvoiceForm,
+          model: DieselInvoiceSubform,
           as: "formItems",
           include: [
             {
@@ -652,7 +655,7 @@ export const updateDieselInvoice = async (req, res) => {
 
     await invoice.update({ project_id, dieselInvoiceId, date, is_invoiced });
 
-    await DieselInvoiceForm.destroy({ where: { diesel_invoice_id: id } });
+    await DieselInvoiceSubform.destroy({ where: { diesel_invoice_id: id } });
 
     const updatedItems = formItems.map((item) => ({
       diesel_invoice_id: id,
@@ -664,7 +667,7 @@ export const updateDieselInvoice = async (req, res) => {
       notes: item.notes || null,
     }));
 
-    await DieselInvoiceForm.bulkCreate(updatedItems);
+    await DieselInvoiceSubform.bulkCreate(updatedItems);
 
     res.status(200).json({ message: "Invoice updated successfully" });
   } catch (error) {
@@ -679,7 +682,7 @@ export const deleteDieselInvoice = async (req, res) => {
     const invoice = await DieselInvoice.findByPk(id);
     if (!invoice) return res.status(404).json({ message: "Not found" });
 
-    await DieselInvoiceForm.destroy({ where: { diesel_invoice_id: id } });
+    await DieselInvoiceSubform.destroy({ where: { diesel_invoice_id: id } });
     await invoice.destroy();
 
     res.status(200).json({ message: "Invoice deleted successfully" });

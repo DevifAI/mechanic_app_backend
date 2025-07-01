@@ -51,6 +51,12 @@ export default (sequelize) => {
       foreignKey: "dieselInvoiceId",
       as: "invoice",
     });
+
+    // ✅ Add in associate function
+    DieselInvoiceModel.hasMany(models.DieselInvoiceSubform, {
+      foreignKey: "diesel_invoice_id",
+      as: "formItems", // 🧠 this must match your include `as: "formItems"`
+    });
   };
 
   return DieselInvoiceModel;

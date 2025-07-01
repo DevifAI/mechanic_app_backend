@@ -85,6 +85,10 @@ export default (sequelize) => {
       foreignKey: "materialTransactionId",
       as: "material",
     });
+    MaterialBillTransactionModel.hasMany(models.MaterialBillTransactionForm, {
+      foreignKey: "material_transaction_id", // must match in form model
+      as: "formItems", // use this alias in include
+    });
   };
 
   return MaterialBillTransactionModel;

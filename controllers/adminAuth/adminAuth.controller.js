@@ -29,6 +29,7 @@ export const adminLogin = async (req, res) => {
 
     if (admin.active_jwt_token) {
       return res.status(403).json({
+        isMultipleLogin: true,
         message:
           "Admin already logged in on another device. Please logout first.",
       });
@@ -62,27 +63,8 @@ export const adminLogin = async (req, res) => {
 
 export const adminLogout = async (req, res) => {
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized - No token provided" });
-    }
-    const token = authHeader.split(" ")[1];
-
-    // Verify token and extract admin_id
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      return res.status(401).json({ message: "Unauthorized - Invalid token" });
-    }
-
-    // Find admin by admin_id (which is the email in your setup)
-    const admin = await Admin.findOne({
-      where: { admin_id: decoded.admin_id },
-    });
+    // Find the only admin (assuming only one exists)
+    const admin = await Admin.findOne();
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }

@@ -33,6 +33,16 @@ export default (sequelize) => {
         allowNull: false,
       },
 
+      unit_price: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+
+      totalValue: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+
       uom: {
         type: DataTypes.UUID,
         allowNull: false,

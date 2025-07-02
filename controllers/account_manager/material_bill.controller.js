@@ -16,6 +16,7 @@ const {
   DieselReceipt,
   DieselReceiptItem,
   Organisations,
+  Partner,
 } = models;
 
 // ✅ Create Material Bill
@@ -33,6 +34,8 @@ export const createMaterialBill = async (req, res) => {
       materialTransactionId,
       forms,
       isInvoiced,
+      unit_price,
+      totalValue,
     } = req.body;
 
     // Step 1: Create Material Bill
@@ -55,6 +58,8 @@ export const createMaterialBill = async (req, res) => {
         item: item.item,
         qty: item.qty,
         uom: item.uom,
+        unit_price: item.unit_price || unit_price,
+        totalValue: item.totalValue || totalValue,
         notes: item.notes || null,
       }));
 
@@ -70,7 +75,7 @@ export const createMaterialBill = async (req, res) => {
 
       if (affectedRows === 0) {
         console.warn(
-          "⚠️ MaterialTransaction ID not found or already invoiced:",
+          "MaterialTransaction ID not found or already invoiced:",
           materialTransactionId
         );
       }
@@ -783,4 +788,247 @@ export const deleteDieselInvoice = async (req, res) => {
   }
 };
 
+// =============================================================================================================================
 
+// Get All Bills
+export const getAllBills = async (req, res) => {
+  try {
+    const bills = await MaterialBillTransaction.findAll({
+      include: [
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: [
+            "id",
+            "project_no",
+            "contract_start_date",
+            "contract_end_date",
+          ],
+        },
+        {
+          model: Partner,
+          as: "partnerDetails",
+          attributes: ["id", "partner_name", "partner_address"],
+        },
+        {
+          model: Employee,
+          as: "createdByUser",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: MaterialTransaction,
+          as: "material",
+          attributes: ["id", "challan_no", "type", "data_type", "date"],
+        },
+        {
+          model: MaterialBillTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(bills);
+  } catch (error) {
+    console.error("Get All Bills Error:", error);
+    return res.status(500).json({ message: "Failed to fetch material bills" });
+  }
+};
+
+// Get All Expenses
+export const getAllExpenses = async (req, res) => {
+  try {
+    const expenses = await ExpenseInput.findAll({
+      include: [
+        {
+          model: Employee,
+          as: "creator",
+          attributes: ["id", "emp_name", "emp_id"],
+        },
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: [
+            "id",
+            "project_no",
+            "contract_start_date",
+            "contract_end_date",
+          ],
+        },
+      ],
+      order: [["date", "DESC"]],
+    });
+
+    res.status(200).json(expenses);
+  } catch (error) {
+    console.error("Fetch All Expenses Error:", error);
+    res.status(500).json({ message: "Failed to fetch expenses" });
+  }
+};
+
+// Get All Revenue Input Invoices
+export const getAllInvoices = async (req, res) => {
+  try {
+    const invoices = await DieselInvoice.findAll({
+      include: [
+        {
+          model: DieselInvoiceSubform,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: ["id", "project_name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(invoices);
+  } catch (error) {
+    console.error("Get All Invoices Error:", error);
+    res.status(500).json({ message: "Failed to fetch invoices" });
+  }
+};
+
+// Get Bill Details by ID
+export const getBillById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bill = await MaterialBillTransaction.findByPk(id, {
+      include: [
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: ["id", "project_name"],
+        },
+        {
+          model: Partner,
+          as: "partnerDetails",
+          attributes: ["id", "partner_name", "partner_address"],
+        },
+        {
+          model: Employee,
+          as: "createdByUser",
+          attributes: ["id", "emp_id", "emp_name"],
+        },
+        {
+          model: MaterialTransaction,
+          as: "material",
+          attributes: ["id", "challan_no", "type", "data_type", "date"],
+        },
+        {
+          model: MaterialBillTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!bill) return res.status(404).json({ message: "Bill not found" });
+    return res.status(200).json(bill);
+  } catch (error) {
+    console.error("Get Bill By ID Error:", error);
+    return res.status(500).json({ message: "Failed to fetch bill details" });
+  }
+};
+
+// Get Expense Details by ID
+export const getExpenseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const expense = await ExpenseInput.findByPk(id, {
+      include: [
+        {
+          model: Employee,
+          as: "creator",
+          attributes: ["id", "emp_name", "emp_id"],
+        },
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: ["id", "project_name"],
+        },
+      ],
+    });
+
+    if (!expense) return res.status(404).json({ message: "Expense not found" });
+    return res.status(200).json(expense);
+  } catch (error) {
+    console.error("Get Expense By ID Error:", error);
+    res.status(500).json({ message: "Failed to fetch expense details" });
+  }
+};
+
+// Get Invoice Details by ID
+export const getInvoiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoice = await DieselInvoice.findByPk(id, {
+      include: [
+        {
+          model: DieselInvoiceSubform,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: ["id", "project_name"],
+        },
+      ],
+    });
+
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    return res.status(200).json(invoice);
+  } catch (error) {
+    console.error("Get Invoice By ID Error:", error);
+    res.status(500).json({ message: "Failed to fetch invoice details" });
+  }
+};

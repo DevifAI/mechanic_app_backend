@@ -6,12 +6,18 @@ import {
   createMaterialBill,
   createRevenueInput,
   deleteDieselInvoice,
+  getAllBills,
+  getAllExpenses,
+  getAllInvoices,
   getAllRevenueInputInvoices,
+  getBillById,
   getBillsByProject,
   getBillsByProjectAndUser,
   getDraft,
+  getExpenseById,
   getExpensesByCreator,
   getHOInvoicesByProjectAndUser,
+  getInvoiceById,
   getInvoiced,
   getInvoicesByProjectId,
   getInvoicesByStatus,
@@ -22,15 +28,23 @@ import {
 
 const router = express.Router();
 
+router.get("/all-bills", getAllBills); // GET all bills
+router.get("/all-expenses", getAllExpenses); // GET all expenses
+router.get("/all-invoices", getAllInvoices); // GET all invoices
+
+router.get("/bill/:id", getBillById);
+router.get("/expense/:id", getExpenseById);
+router.get("/invoice/:id", getInvoiceById);
+
 router.post("/create/material/bill", createMaterialBill);
-router.post("/get/material/bill/creator", getBillsByProjectAndUser); 
+router.post("/get/material/bill/creator", getBillsByProjectAndUser);
 router.post("/get/material/bill/by/project", getBillsByProject); //admin
 router.post("/create/expense/input", createDailyExpense);
 router.post("/get/expense/input/creator", getExpensesByCreator); //admin
 router.post("/create/revenue/input", createRevenueInput);
 router.post("/get/revenue/input", getAllRevenueInputInvoices); //admin
 router.post("/get/revenue/input/creator", getHOInvoicesByProjectAndUser);
-router.post("/diesel-invoice", createDieselInvoice); 
+router.post("/diesel-invoice", createDieselInvoice);
 router.post("/diesel-invoice/submitted", getSubmittedDieselInvoices);
 router.post("/diesel-invoice/all", getInvoicesByProjectId); //admin
 router.get("/diesel-invoice/status/:status", getInvoicesByStatus);

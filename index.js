@@ -46,7 +46,7 @@ app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 app.use("/api/master/super/admin", adminRoutes);
 app.use("/api/master/auth", authentcationRoutes);
 
-app.use(jwtMiddleware); // Apply JWT middleware globally
+// app.use(jwtMiddleware); // Apply JWT middleware globally
 
 // Use partner routes
 app.use("/api/master/super/admin/project", projectsRoutes);

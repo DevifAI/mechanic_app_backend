@@ -23,16 +23,16 @@ import {
 const router = express.Router();
 
 router.post("/create/material/bill", createMaterialBill);
-router.post("/get/material/bill/creator", getBillsByProjectAndUser);
-router.post("/get/material/bill/by/project", getBillsByProject);
+router.post("/get/material/bill/creator", getBillsByProjectAndUser); 
+router.post("/get/material/bill/by/project", getBillsByProject); //admin
 router.post("/create/expense/input", createDailyExpense);
-router.post("/get/expense/input/creator", getExpensesByCreator);
+router.post("/get/expense/input/creator", getExpensesByCreator); //admin
 router.post("/create/revenue/input", createRevenueInput);
-router.post("/get/revenue/input", getAllRevenueInputInvoices);
+router.post("/get/revenue/input", getAllRevenueInputInvoices); //admin
 router.post("/get/revenue/input/creator", getHOInvoicesByProjectAndUser);
-router.post("/diesel-invoice", createDieselInvoice);
+router.post("/diesel-invoice", createDieselInvoice); 
 router.post("/diesel-invoice/submitted", getSubmittedDieselInvoices);
-router.post("/diesel-invoice/all", getInvoicesByProjectId);
+router.post("/diesel-invoice/all", getInvoicesByProjectId); //admin
 router.get("/diesel-invoice/status/:status", getInvoicesByStatus);
 router.put("/diesel-invoice/:id", updateDieselInvoice);
 router.delete("/diesel-invoice/:id", deleteDieselInvoice);

@@ -782,3 +782,5 @@ export const deleteDieselInvoice = async (req, res) => {
     res.status(500).json({ message: "Deletion failed", error: error.message });
   }
 };
+
+

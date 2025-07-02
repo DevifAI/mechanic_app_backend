@@ -1,3 +1,4 @@
+import { where } from "sequelize";
 import { models } from "../../models/index.js";
 const {
   MaterialBillTransaction,
@@ -7,11 +8,14 @@ const {
   Employee,
   Project_Master,
   MaterialTransaction,
-  MaterialTransactionForm,
   ConsumableItem,
   UOM,
   DieselInvoice,
   DieselInvoiceSubform,
+  MaterialTransactionForm,
+  DieselReceipt,
+  DieselReceiptItem,
+  Organisations,
 } = models;
 
 // ✅ Create Material Bill
@@ -28,9 +32,10 @@ export const createMaterialBill = async (req, res) => {
       total_invoice_value,
       materialTransactionId,
       forms,
+      isInvoiced,
     } = req.body;
 
-    // ✅ Step 1: Create Material Bill
+    // Step 1: Create Material Bill
     const bill = await MaterialBillTransaction.create({
       project_id,
       date,
@@ -43,7 +48,7 @@ export const createMaterialBill = async (req, res) => {
       materialTransactionId,
     });
 
-    // ✅ Step 2: Insert subform items
+    // Step 2: Create Subform Items
     if (Array.isArray(forms) && forms.length > 0) {
       const formData = forms.map((item) => ({
         material_transaction_id: bill.id,
@@ -56,18 +61,27 @@ export const createMaterialBill = async (req, res) => {
       await MaterialBillTransactionForm.bulkCreate(formData);
     }
 
-    // ✅ Step 3: Update MaterialTransaction is_invoiced to "invoiced"
+    // Step 3: Update MaterialTransaction is_invoiced to "invoiced"
     if (materialTransactionId) {
-      await MaterialTransaction.update(
-        { is_invoiced: "invoiced" },
+      const [affectedRows] = await MaterialTransaction.update(
+        { is_invoiced: isInvoiced },
         { where: { id: materialTransactionId } }
       );
+
+      if (affectedRows === 0) {
+        console.warn(
+          "⚠️ MaterialTransaction ID not found or already invoiced:",
+          materialTransactionId
+        );
+      }
     }
 
-    return res.status(201).json({ message: "Material bill created", bill });
+    return res
+      .status(201)
+      .json({ message: "Material bill created successfully", bill });
   } catch (error) {
-    console.error("Create Material Bill Error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("❌ Create Material Bill Error:", error);
+    return res.status(500).json({ message: "Internal Server Error", error });
   }
 };
 
@@ -164,11 +178,11 @@ export const getBillsByProject = async (req, res) => {
   try {
     const { project_id } = req.body;
 
-    const bills = await MaterialBillTransaction.findAll({
-      where: { project_id },
+    const bills = await MaterialTransaction.findAll({
+      where: { project_id, is_approve_pm: "approved" },
       include: [
         {
-          model: MaterialBillTransactionForm,
+          model: MaterialTransactionForm,
           as: "formItems",
           include: [
             {
@@ -576,15 +590,61 @@ export const getRejected = async (req, res) => {
 
 // ----------------------diesel invoices --------------------------
 
+export const getSubmittedDieselInvoices = async (req, res) => {
+  const { project_id } = req.body;
+
+  try {
+    const receipts = await DieselReceipt.findAll({
+      where: {
+        project_id,
+        is_approve_pm: "approved",
+        is_approve_mic: "approved",
+        is_approve_sic: "approved",
+      },
+      include: [
+        {
+          model: DieselReceiptItem,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+            },
+          ],
+        },
+        {
+          model: Employee,
+          as: "createdByEmployee",
+        },
+        {
+          model: Organisations,
+          as: "organisation",
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(receipts);
+  } catch (error) {
+    console.error("Error fetching submitted diesel invoices:", error);
+    return res.status(500).json({ message: "Failed to retrieve data", error });
+  }
+};
+
 export const createDieselInvoice = async (req, res) => {
   try {
-    const { project_id, dieselInvoiceId, date, formItems } = req.body;
+    const { project_id, dieselInvoiceId, date, formItems, is_invoiced } =
+      req.body;
 
     const invoice = await DieselInvoice.create({
       project_id,
       dieselInvoiceId,
       date,
-      is_invoiced: "draft",
+      is_invoiced,
     });
 
     if (Array.isArray(formItems)) {
@@ -616,6 +676,38 @@ export const getInvoicesByStatus = async (req, res) => {
   try {
     const invoices = await DieselInvoice.findAll({
       where: { is_invoiced: status },
+      include: [
+        {
+          model: DieselInvoiceSubform,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(invoices);
+  } catch (error) {
+    res.status(500).json({ message: "Fetch failed", error: error.message });
+  }
+};
+
+export const getInvoicesByProjectId = async (req, res) => {
+  const { project_id } = req.body; // draft | invoiced | rejected
+  try {
+    const invoices = await DieselInvoice.findAll({
+      where: { project_id },
       include: [
         {
           model: DieselInvoiceSubform,

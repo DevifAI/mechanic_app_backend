@@ -13,8 +13,10 @@ import {
   getExpensesByCreator,
   getHOInvoicesByProjectAndUser,
   getInvoiced,
+  getInvoicesByProjectId,
   getInvoicesByStatus,
   getRejected,
+  getSubmittedDieselInvoices,
   updateDieselInvoice,
 } from "../../controllers/account_manager/material_bill.controller.js";
 
@@ -29,6 +31,8 @@ router.post("/create/revenue/input", createRevenueInput);
 router.post("/get/revenue/input", getAllRevenueInputInvoices);
 router.post("/get/revenue/input/creator", getHOInvoicesByProjectAndUser);
 router.post("/diesel-invoice", createDieselInvoice);
+router.post("/diesel-invoice/submitted", getSubmittedDieselInvoices);
+router.post("/diesel-invoice/all", getInvoicesByProjectId);
 router.get("/diesel-invoice/status/:status", getInvoicesByStatus);
 router.put("/diesel-invoice/:id", updateDieselInvoice);
 router.delete("/diesel-invoice/:id", deleteDieselInvoice);

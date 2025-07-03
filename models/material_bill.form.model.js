@@ -18,7 +18,6 @@ export default (sequelize) => {
           key: "id",
         },
       },
-
       item: {
         type: DataTypes.UUID,
         allowNull: false,

@@ -21,6 +21,7 @@ import {
   getInvoiced,
   getInvoicesByProjectId,
   getInvoicesByStatus,
+  getMaterialInByProject,
   getRejected,
   getSubmittedDieselInvoices,
   updateDieselInvoice,
@@ -39,6 +40,7 @@ router.get("/invoice/:id", getInvoiceById);
 router.post("/create/material/bill", createMaterialBill);
 router.post("/get/material/bill/creator", getBillsByProjectAndUser);
 router.post("/get/material/bill/by/project", getBillsByProject); //admin
+router.post("/get/material/in/by/project", getMaterialInByProject); //admin
 router.post("/create/expense/input", createDailyExpense);
 router.post("/get/expense/input/creator", getExpensesByCreator); //admin
 router.post("/create/revenue/input", createRevenueInput);

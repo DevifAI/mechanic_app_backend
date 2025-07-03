@@ -183,8 +183,41 @@ export const getBillsByProject = async (req, res) => {
   try {
     const { project_id } = req.body;
 
+    const bills = await MaterialBillTransaction.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: MaterialBillTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code", "product_type"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    return res.status(200).json(bills);
+  } catch (error) {
+    console.error("Filter Bills Error:", error);
+    return res.status(500).json({ message: "Failed to filter material bills" });
+  }
+};
+
+export const getMaterialInByProject = async (req, res) => {
+  try {
+    const { project_id } = req.body;
+
     const bills = await MaterialTransaction.findAll({
-      where: { project_id, is_approve_pm: "approved" },
+      where: { project_id, is_approve_pm: "approved", is_invoiced: "draft" },
       include: [
         {
           model: MaterialTransactionForm,
@@ -202,11 +235,11 @@ export const getBillsByProject = async (req, res) => {
             },
           ],
         },
-        // {
-        //   model: MaterialTransaction,
-        //   as: "material",
-        //   attributes: ["id", "challan_no", "type"],
-        // },
+        {
+          model: models.Partner,
+          as: "partnerDetails",
+          attributes: ["id", "partner_name", "partner_address"],
+        },
       ],
     });
 
@@ -395,7 +428,6 @@ export const deleteDailyExpense = async (req, res) => {
 };
 
 // revenue input
-
 export const createRevenueInput = async (req, res) => {
   try {
     const {

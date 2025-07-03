@@ -13,11 +13,10 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "material_transaction", // ✅ correct snake_case table name
+          model: "material_transaction",
           key: "id",
         },
       },
-
       project_id: {
         type: DataTypes.UUID,
         allowNull: false,

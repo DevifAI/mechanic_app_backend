@@ -1,6 +1,6 @@
 import { where } from "sequelize";
 import { models } from "../../models/index.js";
-import { Op } from 'sequelize';
+import { Op } from "sequelize";
 const {
   MaterialBillTransaction,
   MaterialBillTransactionForm,
@@ -40,15 +40,15 @@ export const createMaterialBill = async (req, res) => {
     } = req.body;
 
     const existingBill = await MaterialBillTransaction.findOne({
-  where: { materialTransactionId },
-});
+      where: { materialTransactionId },
+    });
 
-if (existingBill) {
-  return res.status(500).json({
-    message: 'A bill already exists for this materialTransactionId.',
-    existingBill,
-  });
-}
+    if (existingBill) {
+      return res.status(500).json({
+        message: "A bill already exists for this materialTransactionId.",
+        existingBill,
+      });
+    }
     // Step 1: Create Material Bill
     const bill = await MaterialBillTransaction.create({
       project_id,
@@ -108,7 +108,7 @@ export const getAllMaterialBills = async (req, res) => {
         {
           model: models.Project_Master,
           as: "project",
-          attributes: ["id", "project_name"],
+          attributes: ["id", "project_no"],
         },
         {
           model: models.Partner,
@@ -289,25 +289,25 @@ export const getCombinedBillsAndMaterialsByProject = async (req, res) => {
     });
 
     // Extract all material_transaction_ids from bills to exclude them from MaterialTransaction
-    const excludedTransactionIds = [...new Set(
-      bills.map(bill => bill.materialTransactionId)
-        .filter(id => id !== null && id !== undefined)
-    )];
+    const excludedTransactionIds = [
+      ...new Set(
+        bills
+          .map((bill) => bill.materialTransactionId)
+          .filter((id) => id !== null && id !== undefined)
+      ),
+    ];
 
     // Get MaterialTransaction data excluding those already referenced in bills
- const whereCondition = {
-  project_id,
-  is_approve_pm: "approved",
-  [Op.or]: [
-    { is_invoiced: "draft" },
-    { is_invoiced: "invoiced" }
-  ]
-};
+    const whereCondition = {
+      project_id,
+      is_approve_pm: "approved",
+      [Op.or]: [{ is_invoiced: "draft" }, { is_invoiced: "invoiced" }],
+    };
 
     // Only add the exclusion condition if there are IDs to exclude
     if (excludedTransactionIds.length > 0) {
       whereCondition.id = {
-        [Op.notIn]: excludedTransactionIds
+        [Op.notIn]: excludedTransactionIds,
       };
     }
 
@@ -345,15 +345,15 @@ export const getCombinedBillsAndMaterialsByProject = async (req, res) => {
       summary: {
         totalBills: bills.length,
         totalMaterialTransactions: materialTransactions.length,
-        excludedTransactionIds: excludedTransactionIds
-      }
+        excludedTransactionIds: excludedTransactionIds,
+      },
     };
 
     return res.status(200).json(combinedData);
   } catch (error) {
     console.error("Combined Bills and Materials Error:", error);
-    return res.status(500).json({ 
-      message: "Failed to fetch combined bills and material transactions" 
+    return res.status(500).json({
+      message: "Failed to fetch combined bills and material transactions",
     });
   }
 };
@@ -571,7 +571,7 @@ export const createRevenueInput = async (req, res) => {
 
 export const getAllRevenueInputInvoices = async (req, res) => {
   try {
-    const invoices = await HOInvoiceInput.findAll({
+    const invoices = await RevenueInput.findAll({
       include: [
         {
           model: Employee,
@@ -581,7 +581,7 @@ export const getAllRevenueInputInvoices = async (req, res) => {
         {
           model: Project_Master,
           as: "project",
-          attributes: ["id", "project_name", "project_code"],
+          attributes: ["id", "project_no"],
         },
       ],
       order: [["date", "DESC"]],
@@ -591,6 +591,32 @@ export const getAllRevenueInputInvoices = async (req, res) => {
   } catch (error) {
     console.error("Get All HO Invoices Error:", error);
     res.status(500).json({ message: "Failed to fetch HO invoices" });
+  }
+};
+
+export const getRevenueInputInvoiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoice = await RevenueInput.findByPk(id, {
+      include: [
+        {
+          model: Employee,
+          as: "creator",
+          attributes: ["id", "emp_name", "emp_id"],
+        },
+        {
+          model: Project_Master,
+          as: "project",
+          attributes: ["id", "project_no"],
+        },
+      ],
+    });
+
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    return res.status(200).json(invoice);
+  } catch (error) {
+    console.error("Get HO Invoice By ID Error:", error);
+    res.status(500).json({ message: "Failed to fetch HO invoice" });
   }
 };
 
@@ -1135,7 +1161,7 @@ export const getAllInvoices = async (req, res) => {
         {
           model: Project_Master,
           as: "project",
-          attributes: ["id", "project_name"],
+          attributes: ["id", "project_no"],
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -1157,7 +1183,7 @@ export const getBillById = async (req, res) => {
         {
           model: Project_Master,
           as: "project",
-          attributes: ["id", "project_name"],
+          attributes: ["id", "project_no"],
         },
         {
           model: Partner,
@@ -1215,7 +1241,7 @@ export const getExpenseById = async (req, res) => {
         {
           model: Project_Master,
           as: "project",
-          attributes: ["id", "project_name"],
+          attributes: ["id", "project_no"],
         },
       ],
     });
@@ -1253,7 +1279,7 @@ export const getInvoiceById = async (req, res) => {
         {
           model: Project_Master,
           as: "project",
-          attributes: ["id", "project_name"],
+          attributes: ["id", "project_no"],
         },
       ],
     });

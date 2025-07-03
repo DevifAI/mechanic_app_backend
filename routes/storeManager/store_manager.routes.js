@@ -38,9 +38,9 @@ router.delete("/material-transaction", deleteAllMaterialTransactions);
 
 router.post("/equipment", createEquipmentTransaction);
 router.post("/get/equipment", getAllEquipmentTransactions);
-router.get("/get/equipment", getAllEquipmentTransactionsNoFilter);
+router.get("/get/equipment", getAllEquipmentTransactionsNoFilter); // admin
 router.post("/get/equipment/admin", getAllEquipmentTransactionsNoFilter);
-router.get("/equipment/:id", getEquipmentTransactionById);
+router.get("/equipment/:id", getEquipmentTransactionById); // admin
 router.put("/equipment/:id", updateEquipmentTransaction);
 router.delete("/equipment/:id", deleteEquipmentTransaction);
 

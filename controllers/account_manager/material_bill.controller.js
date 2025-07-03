@@ -1,5 +1,6 @@
 import { where } from "sequelize";
 import { models } from "../../models/index.js";
+import { Op } from 'sequelize';
 const {
   MaterialBillTransaction,
   MaterialBillTransactionForm,
@@ -38,6 +39,16 @@ export const createMaterialBill = async (req, res) => {
       totalValue,
     } = req.body;
 
+    const existingBill = await MaterialBillTransaction.findOne({
+  where: { materialTransactionId },
+});
+
+if (existingBill) {
+  return res.status(500).json({
+    message: 'A bill already exists for this materialTransactionId.',
+    existingBill,
+  });
+}
     // Step 1: Create Material Bill
     const bill = await MaterialBillTransaction.create({
       project_id,
@@ -247,6 +258,103 @@ export const getMaterialInByProject = async (req, res) => {
   } catch (error) {
     console.error("Filter Bills Error:", error);
     return res.status(500).json({ message: "Failed to filter material bills" });
+  }
+};
+
+export const getCombinedBillsAndMaterialsByProject = async (req, res) => {
+  try {
+    const { project_id } = req.body;
+
+    // Get all MaterialBillTransaction data
+    const bills = await MaterialBillTransaction.findAll({
+      where: { project_id },
+      include: [
+        {
+          model: MaterialBillTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name", "item_code", "product_type"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    // Extract all material_transaction_ids from bills to exclude them from MaterialTransaction
+    const excludedTransactionIds = [...new Set(
+      bills.map(bill => bill.materialTransactionId)
+        .filter(id => id !== null && id !== undefined)
+    )];
+
+    // Get MaterialTransaction data excluding those already referenced in bills
+ const whereCondition = {
+  project_id,
+  is_approve_pm: "approved",
+  [Op.or]: [
+    { is_invoiced: "draft" },
+    { is_invoiced: "invoiced" }
+  ]
+};
+
+    // Only add the exclusion condition if there are IDs to exclude
+    if (excludedTransactionIds.length > 0) {
+      whereCondition.id = {
+        [Op.notIn]: excludedTransactionIds
+      };
+    }
+
+    const materialTransactions = await MaterialTransaction.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: MaterialTransactionForm,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name"],
+            },
+          ],
+        },
+        {
+          model: models.Partner,
+          as: "partnerDetails",
+          attributes: ["id", "partner_name", "partner_address"],
+        },
+      ],
+    });
+
+    // Combine the results
+    const combinedData = {
+      bills: bills,
+      materialTransactions: materialTransactions,
+      summary: {
+        totalBills: bills.length,
+        totalMaterialTransactions: materialTransactions.length,
+        excludedTransactionIds: excludedTransactionIds
+      }
+    };
+
+    return res.status(200).json(combinedData);
+  } catch (error) {
+    console.error("Combined Bills and Materials Error:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch combined bills and material transactions" 
+    });
   }
 };
 
@@ -769,6 +877,99 @@ export const getInvoicesByProjectId = async (req, res) => {
     res.status(200).json(invoices);
   } catch (error) {
     res.status(500).json({ message: "Fetch failed", error: error.message });
+  }
+};
+
+export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
+  try {
+    const { project_id } = req.body;
+
+    // ✅ Fetch Approved Diesel Receipts
+    const receipts = await DieselReceipt.findAll({
+      where: {
+        project_id,
+        is_approve_pm: "approved",
+        is_approve_mic: "approved",
+        is_approve_sic: "approved",
+      },
+      include: [
+        {
+          model: DieselReceiptItem,
+          as: "items",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasurement",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+        {
+          model: Employee,
+          as: "createdByEmployee",
+        },
+        {
+          model: Organisations,
+          as: "organisation",
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    // ✅ Extract Diesel Receipt IDs to exclude from DieselInvoice if needed
+    const receiptIds = receipts.map((r) => r.id);
+
+    // ✅ Fetch Diesel Invoices for the same project
+    const invoices = await DieselInvoice.findAll({
+      where: {
+        project_id,
+        // Optionally filter out invoices based on receipts
+        // For example, if you only want to show invoices not based on existing receipts
+        // id: { [Op.notIn]: receiptIds } // <-- optional
+      },
+      include: [
+        {
+          model: DieselInvoiceSubform,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    // ✅ Final Response
+    const combinedData = {
+      dieselReceipts: receipts,
+      dieselInvoices: invoices,
+      summary: {
+        totalReceipts: receipts.length,
+        totalInvoices: invoices.length,
+      },
+    };
+
+    return res.status(200).json(combinedData);
+  } catch (error) {
+    console.error("Error fetching combined diesel data:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve diesel receipts and invoices",
+      error,
+    });
   }
 };
 

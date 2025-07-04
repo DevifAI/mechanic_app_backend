@@ -910,13 +910,48 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
   try {
     const { project_id } = req.body;
 
-    // ✅ Fetch Approved Diesel Receipts
+    // ✅ First, fetch all Diesel Invoices to get receipt IDs that are already invoiced
+    const invoices = await DieselInvoice.findAll({
+      where: {
+        project_id,
+      },
+      include: [
+        {
+          model: DieselInvoiceSubform,
+          as: "formItems",
+          include: [
+            {
+              model: ConsumableItem,
+              as: "consumableItem",
+              attributes: ["id", "item_name"],
+            },
+            {
+              model: UOM,
+              as: "unitOfMeasure",
+              attributes: ["id", "unit_name", "unit_code"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    // ✅ Extract Diesel Receipt IDs that are already used in invoices
+    const invoicedReceiptIds = invoices
+      .map((invoice) => invoice.dieselReceiptId)
+      .filter((id) => id !== null); // Remove null values if any
+
+    // ✅ Fetch Approved Diesel Receipts, excluding those already invoiced
     const receipts = await DieselReceipt.findAll({
       where: {
         project_id,
         is_approve_pm: "approved",
         is_approve_mic: "approved",
         is_approve_sic: "approved",
+        // Exclude receipts that are already used in invoices
+        id: {
+          [Op.notIn]: invoicedReceiptIds.length > 0 ? invoicedReceiptIds : [''] // Use empty string if no invoiced receipts
+        }
       },
       include: [
         {
@@ -942,38 +977,6 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
         {
           model: Organisations,
           as: "organisation",
-        },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
-
-    // ✅ Extract Diesel Receipt IDs to exclude from DieselInvoice if needed
-    const receiptIds = receipts.map((r) => r.id);
-
-    // ✅ Fetch Diesel Invoices for the same project
-    const invoices = await DieselInvoice.findAll({
-      where: {
-        project_id,
-        // Optionally filter out invoices based on receipts
-        // For example, if you only want to show invoices not based on existing receipts
-        // id: { [Op.notIn]: receiptIds } // <-- optional
-      },
-      include: [
-        {
-          model: DieselInvoiceSubform,
-          as: "formItems",
-          include: [
-            {
-              model: ConsumableItem,
-              as: "consumableItem",
-              attributes: ["id", "item_name"],
-            },
-            {
-              model: UOM,
-              as: "unitOfMeasure",
-              attributes: ["id", "unit_name", "unit_code"],
-            },
-          ],
         },
       ],
       order: [["createdAt", "DESC"]],

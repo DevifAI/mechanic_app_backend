@@ -17,11 +17,11 @@ export default (sequelize) => {
           key: "id",
         },
       },
-      dieselInvoiceId: {
+      dieselReceiptId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "diesel_invoice", // <-- parent table
+          model: "diesel_receipt", // ✅ Corrected
           key: "id",
         },
       },
@@ -48,14 +48,13 @@ export default (sequelize) => {
     });
 
     DieselInvoiceModel.belongsTo(models.DieselReceipt, {
-      foreignKey: "dieselInvoiceId",
-      as: "invoice",
+      foreignKey: "dieselReceiptId", // ✅ Corrected to match field name
+      as: "receipt", // Optional alias
     });
 
-    // ✅ Add in associate function
     DieselInvoiceModel.hasMany(models.DieselInvoiceSubform, {
       foreignKey: "diesel_invoice_id",
-      as: "formItems", // 🧠 this must match your include `as: "formItems"`
+      as: "formItems",
     });
   };
 

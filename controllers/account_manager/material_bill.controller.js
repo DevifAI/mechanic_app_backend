@@ -813,7 +813,7 @@ export const createDieselInvoice = async (req, res) => {
 
     const invoice = await DieselInvoice.create({
       project_id,
-      dieselInvoiceId,
+      dieselReceiptId: dieselInvoiceId,
       date,
       is_invoiced,
     });

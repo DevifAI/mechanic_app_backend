@@ -39,7 +39,6 @@ router.post("/edit/employee/project", updateEmployeesForProject);
 router.post("/get/employee/project", getEmployeesByProject);
 router.post(
   "/get/employee/project/roleType",
-
   getEmployeesByProjectWithRoleType
 );
 export default router;

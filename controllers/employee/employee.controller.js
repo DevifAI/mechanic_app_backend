@@ -16,8 +16,6 @@ const {
   MaintenanceSheet,
 } = models;
 
-
-
 export const createEmployee = async (req, res) => {
   try {
     const {
@@ -796,7 +794,6 @@ export const updateEmployeesForProject = async (req, res) => {
   }
 };
 
-
 export const getEmployeesByProject = async (req, res) => {
   try {
     const { project_id } = req.body;
@@ -846,7 +843,6 @@ export const getEmployeesByProject = async (req, res) => {
   }
 };
 
-
 export const getEmployeesByProjectWithRoleType = async (req, res) => {
   try {
     const { project_id, role_name } = req.body;
@@ -856,13 +852,18 @@ export const getEmployeesByProjectWithRoleType = async (req, res) => {
         message: "project_id is required in body",
       });
     }
+    if (!role_name) {
+      return res.status(400).json({
+        message: "role_name is required in body",
+      });
+    }
 
     const assignedEmployees = await ProjectEmployees.findAll({
       where: { project_id },
       include: [
         {
           model: Employee,
-          as: "employeeDetails", // use alias from association
+          as: "employeeDetails",
           attributes: [
             "id",
             "emp_id",
@@ -873,7 +874,7 @@ export const getEmployeesByProjectWithRoleType = async (req, res) => {
           include: [
             {
               model: Role,
-              as: "role", // ✅ Use the alias as defined in your model association
+              as: "role",
               attributes: ["id", "name"],
             },
           ],
@@ -882,13 +883,20 @@ export const getEmployeesByProjectWithRoleType = async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
 
-    const filteredEmployess = assignedEmployees.filter(
-      (emp) => emp.employeeDetails.role.name === role_name
+    // Case-insensitive and whitespace-trimmed comparison
+    const normalizedRoleName = role_name.trim().toLowerCase();
+    const filteredEmployees = assignedEmployees.filter(
+      (emp) =>
+        emp.employeeDetails &&
+        emp.employeeDetails.role &&
+        typeof emp.employeeDetails.role.name === "string" &&
+        emp.employeeDetails.role.name.trim().toLowerCase() ===
+          normalizedRoleName
     );
 
     return res.status(200).json({
-      message: `Found ${filteredEmployess} employees assigned to project`,
-      data: filteredEmployess,
+      message: `Found ${filteredEmployees.length} employees assigned to project`,
+      data: filteredEmployees,
     });
   } catch (error) {
     console.error("Error fetching project employees:", error);

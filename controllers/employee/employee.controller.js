@@ -49,11 +49,14 @@ export const createEmployee = async (req, res) => {
     if (!roleExists)
       return res.status(400).json({ message: "Invalid role_id" });
 
-    const shiftExists = await Shift.findOne({
-      where: { shift_code: shiftcode },
-    });
-    if (!shiftExists)
-      return res.status(400).json({ message: "Invalid shiftcode" });
+    if (shiftcode) {
+      const shiftExists = await Shift.findOne({
+        where: { shift_code: shiftcode },
+      });
+      if (!shiftExists) {
+        return res.status(400).json({ message: "Invalid shiftcode" });
+      }
+    }
 
     const orgExists = await Organisations.findByPk(org_id);
     if (!orgExists)

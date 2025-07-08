@@ -26,7 +26,7 @@ export default (sequelize) => {
       ifsc_code: { type: DataTypes.STRING, allowNull: true },
 
       is_active: { type: DataTypes.BOOLEAN, allowNull: false },
-      shiftcode: { type: DataTypes.STRING, allowNull: false },
+      shiftcode: { type: DataTypes.STRING, allowNull: true },
       active_jwt_token: { type: DataTypes.STRING, allowNull: true },
 
       role_id: {

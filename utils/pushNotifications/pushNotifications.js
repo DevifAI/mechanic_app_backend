@@ -1,11 +1,13 @@
 import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
+
 export const sendLoginNotification = async (
   empName,
   deviceName,
   playerId,
-  content
+  content,
+  screenName = "Dashboard" // default screen
 ) => {
   try {
     await axios.post(
@@ -13,8 +15,11 @@ export const sendLoginNotification = async (
       {
         app_id: process.env.ONESIGNAL_APP_ID,
         include_player_ids: [playerId],
-        headings: { en: "New Notifications" },
-        contents: { en: content || `${empName} you have a new notifications` },
+        headings: { en: "New Notification" },
+        contents: { en: content || `${empName}, you have a new notification` },
+        data: {
+          screen: screenName,
+        },
       },
       {
         headers: {

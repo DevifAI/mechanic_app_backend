@@ -8,7 +8,7 @@ const {
   OEM,
   Employee,
   Organisations,
-  ProjectEmployees
+  ProjectEmployees,
 } = models;
 
 // Create a new diesel requisition
@@ -76,7 +76,8 @@ export const createDieselRequisition = async (req, res) => {
             empName || "User",
             "Diesel Module", // deviceName (optional)
             playerId,
-            "A new diesel requisition has been created for your project"
+            "A new diesel requisition has been created for your project",
+            "Requisition"
           );
         }
       })

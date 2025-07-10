@@ -76,14 +76,14 @@ export const login = async (req, res) => {
     });
 
     // ✅ Send notification on successful login
-    if (player_id) {
-      await sendLoginNotification(
-        employee.emp_name,
-        device_name,
-        player_id,
-        "Login successful from " + device_name
-      );
-    }
+    // if (player_id) {
+    //   await sendLoginNotification(
+    //     employee.emp_name,
+    //     device_name,
+    //     player_id,
+    //     "Login successful from " + device_name
+    //   );
+    // }
 
     return res.status(200).json({
       message: "Login successful",

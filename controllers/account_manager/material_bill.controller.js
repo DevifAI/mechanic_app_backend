@@ -493,8 +493,13 @@ export const getExpensesByCreator = async (req, res) => {
   try {
     const { createdBy, project_id } = req.body;
 
-    const where = { createdBy };
-    if (project_id) where.project_id = project_id;
+    // Always filter by project_id
+    const where = { project_id };
+
+    // Conditionally filter by createdBy only if it's provided
+    if (createdBy) {
+      where.createdBy = createdBy;
+    }
 
     const expenses = await ExpenseInput.findAll({
       where,
@@ -517,6 +522,7 @@ export const getExpensesByCreator = async (req, res) => {
     res.status(500).json({ message: "Failed to filter expenses" });
   }
 };
+
 
 export const deleteDailyExpense = async (req, res) => {
   try {
@@ -624,8 +630,14 @@ export const getHOInvoicesByProjectAndUser = async (req, res) => {
   try {
     const { project_id, createdBy } = req.body;
 
+    // Build dynamic where clause
+    const whereClause = {
+      project_id,
+      ...(createdBy && { createdBy }), // only include createdBy if it's provided
+    };
+
     const invoices = await RevenueInput.findAll({
-      where: { project_id, createdBy },
+      where: whereClause,
       include: [
         {
           model: Employee,
@@ -645,6 +657,7 @@ export const getHOInvoicesByProjectAndUser = async (req, res) => {
     res.status(500).json({ message: "Failed to filter HO invoices" });
   }
 };
+
 
 // ----------------------- After 2nd feedback --------------------------
 
@@ -910,7 +923,7 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
   try {
     const { project_id } = req.body;
 
-    // ✅ First, fetch all Diesel Invoices to get receipt IDs that are already invoiced
+    // ✅ Step 1: Fetch Diesel Invoices
     const invoices = await DieselInvoice.findAll({
       where: {
         project_id,
@@ -936,23 +949,25 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    // ✅ Extract Diesel Receipt IDs that are already used in invoices
+    // ✅ Step 2: Extract IDs of already invoiced Diesel Receipts
     const invoicedReceiptIds = invoices
       .map((invoice) => invoice.dieselReceiptId)
-      .filter((id) => id !== null); // Remove null values if any
+      .filter((id) => id !== null); // Skip nulls
 
-    // ✅ Fetch Approved Diesel Receipts, excluding those already invoiced
+    // ✅ Step 3: Build dynamic `where` clause for receipts
+    const receiptWhereClause = {
+      project_id,
+      is_approve_pm: "approved",
+      is_approve_mic: "approved",
+      is_approve_sic: "approved",
+      ...(invoicedReceiptIds.length > 0 && {
+        id: { [Op.notIn]: invoicedReceiptIds },
+      }),
+    };
+
+    // ✅ Step 4: Fetch eligible Diesel Receipts
     const receipts = await DieselReceipt.findAll({
-      where: {
-        project_id,
-        is_approve_pm: "approved",
-        is_approve_mic: "approved",
-        is_approve_sic: "approved",
-        // Exclude receipts that are already used in invoices
-        id: {
-          [Op.notIn]: invoicedReceiptIds.length > 0 ? invoicedReceiptIds : [''] // Use empty string if no invoiced receipts
-        }
-      },
+      where: receiptWhereClause,
       include: [
         {
           model: DieselReceiptItem,
@@ -982,7 +997,7 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    // ✅ Final Response
+    // ✅ Step 5: Combine data and respond
     const combinedData = {
       dieselReceipts: receipts,
       dieselInvoices: invoices,
@@ -997,7 +1012,7 @@ export const getCombinedDieselReceiptsAndInvoices = async (req, res) => {
     console.error("Error fetching combined diesel data:", error);
     return res.status(500).json({
       message: "Failed to retrieve diesel receipts and invoices",
-      error,
+      error: error.message || error,
     });
   }
 };
